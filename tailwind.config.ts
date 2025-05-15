@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,7 +62,15 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+				// Custom colors for RideMatch St. Lucia
+				"brand-purple": "#9b87f5",
+				"brand-purple-dark": "#7E69AB", 
+				"brand-orange": "#F97316",
+				"brand-blue": "#33C3F0",
+				"brand-gray": "#8E9196",
+				"brand-light": "#F1F1F1",
+				"brand-dark": "#222222",
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -89,6 +98,9 @@ export default {
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out'
+			},
+			backgroundImage: {
+				'hero-pattern': "url('/hero-background.jpg')"
 			}
 		}
 	},
