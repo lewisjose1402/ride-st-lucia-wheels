@@ -9,7 +9,335 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      bookings: {
+        Row: {
+          created_at: string | null
+          deposit_amount: number
+          driver_age: number
+          driver_name: string
+          dropoff_date: string
+          dropoff_location: string
+          has_international_license: boolean
+          id: string
+          payment_id: string | null
+          permit_fee: number | null
+          pickup_date: string
+          pickup_location: string
+          status: Database["public"]["Enums"]["booking_status"] | null
+          total_price: number
+          updated_at: string | null
+          user_id: string | null
+          vehicle_id: string | null
+          young_driver_fee: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          deposit_amount: number
+          driver_age: number
+          driver_name: string
+          dropoff_date: string
+          dropoff_location: string
+          has_international_license?: boolean
+          id?: string
+          payment_id?: string | null
+          permit_fee?: number | null
+          pickup_date: string
+          pickup_location: string
+          status?: Database["public"]["Enums"]["booking_status"] | null
+          total_price: number
+          updated_at?: string | null
+          user_id?: string | null
+          vehicle_id?: string | null
+          young_driver_fee?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          deposit_amount?: number
+          driver_age?: number
+          driver_name?: string
+          dropoff_date?: string
+          dropoff_location?: string
+          has_international_license?: boolean
+          id?: string
+          payment_id?: string | null
+          permit_fee?: number | null
+          pickup_date?: string
+          pickup_location?: string
+          status?: Database["public"]["Enums"]["booking_status"] | null
+          total_price?: number
+          updated_at?: string | null
+          user_id?: string | null
+          vehicle_id?: string | null
+          young_driver_fee?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          first_name: string | null
+          id: string
+          last_name: string | null
+          phone: string | null
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          first_name?: string | null
+          id: string
+          last_name?: string | null
+          phone?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          phone?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      rental_companies: {
+        Row: {
+          address: string | null
+          company_name: string
+          contact_person: string | null
+          created_at: string | null
+          description: string | null
+          email: string
+          id: string
+          is_approved: boolean | null
+          logo_url: string | null
+          phone: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          address?: string | null
+          company_name: string
+          contact_person?: string | null
+          created_at?: string | null
+          description?: string | null
+          email: string
+          id?: string
+          is_approved?: boolean | null
+          logo_url?: string | null
+          phone: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          address?: string | null
+          company_name?: string
+          contact_person?: string | null
+          created_at?: string | null
+          description?: string | null
+          email?: string
+          id?: string
+          is_approved?: boolean | null
+          logo_url?: string | null
+          phone?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      reviews: {
+        Row: {
+          booking_id: string | null
+          comment: string | null
+          company_id: string | null
+          created_at: string | null
+          id: string
+          rating: number
+          user_id: string | null
+          vehicle_id: string | null
+        }
+        Insert: {
+          booking_id?: string | null
+          comment?: string | null
+          company_id?: string | null
+          created_at?: string | null
+          id?: string
+          rating: number
+          user_id?: string | null
+          vehicle_id?: string | null
+        }
+        Update: {
+          booking_id?: string | null
+          comment?: string | null
+          company_id?: string | null
+          created_at?: string | null
+          id?: string
+          rating?: number
+          user_id?: string | null
+          vehicle_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "rental_companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vehicle_images: {
+        Row: {
+          created_at: string | null
+          id: string
+          image_url: string
+          is_primary: boolean | null
+          vehicle_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          image_url: string
+          is_primary?: boolean | null
+          vehicle_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          image_url?: string
+          is_primary?: boolean | null
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_images_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vehicle_types: {
+        Row: {
+          created_at: string | null
+          id: number
+          name: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: number
+          name: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: number
+          name?: string
+        }
+        Relationships: []
+      }
+      vehicles: {
+        Row: {
+          company_id: string
+          created_at: string | null
+          description: string | null
+          features: Json | null
+          id: string
+          is_available: boolean | null
+          is_featured: boolean | null
+          latitude: number | null
+          location: string
+          longitude: number | null
+          name: string
+          price_per_day: number
+          rating: number | null
+          seats: number
+          transmission: string
+          type_id: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string | null
+          description?: string | null
+          features?: Json | null
+          id?: string
+          is_available?: boolean | null
+          is_featured?: boolean | null
+          latitude?: number | null
+          location: string
+          longitude?: number | null
+          name: string
+          price_per_day: number
+          rating?: number | null
+          seats: number
+          transmission: string
+          type_id?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string | null
+          description?: string | null
+          features?: Json | null
+          id?: string
+          is_available?: boolean | null
+          is_featured?: boolean | null
+          latitude?: number | null
+          location?: string
+          longitude?: number | null
+          name?: string
+          price_per_day?: number
+          rating?: number | null
+          seats?: number
+          transmission?: string
+          type_id?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicles_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "rental_companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicles_type_id_fkey"
+            columns: ["type_id"]
+            isOneToOne: false
+            referencedRelation: "vehicle_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -18,7 +346,8 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      booking_status: "pending" | "confirmed" | "cancelled" | "completed"
+      user_role: "guest" | "rental_company" | "admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -133,6 +462,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      booking_status: ["pending", "confirmed", "cancelled", "completed"],
+      user_role: ["guest", "rental_company", "admin"],
+    },
   },
 } as const
