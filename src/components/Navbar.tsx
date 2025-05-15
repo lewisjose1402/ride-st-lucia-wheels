@@ -1,8 +1,8 @@
 
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Button } from "@/components/ui/button";
 import { Car, Menu, X } from 'lucide-react';
+import AuthButtons from './AuthButtons';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -35,13 +35,8 @@ const Navbar = () => {
           </nav>
 
           {/* Auth Buttons - Desktop */}
-          <div className="hidden md:flex items-center space-x-4">
-            <Button variant="ghost" className="text-brand-purple-dark hover:text-brand-purple hover:bg-gray-100">
-              Sign In
-            </Button>
-            <Button className="bg-brand-purple text-white hover:bg-brand-purple-dark">
-              Register
-            </Button>
+          <div className="hidden md:block">
+            <AuthButtons />
           </div>
 
           {/* Mobile Menu Button */}
@@ -90,13 +85,8 @@ const Navbar = () => {
               >
                 Contact
               </Link>
-              <div className="flex flex-col space-y-2 pt-4 border-t border-gray-200">
-                <Button variant="ghost" className="justify-center text-brand-purple-dark hover:text-brand-purple hover:bg-gray-100">
-                  Sign In
-                </Button>
-                <Button className="justify-center bg-brand-purple text-white hover:bg-brand-purple-dark">
-                  Register
-                </Button>
+              <div className="pt-4 border-t border-gray-200">
+                <AuthButtons />
               </div>
             </nav>
           </div>
