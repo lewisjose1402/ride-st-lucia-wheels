@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { useAuth } from '@/context/AuthContext';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { UserPlus, Info } from 'lucide-react';
 
 const SignUp = () => {
   const [email, setEmail] = useState('');
@@ -55,7 +56,22 @@ const SignUp = () => {
                 sign in to your existing account
               </Link>
             </p>
+            
+            <div className="mt-4 p-4 bg-blue-50 rounded-md border border-blue-100">
+              <div className="flex items-start">
+                <Info className="h-5 w-5 text-blue-500 mr-2 mt-0.5" />
+                <div className="text-sm text-left text-blue-700">
+                  <p className="font-semibold">Who can sign up?</p>
+                  <p className="mt-1">
+                    Anyone can create an account to book vehicles. If you're a rental company in St. Lucia 
+                    interested in listing your vehicles, please contact us after registration 
+                    for company verification.
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
+          
           <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
             <div className="space-y-4">
               <div>
@@ -113,9 +129,10 @@ const SignUp = () => {
 
             <Button
               type="submit"
-              className="w-full bg-brand-purple hover:bg-brand-purple-dark"
+              className="w-full bg-brand-purple hover:bg-brand-purple-dark flex items-center justify-center"
               disabled={isSubmitting}
             >
+              <UserPlus className="mr-2 h-4 w-4" />
               {isSubmitting ? 'Creating account...' : 'Create account'}
             </Button>
           </form>
