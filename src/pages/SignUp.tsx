@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { useAuth } from '@/context/AuthContext';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { UserPlus, Info } from 'lucide-react';
+import { UserPlus, Info, Building } from 'lucide-react';
 
 const SignUp = () => {
   const [email, setEmail] = useState('');
@@ -14,6 +14,9 @@ const SignUp = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCompanySignUp, setIsCompanySignUp] = useState(false);
+  const [companyName, setCompanyName] = useState('');
+  const [registrationNumber, setRegistrationNumber] = useState('');
   const { signUp } = useAuth();
   const navigate = useNavigate();
 
@@ -34,7 +37,12 @@ const SignUp = () => {
     setIsSubmitting(true);
 
     try {
-      const result = await signUp(email, password);
+      // If it's a company sign-up, include company metadata
+      const metadata = isCompanySignUp 
+        ? { company_name: companyName, registration_number: registrationNumber, is_company: true }
+        : {};
+      
+      const result = await signUp(email, password, metadata);
       if (result.success) {
         navigate('/signin');
       }
@@ -70,6 +78,27 @@ const SignUp = () => {
                 </div>
               </div>
             </div>
+
+            <div className="mt-6 flex gap-2 justify-center">
+              <Button 
+                type="button"
+                variant={isCompanySignUp ? "outline" : "default"}
+                onClick={() => setIsCompanySignUp(false)}
+                className="flex-1"
+              >
+                <UserPlus className="mr-2 h-4 w-4" />
+                Personal
+              </Button>
+              <Button 
+                type="button"
+                variant={isCompanySignUp ? "default" : "outline"}
+                onClick={() => setIsCompanySignUp(true)}
+                className="flex-1"
+              >
+                <Building className="mr-2 h-4 w-4" />
+                Company
+              </Button>
+            </div>
           </div>
           
           <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
@@ -90,6 +119,42 @@ const SignUp = () => {
                   placeholder="Enter your email"
                 />
               </div>
+
+              {isCompanySignUp && (
+                <>
+                  <div>
+                    <label htmlFor="companyName" className="block text-sm font-medium text-gray-700">
+                      Company Name
+                    </label>
+                    <Input
+                      id="companyName"
+                      name="companyName"
+                      type="text"
+                      required={isCompanySignUp}
+                      value={companyName}
+                      onChange={(e) => setCompanyName(e.target.value)}
+                      className="mt-1"
+                      placeholder="Enter your company name"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="registrationNumber" className="block text-sm font-medium text-gray-700">
+                      Registration Number
+                    </label>
+                    <Input
+                      id="registrationNumber"
+                      name="registrationNumber"
+                      type="text"
+                      required={isCompanySignUp}
+                      value={registrationNumber}
+                      onChange={(e) => setRegistrationNumber(e.target.value)}
+                      className="mt-1"
+                      placeholder="Enter company registration number"
+                    />
+                  </div>
+                </>
+              )}
+
               <div>
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                   Password
@@ -132,8 +197,8 @@ const SignUp = () => {
               className="w-full bg-brand-purple hover:bg-brand-purple-dark flex items-center justify-center"
               disabled={isSubmitting}
             >
-              <UserPlus className="mr-2 h-4 w-4" />
-              {isSubmitting ? 'Creating account...' : 'Create account'}
+              {isCompanySignUp ? <Building className="mr-2 h-4 w-4" /> : <UserPlus className="mr-2 h-4 w-4" />}
+              {isSubmitting ? 'Creating account...' : isCompanySignUp ? 'Create company account' : 'Create account'}
             </Button>
           </form>
         </div>
