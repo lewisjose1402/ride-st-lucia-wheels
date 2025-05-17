@@ -13,6 +13,11 @@ import AboutPage from "./pages/About";
 import ContactPage from "./pages/Contact";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
+import CompanyDashboard from "./pages/company/Dashboard";
+import CompanyVehicles from "./pages/company/Vehicles";
+import AddEditVehicle from "./pages/company/AddEditVehicle";
+import CompanyProfile from "./pages/company/Profile";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +36,34 @@ const App = () => (
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/signin" element={<SignIn />} />
             <Route path="/signup" element={<SignUp />} />
+            
+            {/* Company Routes */}
+            <Route path="/company" element={
+              <ProtectedRoute requiredRole="rental_company">
+                <CompanyDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/company/vehicles" element={
+              <ProtectedRoute requiredRole="rental_company">
+                <CompanyVehicles />
+              </ProtectedRoute>
+            } />
+            <Route path="/company/vehicles/add" element={
+              <ProtectedRoute requiredRole="rental_company">
+                <AddEditVehicle />
+              </ProtectedRoute>
+            } />
+            <Route path="/company/vehicles/edit/:id" element={
+              <ProtectedRoute requiredRole="rental_company">
+                <AddEditVehicle />
+              </ProtectedRoute>
+            } />
+            <Route path="/company/profile" element={
+              <ProtectedRoute requiredRole="rental_company">
+                <CompanyProfile />
+              </ProtectedRoute>
+            } />
+            
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
