@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -29,6 +28,24 @@ import {
 } from '@/services/companyService';
 import { Car, Upload, Plus, X, Check } from 'lucide-react';
 
+// Define TypeScript interface for form values
+interface VehicleFormValues {
+  name: string;
+  price_per_day: string;
+  location: string;
+  description: string;
+  seats: string;
+  transmission: string;
+  is_available: boolean;
+  features: {
+    air_conditioning: boolean;
+    bluetooth: boolean;
+    gps: boolean;
+    usb: boolean;
+    child_seat: boolean;
+  };
+}
+
 const AddEditVehicle = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -43,7 +60,7 @@ const AddEditVehicle = () => {
   
   const isEditMode = !!id;
 
-  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm({
+  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<VehicleFormValues>({
     defaultValues: {
       name: '',
       price_per_day: '',
@@ -81,17 +98,18 @@ const AddEditVehicle = () => {
           
           // Set form values
           setValue('name', vehicleData.name);
-          setValue('price_per_day', vehicleData.price_per_day);
+          setValue('price_per_day', vehicleData.price_per_day.toString());
           setValue('location', vehicleData.location);
           setValue('description', vehicleData.description || '');
-          setValue('seats', vehicleData.seats);
+          setValue('seats', vehicleData.seats.toString());
           setValue('transmission', vehicleData.transmission);
           setValue('is_available', vehicleData.is_available);
           
           // Set features
           if (vehicleData.features) {
             Object.keys(vehicleData.features).forEach((feature) => {
-              setValue(`features.${feature}`, vehicleData.features[feature]);
+              setValue(`features.${feature as keyof VehicleFormValues['features']}`, 
+                vehicleData.features[feature]);
             });
           }
         }
@@ -108,7 +126,7 @@ const AddEditVehicle = () => {
     };
     
     initializeForm();
-  }, [user, id, isEditMode]);
+  }, [user, id, isEditMode, setValue]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
@@ -209,7 +227,7 @@ const AddEditVehicle = () => {
     }
   };
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: VehicleFormValues) => {
     if (!companyData) return;
     
     try {
@@ -459,7 +477,8 @@ const AddEditVehicle = () => {
               <Checkbox
                 id="features.air_conditioning"
                 checked={features.air_conditioning}
-                onCheckedChange={(checked) => setValue('features.air_conditioning', checked as boolean)}
+                onCheckedChange={(checked) => 
+                  setValue('features.air_conditioning', checked as boolean)}
               />
               <Label htmlFor="features.air_conditioning" className="font-normal">Air Conditioning</Label>
             </div>
@@ -468,7 +487,8 @@ const AddEditVehicle = () => {
               <Checkbox
                 id="features.bluetooth"
                 checked={features.bluetooth}
-                onCheckedChange={(checked) => setValue('features.bluetooth', checked as boolean)}
+                onCheckedChange={(checked) => 
+                  setValue('features.bluetooth', checked as boolean)}
               />
               <Label htmlFor="features.bluetooth" className="font-normal">Bluetooth</Label>
             </div>
@@ -477,7 +497,8 @@ const AddEditVehicle = () => {
               <Checkbox
                 id="features.gps"
                 checked={features.gps}
-                onCheckedChange={(checked) => setValue('features.gps', checked as boolean)}
+                onCheckedChange={(checked) => 
+                  setValue('features.gps', checked as boolean)}
               />
               <Label htmlFor="features.gps" className="font-normal">GPS Navigation</Label>
             </div>
@@ -486,7 +507,8 @@ const AddEditVehicle = () => {
               <Checkbox
                 id="features.usb"
                 checked={features.usb}
-                onCheckedChange={(checked) => setValue('features.usb', checked as boolean)}
+                onCheckedChange={(checked) => 
+                  setValue('features.usb', checked as boolean)}
               />
               <Label htmlFor="features.usb" className="font-normal">USB Port</Label>
             </div>
@@ -495,7 +517,8 @@ const AddEditVehicle = () => {
               <Checkbox
                 id="features.child_seat"
                 checked={features.child_seat}
-                onCheckedChange={(checked) => setValue('features.child_seat', checked as boolean)}
+                onCheckedChange={(checked) => 
+                  setValue('features.child_seat', checked as boolean)}
               />
               <Label htmlFor="features.child_seat" className="font-normal">Child Seat Compatible</Label>
             </div>
