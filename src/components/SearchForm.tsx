@@ -35,7 +35,6 @@ const seatOptions = [
 const SearchForm = () => {
   const navigate = useNavigate();
   const [pickupLocation, setPickupLocation] = useState('');
-  const [dropoffLocation, setDropoffLocation] = useState('');
   const [pickupDate, setPickupDate] = useState('');
   const [dropoffDate, setDropoffDate] = useState('');
   const [priceRange, setPriceRange] = useState([50]);
@@ -48,7 +47,6 @@ const SearchForm = () => {
     navigate('/vehicles', { 
       state: { 
         pickupLocation,
-        dropoffLocation,
         pickupDate,
         dropoffDate,
         priceRange: priceRange[0],
@@ -61,7 +59,7 @@ const SearchForm = () => {
   return (
     <div className="bg-white rounded-lg shadow-lg p-6">
       <form onSubmit={handleSearch}>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div className="mb-4">
           {/* Pickup Location */}
           <div>
             <Label htmlFor="pickupLocation" className="mb-1 block">Pickup Location</Label>
@@ -70,19 +68,6 @@ const SearchForm = () => {
               placeholder="Enter pickup location"
               value={pickupLocation}
               onChange={(e) => setPickupLocation(e.target.value)}
-              required
-              className="w-full"
-            />
-          </div>
-          
-          {/* Dropoff Location */}
-          <div>
-            <Label htmlFor="dropoffLocation" className="mb-1 block">Dropoff Location</Label>
-            <Input
-              id="dropoffLocation"
-              placeholder="Enter dropoff location"
-              value={dropoffLocation}
-              onChange={(e) => setDropoffLocation(e.target.value)}
               required
               className="w-full"
             />
