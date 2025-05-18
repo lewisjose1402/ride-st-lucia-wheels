@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { useAuth } from '@/context/AuthContext';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { UserPlus, Info, Building } from 'lucide-react';
+import { Building, Info } from 'lucide-react';
 
 const SignUp = () => {
   const [email, setEmail] = useState('');
@@ -14,7 +14,6 @@ const SignUp = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isCompanySignUp, setIsCompanySignUp] = useState(false);
   const [companyName, setCompanyName] = useState('');
   const [registrationNumber, setRegistrationNumber] = useState('');
   const { signUp } = useAuth();
@@ -37,10 +36,12 @@ const SignUp = () => {
     setIsSubmitting(true);
 
     try {
-      // If it's a company sign-up, include company metadata
-      const metadata = isCompanySignUp 
-        ? { company_name: companyName, registration_number: registrationNumber, is_company: true }
-        : {};
+      // Include company metadata
+      const metadata = { 
+        company_name: companyName, 
+        registration_number: registrationNumber, 
+        is_company: true 
+      };
       
       const result = await signUp(email, password, metadata);
       if (result.success) {
@@ -57,7 +58,7 @@ const SignUp = () => {
       <main className="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gray-50">
         <div className="max-w-md w-full space-y-8 bg-white p-8 shadow-md rounded-lg">
           <div className="text-center">
-            <h2 className="text-3xl font-extrabold text-gray-900">Create your account</h2>
+            <h2 className="text-3xl font-extrabold text-gray-900">Create Company Account</h2>
             <p className="mt-2 text-sm text-gray-600">
               Or{" "}
               <Link to="/signin" className="font-medium text-brand-purple hover:text-brand-purple-dark">
@@ -69,35 +70,13 @@ const SignUp = () => {
               <div className="flex items-start">
                 <Info className="h-5 w-5 text-blue-500 mr-2 mt-0.5" />
                 <div className="text-sm text-left text-blue-700">
-                  <p className="font-semibold">Who can sign up?</p>
+                  <p className="font-semibold">Rental companies sign up here</p>
                   <p className="mt-1">
-                    Anyone can create an account to book vehicles. If you're a rental company in St. Lucia 
-                    interested in listing your vehicles, please contact us after registration 
-                    for company verification.
+                    Create your company account to list and manage your vehicles for rent in St. Lucia. 
+                    Personal accounts for booking vehicles can be created during the booking process.
                   </p>
                 </div>
               </div>
-            </div>
-
-            <div className="mt-6 flex gap-2 justify-center">
-              <Button 
-                type="button"
-                variant={isCompanySignUp ? "outline" : "default"}
-                onClick={() => setIsCompanySignUp(false)}
-                className="flex-1"
-              >
-                <UserPlus className="mr-2 h-4 w-4" />
-                Personal
-              </Button>
-              <Button 
-                type="button"
-                variant={isCompanySignUp ? "default" : "outline"}
-                onClick={() => setIsCompanySignUp(true)}
-                className="flex-1"
-              >
-                <Building className="mr-2 h-4 w-4" />
-                Company
-              </Button>
             </div>
           </div>
           
@@ -120,40 +99,37 @@ const SignUp = () => {
                 />
               </div>
 
-              {isCompanySignUp && (
-                <>
-                  <div>
-                    <label htmlFor="companyName" className="block text-sm font-medium text-gray-700">
-                      Company Name
-                    </label>
-                    <Input
-                      id="companyName"
-                      name="companyName"
-                      type="text"
-                      required={isCompanySignUp}
-                      value={companyName}
-                      onChange={(e) => setCompanyName(e.target.value)}
-                      className="mt-1"
-                      placeholder="Enter your company name"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="registrationNumber" className="block text-sm font-medium text-gray-700">
-                      Registration Number
-                    </label>
-                    <Input
-                      id="registrationNumber"
-                      name="registrationNumber"
-                      type="text"
-                      required={isCompanySignUp}
-                      value={registrationNumber}
-                      onChange={(e) => setRegistrationNumber(e.target.value)}
-                      className="mt-1"
-                      placeholder="Enter company registration number"
-                    />
-                  </div>
-                </>
-              )}
+              <div>
+                <label htmlFor="companyName" className="block text-sm font-medium text-gray-700">
+                  Company Name
+                </label>
+                <Input
+                  id="companyName"
+                  name="companyName"
+                  type="text"
+                  required
+                  value={companyName}
+                  onChange={(e) => setCompanyName(e.target.value)}
+                  className="mt-1"
+                  placeholder="Enter your company name"
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="registrationNumber" className="block text-sm font-medium text-gray-700">
+                  Registration Number
+                </label>
+                <Input
+                  id="registrationNumber"
+                  name="registrationNumber"
+                  type="text"
+                  required
+                  value={registrationNumber}
+                  onChange={(e) => setRegistrationNumber(e.target.value)}
+                  className="mt-1"
+                  placeholder="Enter company registration number"
+                />
+              </div>
 
               <div>
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700">
@@ -197,8 +173,8 @@ const SignUp = () => {
               className="w-full bg-brand-purple hover:bg-brand-purple-dark flex items-center justify-center"
               disabled={isSubmitting}
             >
-              {isCompanySignUp ? <Building className="mr-2 h-4 w-4" /> : <UserPlus className="mr-2 h-4 w-4" />}
-              {isSubmitting ? 'Creating account...' : isCompanySignUp ? 'Create company account' : 'Create account'}
+              <Building className="mr-2 h-4 w-4" />
+              {isSubmitting ? 'Creating account...' : 'Create company account'}
             </Button>
           </form>
         </div>

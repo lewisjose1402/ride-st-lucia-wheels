@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { useAuth } from '@/context/AuthContext';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { Building, User, ArrowRight } from 'lucide-react';
+import { Building, ArrowRight } from 'lucide-react';
 
 const SignIn = () => {
   const [email, setEmail] = useState('');
@@ -57,23 +57,20 @@ const SignIn = () => {
           <div className="text-center">
             <h2 className="text-3xl font-extrabold text-gray-900">Sign in to your account</h2>
             <p className="mt-2 text-sm text-gray-600">
-              Or{" "}
+              Are you a rental company?{" "}
               <Link to="/signup" className="font-medium text-brand-purple hover:text-brand-purple-dark">
-                create a new account
+                Create a company account
               </Link>
             </p>
 
             {/* Account type information */}
-            <div className="mt-6 grid grid-cols-2 gap-4">
-              <div className="p-4 border rounded-md bg-gray-50">
-                <User className="h-6 w-6 text-brand-purple mx-auto mb-2" />
-                <h3 className="font-semibold">Personal Account</h3>
-                <p className="text-xs text-gray-600 mt-1">Book vehicles for your trips</p>
-              </div>
-              <div className="p-4 border rounded-md bg-gray-50">
+            <div className="mt-6 flex justify-center">
+              <div className="p-4 border rounded-md bg-gray-50 max-w-xs">
                 <Building className="h-6 w-6 text-brand-purple mx-auto mb-2" />
-                <h3 className="font-semibold">Company Account</h3>
-                <p className="text-xs text-gray-600 mt-1">Manage your rental listings</p>
+                <h3 className="font-semibold">Company & Personal Accounts</h3>
+                <p className="text-xs text-gray-600 mt-1">
+                  Sign in with your existing account. Company accounts will be automatically directed to the company dashboard.
+                </p>
               </div>
             </div>
           </div>
