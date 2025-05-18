@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -5,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { useAuth } from '@/context/AuthContext';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { Building, User, ArrowRight } from 'lucide-react';
 
 const SignIn = () => {
   const [email, setEmail] = useState('');
@@ -46,6 +48,20 @@ const SignIn = () => {
                 create a new account
               </Link>
             </p>
+
+            {/* Account type information */}
+            <div className="mt-6 grid grid-cols-2 gap-4">
+              <div className="p-4 border rounded-md bg-gray-50">
+                <User className="h-6 w-6 text-brand-purple mx-auto mb-2" />
+                <h3 className="font-semibold">Personal Account</h3>
+                <p className="text-xs text-gray-600 mt-1">Book vehicles for your trips</p>
+              </div>
+              <div className="p-4 border rounded-md bg-gray-50">
+                <Building className="h-6 w-6 text-brand-purple mx-auto mb-2" />
+                <h3 className="font-semibold">Company Account</h3>
+                <p className="text-xs text-gray-600 mt-1">Manage your rental listings</p>
+              </div>
+            </div>
           </div>
           <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
             <div className="space-y-4">
@@ -93,10 +109,16 @@ const SignIn = () => {
 
             <Button
               type="submit"
-              className="w-full bg-brand-purple hover:bg-brand-purple-dark"
+              className="w-full bg-brand-purple hover:bg-brand-purple-dark flex items-center justify-center"
               disabled={isSubmitting}
             >
-              {isSubmitting ? 'Signing in...' : 'Sign in'}
+              {isSubmitting ? (
+                'Signing in...'
+              ) : (
+                <>
+                  Sign in <ArrowRight className="ml-2 h-4 w-4" />
+                </>
+              )}
             </Button>
           </form>
         </div>
