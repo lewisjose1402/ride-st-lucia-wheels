@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,8 +12,25 @@ const SignIn = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { signIn, isRentalCompany } = useAuth();
+  const [signInSuccess, setSignInSuccess] = useState(false);
+  const { signIn, isRentalCompany, profile } = useAuth();
   const navigate = useNavigate();
+
+  // Handle redirection after successful sign-in
+  useEffect(() => {
+    if (signInSuccess && profile) {
+      console.log("Redirecting based on role, profile:", profile);
+      console.log("Is rental company:", isRentalCompany);
+      
+      if (isRentalCompany) {
+        console.log("Redirecting to company dashboard");
+        navigate('/company');
+      } else {
+        console.log("Redirecting to home page");
+        navigate('/');
+      }
+    }
+  }, [signInSuccess, profile, isRentalCompany, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,14 +39,11 @@ const SignIn = () => {
     try {
       const result = await signIn(email, password);
       if (result.success) {
-        // Check if the user is a rental company, redirect to the company dashboard
-        // Otherwise, redirect to the home page
-        if (isRentalCompany) {
-          navigate('/company');
-        } else {
-          navigate('/');
-        }
+        console.log("Sign-in successful");
+        setSignInSuccess(true);
       }
+    } catch (error) {
+      console.error("Sign-in error:", error);
     } finally {
       setIsSubmitting(false);
     }
