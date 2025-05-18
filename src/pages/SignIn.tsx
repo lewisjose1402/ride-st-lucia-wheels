@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -11,7 +10,7 @@ const SignIn = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { signIn } = useAuth();
+  const { signIn, isRentalCompany } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -21,7 +20,13 @@ const SignIn = () => {
     try {
       const result = await signIn(email, password);
       if (result.success) {
-        navigate('/');
+        // Check if the user is a rental company, redirect to the company dashboard
+        // Otherwise, redirect to the home page
+        if (isRentalCompany) {
+          navigate('/company');
+        } else {
+          navigate('/');
+        }
       }
     } finally {
       setIsSubmitting(false);
