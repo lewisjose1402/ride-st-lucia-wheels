@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { User, LogOut, Car, Settings, UserCircle } from 'lucide-react';
+import { User, LogOut, Car, Settings, UserCircle, Building } from 'lucide-react';
 
 const AuthButtons = () => {
   const { user, signOut, isRentalCompany, isAdmin } = useAuth();
@@ -51,8 +51,8 @@ const AuthButtons = () => {
             
             {isRentalCompany && (
               <DropdownMenuItem asChild>
-                <Link to="/company/dashboard" className="w-full flex items-center cursor-pointer">
-                  <Car className="mr-2 h-4 w-4" />
+                <Link to="/company" className="w-full flex items-center cursor-pointer">
+                  <Building className="mr-2 h-4 w-4" />
                   <span>Company Dashboard</span>
                 </Link>
               </DropdownMenuItem>
