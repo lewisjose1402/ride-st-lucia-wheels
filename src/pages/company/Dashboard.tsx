@@ -6,8 +6,9 @@ import { useToast } from '@/components/ui/use-toast';
 import CompanyLayout from '@/components/company/CompanyLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { getCompanyVehicles, getCompanyProfile } from '@/services/companyService';
+import { getCompanyVehicles } from '@/services/companyService';
 import { Car, Plus, Star, CalendarRange } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 const CompanyDashboard = () => {
   const { user } = useAuth();
@@ -23,31 +24,118 @@ const CompanyDashboard = () => {
       try {
         setIsLoading(true);
         
-        const companyProfile = await getCompanyProfile(user.id);
-        setCompanyData(companyProfile);
+        // Get company directly from rental_companies table
+        const { data: company, error: companyError } = await supabase
+          .from('rental_companies')
+          .select('*')
+          .eq('user_id', user.id)
+          .maybeSingle();
         
-        const vehiclesData = await getCompanyVehicles(companyProfile.id);
-        setVehicles(vehiclesData);
+        if (companyError) {
+          console.error("Error fetching company:", companyError);
+          toast({
+            title: "Error loading dashboard",
+            description: "Failed to load your company data. Please try again later.",
+            variant: "destructive",
+          });
+          setIsLoading(false);
+          return;
+        }
+        
+        if (!company) {
+          // If no company record exists, we need to create one from user metadata
+          const { data: userData } = await supabase.auth.getUser();
+          const userMetadata = userData?.user?.user_metadata;
+          
+          if (userMetadata && userMetadata.company_name) {
+            // Create a new company record
+            const { data: newCompany, error: insertError } = await supabase
+              .from('rental_companies')
+              .insert([{
+                user_id: user.id,
+                company_name: userMetadata.company_name,
+                email: user.email || '',
+                phone: userMetadata.phone || ''
+              }])
+              .select()
+              .single();
+            
+            if (insertError) {
+              console.error("Error creating company:", insertError);
+              toast({
+                title: "Error setting up company",
+                description: "Failed to set up your company profile",
+                variant: "destructive",
+              });
+              setIsLoading(false);
+              return;
+            }
+            
+            setCompanyData(newCompany);
+            // No vehicles yet for a new company
+            setVehicles([]);
+          } else {
+            toast({
+              title: "Company profile missing",
+              description: "Please complete your company profile",
+              variant: "destructive",
+            });
+            setIsLoading(false);
+            return;
+          }
+        } else {
+          // We have a company, set it and load vehicles
+          setCompanyData(company);
+          
+          try {
+            const vehiclesData = await getCompanyVehicles(company.id);
+            setVehicles(vehiclesData || []);
+          } catch (vehicleError) {
+            console.error("Error loading vehicles:", vehicleError);
+            toast({
+              title: "Error loading vehicles",
+              description: "Failed to load your vehicles",
+              variant: "destructive",
+            });
+          }
+        }
       } catch (error) {
+        console.error("Unexpected error:", error);
         toast({
           title: "Error loading dashboard",
-          description: "Failed to load your company data",
+          description: "An unexpected error occurred",
           variant: "destructive",
         });
-        console.error(error);
       } finally {
         setIsLoading(false);
       }
     };
     
     loadDashboardData();
-  }, [user]);
+  }, [user, toast]);
 
   if (isLoading) {
     return (
       <CompanyLayout title="Dashboard">
         <div className="flex justify-center items-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-purple"></div>
+        </div>
+      </CompanyLayout>
+    );
+  }
+  
+  // If still no companyData after loading, show missing profile message
+  if (!companyData) {
+    return (
+      <CompanyLayout title="Dashboard">
+        <div className="bg-white rounded-lg shadow-sm p-6 text-center">
+          <h2 className="text-xl font-semibold text-red-600">Company Profile Missing</h2>
+          <p className="text-gray-600 mt-2 mb-4">
+            Your company profile needs to be created before you can access the dashboard.
+          </p>
+          <Link to="/company/profile">
+            <Button>Complete Your Profile</Button>
+          </Link>
         </div>
       </CompanyLayout>
     );

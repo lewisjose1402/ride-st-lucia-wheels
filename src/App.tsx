@@ -17,6 +17,7 @@ import CompanyDashboard from "./pages/company/Dashboard";
 import CompanyVehicles from "./pages/company/Vehicles";
 import AddEditVehicle from "./pages/company/AddEditVehicle";
 import CompanyProfile from "./pages/company/Profile";
+import CompanyBookings from "./pages/company/Bookings";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
@@ -61,6 +62,11 @@ const App = () => (
             <Route path="/company/profile" element={
               <ProtectedRoute requiredRole="rental_company">
                 <CompanyProfile />
+              </ProtectedRoute>
+            } />
+            <Route path="/company/bookings" element={
+              <ProtectedRoute requiredRole="rental_company">
+                <CompanyBookings />
               </ProtectedRoute>
             } />
             

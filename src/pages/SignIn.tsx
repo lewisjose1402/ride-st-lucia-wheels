@@ -13,18 +13,24 @@ const SignIn = () => {
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [signInSuccess, setSignInSuccess] = useState(false);
-  const { signIn, isRentalCompany, profile } = useAuth();
+  const { signIn, user } = useAuth();
   const navigate = useNavigate();
+
+  // Redirect to company dashboard if user is already signed in
+  useEffect(() => {
+    if (user) {
+      console.log("User is already signed in, redirecting to company dashboard");
+      navigate('/company');
+    }
+  }, [user, navigate]);
 
   // Handle redirection after successful sign-in
   useEffect(() => {
-    if (signInSuccess && profile) {
-      console.log("Redirecting based on role, profile:", profile);
-      
-      // All users should be redirected to company dashboard as we only have company accounts
+    if (signInSuccess && user) {
+      console.log("Sign-in successful, redirecting to company dashboard");
       navigate('/company');
     }
-  }, [signInSuccess, profile, navigate]);
+  }, [signInSuccess, user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,6 +41,7 @@ const SignIn = () => {
       if (result.success) {
         console.log("Sign-in successful");
         setSignInSuccess(true);
+        // Redirect will happen in the useEffect above
       }
     } catch (error) {
       console.error("Sign-in error:", error);
