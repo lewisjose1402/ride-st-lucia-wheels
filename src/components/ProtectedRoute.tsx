@@ -1,6 +1,7 @@
 
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import LoadingState from '@/components/company/dashboard/LoadingState';
 
 type ProtectedRouteProps = {
   children: React.ReactNode;
@@ -11,11 +12,7 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
   const { user, isLoading, isAdmin, isRentalCompany } = useAuth();
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-purple"></div>
-      </div>
-    );
+    return <LoadingState />;
   }
 
   if (!user) {
