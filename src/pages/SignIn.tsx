@@ -20,17 +20,11 @@ const SignIn = () => {
   useEffect(() => {
     if (signInSuccess && profile) {
       console.log("Redirecting based on role, profile:", profile);
-      console.log("Is rental company:", isRentalCompany);
       
-      if (isRentalCompany) {
-        console.log("Redirecting to company dashboard");
-        navigate('/company');
-      } else {
-        console.log("Redirecting to home page");
-        navigate('/');
-      }
+      // All users should be redirected to company dashboard as we only have company accounts
+      navigate('/company');
     }
-  }, [signInSuccess, profile, isRentalCompany, navigate]);
+  }, [signInSuccess, profile, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,7 +51,7 @@ const SignIn = () => {
           <div className="text-center">
             <h2 className="text-3xl font-extrabold text-gray-900">Sign in to your account</h2>
             <p className="mt-2 text-sm text-gray-600">
-              Are you a rental company?{" "}
+              Need a rental company account?{" "}
               <Link to="/signup" className="font-medium text-brand-purple hover:text-brand-purple-dark">
                 Create a company account
               </Link>
@@ -67,9 +61,9 @@ const SignIn = () => {
             <div className="mt-6 flex justify-center">
               <div className="p-4 border rounded-md bg-gray-50 max-w-xs">
                 <Building className="h-6 w-6 text-brand-purple mx-auto mb-2" />
-                <h3 className="font-semibold">Company & Personal Accounts</h3>
+                <h3 className="font-semibold">Company Accounts Only</h3>
                 <p className="text-xs text-gray-600 mt-1">
-                  Sign in with your existing account. Company accounts will be automatically directed to the company dashboard.
+                  Our platform is exclusively for rental companies in St. Lucia. Sign in with your company credentials.
                 </p>
               </div>
             </div>

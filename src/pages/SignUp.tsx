@@ -40,11 +40,13 @@ const SignUp = () => {
       const metadata = { 
         company_name: companyName, 
         registration_number: registrationNumber, 
-        is_company: true 
+        is_company: true,
+        role: 'rental_company' // Explicitly set the role for company accounts
       };
       
       const result = await signUp(email, password, metadata);
       if (result.success) {
+        // Redirect to sign in page after successful registration
         navigate('/signin');
       }
     } finally {
@@ -60,9 +62,9 @@ const SignUp = () => {
           <div className="text-center">
             <h2 className="text-3xl font-extrabold text-gray-900">Create Company Account</h2>
             <p className="mt-2 text-sm text-gray-600">
-              Or{" "}
+              Already have an account?{" "}
               <Link to="/signin" className="font-medium text-brand-purple hover:text-brand-purple-dark">
-                sign in to your existing account
+                Sign in to your company account
               </Link>
             </p>
             
@@ -70,10 +72,10 @@ const SignUp = () => {
               <div className="flex items-start">
                 <Info className="h-5 w-5 text-blue-500 mr-2 mt-0.5" />
                 <div className="text-sm text-left text-blue-700">
-                  <p className="font-semibold">Rental companies sign up here</p>
+                  <p className="font-semibold">For Rental Companies Only</p>
                   <p className="mt-1">
-                    Create your company account to list and manage your vehicles for rent in St. Lucia. 
-                    Personal accounts for booking vehicles can be created during the booking process.
+                    This sign-up form is exclusively for rental companies operating in St. Lucia. 
+                    Create your account to list and manage your rental vehicles.
                   </p>
                 </div>
               </div>
@@ -95,7 +97,7 @@ const SignUp = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="mt-1"
-                  placeholder="Enter your email"
+                  placeholder="Enter your business email"
                 />
               </div>
 

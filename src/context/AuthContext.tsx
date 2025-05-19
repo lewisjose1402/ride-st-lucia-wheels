@@ -68,6 +68,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const fetchProfile = async (userId: string) => {
     try {
+      // First check if user has company role from metadata
+      const { data: userData } = await supabase.auth.getUser();
+      const userMetadata = userData?.user?.user_metadata;
+      
+      console.log("User metadata:", userMetadata);
+      
+      // Check for company flag in metadata
+      if (userMetadata && userMetadata.is_company) {
+        console.log("User is a company from metadata");
+        setIsRentalCompany(true);
+      }
+      
+      // Also check profile table as fallback
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -77,9 +90,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (error) {
         console.error('Error fetching profile:', error);
       } else if (data) {
+        console.log("Profile data:", data);
         setProfile(data);
         setIsAdmin(data.role === 'admin');
-        setIsRentalCompany(data.role === 'rental_company');
+        setIsRentalCompany(data.role === 'rental_company' || isRentalCompany);
       }
     } catch (error) {
       console.error('Unexpected error fetching profile:', error);
@@ -90,6 +104,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signUp = async (email: string, password: string, metadata: Record<string, any> = {}) => {
     try {
+      // Always set company flag for all signups
+      if (!metadata.is_company) {
+        metadata.is_company = true;
+      }
+      
+      // Always set rental_company role for all signups
+      if (!metadata.role) {
+        metadata.role = 'rental_company';
+      }
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -109,7 +133,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       toast({
         title: "Sign up successful",
-        description: "Please check your email to verify your account.",
+        description: "Please check your email to verify your account before signing in.",
       });
       return { success: true, error: null };
     } catch (error) {
