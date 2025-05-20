@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 // Get company profile by user ID
@@ -22,6 +23,20 @@ export const updateCompanyProfile = async (userId: string, companyData: any) => 
     .from('rental_companies')
     .update(companyData)
     .eq('user_id', userId)
+    .select();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data && data.length > 0 ? data[0] : null;
+};
+
+// Create company profile if it doesn't exist
+export const createCompanyProfile = async (userId: string, companyData: any) => {
+  const { data, error } = await supabase
+    .from('rental_companies')
+    .insert([{ ...companyData, user_id: userId }])
     .select();
 
   if (error) {

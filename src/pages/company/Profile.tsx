@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
@@ -7,8 +8,28 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { getCompanyProfile, updateCompanyProfile } from '@/services/companyService';
+import { getCompanyProfile, updateCompanyProfile, createCompanyProfile } from '@/services/companyService';
 import { Building, Phone, Mail, MapPin, User, Save } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+const CONSTITUENCIES = [
+  'Gros Islet',
+  'Babonneau',
+  'Castries',
+  'Anse La Raye / Canaries',
+  'Soufrière',
+  'Choiseul',
+  'Laborie',
+  'Vieux Fort',
+  'Micoud',
+  'Dennery'
+];
 
 const CompanyProfile = () => {
   const { user } = useAuth();
@@ -17,13 +38,14 @@ const CompanyProfile = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [companyData, setCompanyData] = useState<any>(null);
 
-  const { register, handleSubmit, setValue, formState: { errors } } = useForm({
+  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm({
     defaultValues: {
       company_name: '',
       contact_person: '',
       email: '',
       phone: '',
-      address: '',
+      street_address: '',
+      constituency: '',
       description: '',
     }
   });
@@ -51,12 +73,29 @@ const CompanyProfile = () => {
         
         setCompanyData(profile);
         
+        // Parse address field if it exists
+        let streetAddress = '';
+        let constituency = '';
+        
+        if (profile.address) {
+          // Try to extract street_address and constituency if they were stored in JSON format
+          try {
+            const addressObj = JSON.parse(profile.address);
+            streetAddress = addressObj.street_address || '';
+            constituency = addressObj.constituency || '';
+          } catch (e) {
+            // If not JSON, use the full string as street_address
+            streetAddress = profile.address;
+          }
+        }
+        
         // Set form values
         setValue('company_name', profile.company_name || '');
         setValue('contact_person', profile.contact_person || '');
         setValue('email', profile.email || '');
         setValue('phone', profile.phone || '');
-        setValue('address', profile.address || '');
+        setValue('street_address', streetAddress);
+        setValue('constituency', constituency);
         setValue('description', profile.description || '');
       } catch (error) {
         console.error("Error loading profile:", error);
@@ -79,7 +118,29 @@ const CompanyProfile = () => {
     try {
       setIsSubmitting(true);
       
-      await updateCompanyProfile(user.id, data);
+      // Combine street_address and constituency into a JSON string
+      const formattedData = {
+        ...data,
+        address: JSON.stringify({
+          street_address: data.street_address,
+          constituency: data.constituency
+        })
+      };
+      
+      // Remove the individual fields that we've combined
+      delete formattedData.street_address;
+      delete formattedData.constituency;
+      
+      let result;
+      
+      if (companyData) {
+        // Update existing profile
+        result = await updateCompanyProfile(user.id, formattedData);
+      } else {
+        // Create new profile
+        result = await createCompanyProfile(user.id, formattedData);
+        setCompanyData(result);
+      }
       
       toast({
         title: "Profile updated",
@@ -96,6 +157,8 @@ const CompanyProfile = () => {
       setIsSubmitting(false);
     }
   };
+
+  const constituency = watch('constituency');
 
   if (isLoading) {
     return (
@@ -175,16 +238,44 @@ const CompanyProfile = () => {
               )}
             </div>
             
-            <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="address" className="flex items-center">
+            <div className="space-y-2">
+              <Label htmlFor="street_address" className="flex items-center">
                 <MapPin className="h-4 w-4 mr-2" />
-                Address
+                Street Address
               </Label>
               <Input
-                id="address"
-                placeholder="Your business address"
-                {...register('address')}
+                id="street_address"
+                placeholder="Street address"
+                {...register('street_address', { required: 'Street address is required' })}
               />
+              {errors.street_address && (
+                <p className="text-sm text-red-500">{errors.street_address.message as string}</p>
+              )}
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="constituency" className="flex items-center">
+                <MapPin className="h-4 w-4 mr-2" />
+                Constituency
+              </Label>
+              <Select 
+                value={constituency} 
+                onValueChange={(value) => setValue('constituency', value)}
+              >
+                <SelectTrigger id="constituency">
+                  <SelectValue placeholder="Select constituency" />
+                </SelectTrigger>
+                <SelectContent>
+                  {CONSTITUENCIES.map((option) => (
+                    <SelectItem key={option} value={option}>
+                      {option}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.constituency && (
+                <p className="text-sm text-red-500">{errors.constituency.message as string}</p>
+              )}
             </div>
             
             <div className="space-y-2 md:col-span-2">
