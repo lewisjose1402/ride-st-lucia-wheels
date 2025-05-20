@@ -19,12 +19,11 @@ export const useCompanyDashboard = () => {
       try {
         setIsLoading(true);
         
-        // Get company directly from rental_companies table
-        const { data: company, error: companyError } = await supabase
+        // Get company directly from rental_companies table with eq instead of maybeSingle
+        const { data: companies, error: companyError } = await supabase
           .from('rental_companies')
           .select('*')
-          .eq('user_id', user.id)
-          .maybeSingle();
+          .eq('user_id', user.id);
         
         if (companyError) {
           console.error("Error fetching company:", companyError);
@@ -37,38 +36,52 @@ export const useCompanyDashboard = () => {
           return;
         }
         
+        // Check if any company was found
+        const company = companies && companies.length > 0 ? companies[0] : null;
+        
         if (!company) {
           // If no company record exists, we need to create one from user metadata
           const { data: userData } = await supabase.auth.getUser();
           const userMetadata = userData?.user?.user_metadata;
           
           if (userMetadata && userMetadata.company_name) {
+            console.log("Creating new company from metadata:", userMetadata);
             // Create a new company record
-            const { data: newCompany, error: insertError } = await supabase
-              .from('rental_companies')
-              .insert([{
-                user_id: user.id,
-                company_name: userMetadata.company_name,
-                email: user.email || '',
-                phone: userMetadata.phone || ''
-              }])
-              .select()
-              .single();
-            
-            if (insertError) {
-              console.error("Error creating company:", insertError);
+            try {
+              const { data: newCompany, error: insertError } = await supabase
+                .from('rental_companies')
+                .insert([{
+                  user_id: user.id,
+                  company_name: userMetadata.company_name,
+                  email: userMetadata.email || user.email || '',
+                  phone: userMetadata.phone || ''
+                }])
+                .select();
+              
+              if (insertError) {
+                console.error("Error creating company:", insertError);
+                toast({
+                  title: "Error setting up company",
+                  description: "Failed to set up your company profile",
+                  variant: "destructive",
+                });
+                setIsLoading(false);
+                return;
+              }
+              
+              if (newCompany && newCompany.length > 0) {
+                setCompanyData(newCompany[0]);
+                // No vehicles yet for a new company
+                setVehicles([]);
+              }
+            } catch (error) {
+              console.error("Unexpected error creating company:", error);
               toast({
                 title: "Error setting up company",
-                description: "Failed to set up your company profile",
+                description: "An unexpected error occurred while setting up your company",
                 variant: "destructive",
               });
-              setIsLoading(false);
-              return;
             }
-            
-            setCompanyData(newCompany);
-            // No vehicles yet for a new company
-            setVehicles([]);
           } else {
             toast({
               title: "Company profile missing",
@@ -83,8 +96,10 @@ export const useCompanyDashboard = () => {
           setCompanyData(company);
           
           try {
-            const vehiclesData = await getCompanyVehicles(company.id);
-            setVehicles(vehiclesData || []);
+            if (company.id) {
+              const vehiclesData = await getCompanyVehicles(company.id);
+              setVehicles(vehiclesData || []);
+            }
           } catch (vehicleError) {
             console.error("Error loading vehicles:", vehicleError);
             toast({

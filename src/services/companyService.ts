@@ -1,19 +1,19 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 // Get company profile by user ID
 export const getCompanyProfile = async (userId: string) => {
+  // Use select() without single() to avoid errors when multiple or no records are found
   const { data, error } = await supabase
     .from('rental_companies')
     .select('*')
-    .eq('user_id', userId)
-    .single();
+    .eq('user_id', userId);
 
   if (error) {
     throw new Error(error.message);
   }
 
-  return data;
+  // Return the first company record or null
+  return data && data.length > 0 ? data[0] : null;
 };
 
 // Update company profile
@@ -28,7 +28,7 @@ export const updateCompanyProfile = async (userId: string, companyData: any) => 
     throw new Error(error.message);
   }
 
-  return data;
+  return data && data.length > 0 ? data[0] : null;
 };
 
 // Get company vehicles

@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
@@ -37,6 +36,19 @@ const CompanyProfile = () => {
         setIsLoading(true);
         
         const profile = await getCompanyProfile(user.id);
+        
+        if (!profile) {
+          // Handle case where profile doesn't exist
+          toast({
+            title: "Company profile not found",
+            description: "Please complete your company profile information",
+            variant: "destructive",
+          });
+          setCompanyData(null);
+          setIsLoading(false);
+          return;
+        }
+        
         setCompanyData(profile);
         
         // Set form values
@@ -47,19 +59,19 @@ const CompanyProfile = () => {
         setValue('address', profile.address || '');
         setValue('description', profile.description || '');
       } catch (error) {
+        console.error("Error loading profile:", error);
         toast({
           title: "Error loading profile",
           description: "Failed to load your company profile",
           variant: "destructive",
         });
-        console.error(error);
       } finally {
         setIsLoading(false);
       }
     };
     
     loadCompanyProfile();
-  }, [user]);
+  }, [user, toast, setValue]);
 
   const onSubmit = async (data: any) => {
     if (!user) return;
@@ -74,12 +86,12 @@ const CompanyProfile = () => {
         description: "Your company profile has been updated successfully",
       });
     } catch (error) {
+      console.error("Error updating profile:", error);
       toast({
         title: "Error updating profile",
         description: "Failed to update your company profile",
         variant: "destructive",
       });
-      console.error(error);
     } finally {
       setIsSubmitting(false);
     }

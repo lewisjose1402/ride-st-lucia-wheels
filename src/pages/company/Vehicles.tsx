@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -49,24 +48,46 @@ const CompanyVehicles = () => {
         setIsLoading(true);
         
         const companyProfile = await getCompanyProfile(user.id);
+        
+        if (!companyProfile) {
+          toast({
+            title: "Company profile missing",
+            description: "Please complete your company profile first",
+            variant: "destructive",
+          });
+          setIsLoading(false);
+          return;
+        }
+        
         setCompanyData(companyProfile);
         
-        const vehiclesData = await getCompanyVehicles(companyProfile.id);
-        setVehicles(vehiclesData);
+        if (companyProfile.id) {
+          try {
+            const vehiclesData = await getCompanyVehicles(companyProfile.id);
+            setVehicles(vehiclesData || []);
+          } catch (vehicleError) {
+            console.error("Error loading vehicles:", vehicleError);
+            toast({
+              title: "Error loading vehicles",
+              description: "Failed to load your vehicles",
+              variant: "destructive",
+            });
+          }
+        }
       } catch (error) {
+        console.error("Error loading company data:", error);
         toast({
-          title: "Error loading vehicles",
-          description: "Failed to load your vehicles",
+          title: "Error loading data",
+          description: "Failed to load your company data",
           variant: "destructive",
         });
-        console.error(error);
       } finally {
         setIsLoading(false);
       }
     };
     
     loadVehicles();
-  }, [user]);
+  }, [user, toast]);
 
   const handleDeleteVehicle = async () => {
     if (!vehicleToDelete) return;
