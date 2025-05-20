@@ -17,6 +17,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 const CONSTITUENCIES = [
   'Gros Islet',
@@ -31,14 +41,27 @@ const CONSTITUENCIES = [
   'Dennery'
 ];
 
+// Create a schema for the form
+const FormSchema = z.object({
+  company_name: z.string().min(2, "Company name must be at least 2 characters"),
+  contact_person: z.string().optional(),
+  email: z.string().email("Please enter a valid email address"),
+  phone: z.string().min(7, "Please enter a valid phone number"),
+  street_address: z.string().min(5, "Please enter a valid street address"),
+  constituency: z.string().min(1, "Please select a constituency"),
+  description: z.string().optional(),
+});
+
 const CompanyProfile = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [companyData, setCompanyData] = useState<any>(null);
-
-  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm({
+  
+  // Initialize form with schema validation
+  const form = useForm<z.infer<typeof FormSchema>>({
+    resolver: zodResolver(FormSchema),
     defaultValues: {
       company_name: '',
       contact_person: '',
@@ -60,7 +83,6 @@ const CompanyProfile = () => {
         const profile = await getCompanyProfile(user.id);
         
         if (!profile) {
-          // Handle case where profile doesn't exist
           toast({
             title: "Company profile not found",
             description: "Please complete your company profile information",
@@ -78,25 +100,25 @@ const CompanyProfile = () => {
         let constituency = '';
         
         if (profile.address) {
-          // Try to extract street_address and constituency if they were stored in JSON format
           try {
             const addressObj = JSON.parse(profile.address);
             streetAddress = addressObj.street_address || '';
             constituency = addressObj.constituency || '';
           } catch (e) {
-            // If not JSON, use the full string as street_address
             streetAddress = profile.address;
           }
         }
         
         // Set form values
-        setValue('company_name', profile.company_name || '');
-        setValue('contact_person', profile.contact_person || '');
-        setValue('email', profile.email || '');
-        setValue('phone', profile.phone || '');
-        setValue('street_address', streetAddress);
-        setValue('constituency', constituency);
-        setValue('description', profile.description || '');
+        form.reset({
+          company_name: profile.company_name || '',
+          contact_person: profile.contact_person || '',
+          email: profile.email || '',
+          phone: profile.phone || '',
+          street_address: streetAddress,
+          constituency: constituency,
+          description: profile.description || '',
+        });
       } catch (error) {
         console.error("Error loading profile:", error);
         toast({
@@ -110,9 +132,9 @@ const CompanyProfile = () => {
     };
     
     loadCompanyProfile();
-  }, [user, toast, setValue]);
+  }, [user, toast, form]);
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: z.infer<typeof FormSchema>) => {
     if (!user) return;
     
     try {
@@ -131,6 +153,8 @@ const CompanyProfile = () => {
       delete formattedData.street_address;
       delete formattedData.constituency;
       
+      console.log("Saving company profile with data:", formattedData);
+      
       let result;
       
       if (companyData) {
@@ -141,6 +165,8 @@ const CompanyProfile = () => {
         result = await createCompanyProfile(user.id, formattedData);
         setCompanyData(result);
       }
+      
+      console.log("Save result:", result);
       
       toast({
         title: "Profile updated",
@@ -157,8 +183,6 @@ const CompanyProfile = () => {
       setIsSubmitting(false);
     }
   };
-
-  const constituency = watch('constituency');
 
   if (isLoading) {
     return (
@@ -177,139 +201,167 @@ const CompanyProfile = () => {
         <p className="text-gray-600">Update your company profile information</p>
       </div>
       
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label htmlFor="company_name" className="flex items-center">
-                <Building className="h-4 w-4 mr-2" />
-                Company Name
-              </Label>
-              <Input
-                id="company_name"
-                placeholder="Your company name"
-                {...register('company_name', { required: 'Company name is required' })}
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <FormField
+                control={form.control}
+                name="company_name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center">
+                      <Building className="h-4 w-4 mr-2" />
+                      Company Name
+                    </FormLabel>
+                    <FormControl>
+                      <Input placeholder="Your company name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-              {errors.company_name && (
-                <p className="text-sm text-red-500">{errors.company_name.message as string}</p>
-              )}
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="contact_person" className="flex items-center">
-                <User className="h-4 w-4 mr-2" />
-                Contact Person
-              </Label>
-              <Input
-                id="contact_person"
-                placeholder="Primary contact person"
-                {...register('contact_person')}
+              
+              <FormField
+                control={form.control}
+                name="contact_person"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center">
+                      <User className="h-4 w-4 mr-2" />
+                      Contact Person
+                    </FormLabel>
+                    <FormControl>
+                      <Input placeholder="Primary contact person" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="email" className="flex items-center">
-                <Mail className="h-4 w-4 mr-2" />
-                Email Address
-              </Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="company@example.com"
-                {...register('email', { required: 'Email is required' })}
+              
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center">
+                      <Mail className="h-4 w-4 mr-2" />
+                      Email Address
+                    </FormLabel>
+                    <FormControl>
+                      <Input type="email" placeholder="company@example.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-              {errors.email && (
-                <p className="text-sm text-red-500">{errors.email.message as string}</p>
-              )}
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="phone" className="flex items-center">
-                <Phone className="h-4 w-4 mr-2" />
-                Phone Number
-              </Label>
-              <Input
-                id="phone"
-                placeholder="+1 758 XXX XXXX"
-                {...register('phone', { required: 'Phone number is required' })}
+              
+              <FormField
+                control={form.control}
+                name="phone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center">
+                      <Phone className="h-4 w-4 mr-2" />
+                      Phone Number
+                    </FormLabel>
+                    <FormControl>
+                      <Input placeholder="+1 758 XXX XXXX" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-              {errors.phone && (
-                <p className="text-sm text-red-500">{errors.phone.message as string}</p>
-              )}
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="street_address" className="flex items-center">
-                <MapPin className="h-4 w-4 mr-2" />
-                Street Address
-              </Label>
-              <Input
-                id="street_address"
-                placeholder="Street address"
-                {...register('street_address', { required: 'Street address is required' })}
+              
+              <FormField
+                control={form.control}
+                name="street_address"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center">
+                      <MapPin className="h-4 w-4 mr-2" />
+                      Street Address
+                    </FormLabel>
+                    <FormControl>
+                      <Input placeholder="Street address" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-              {errors.street_address && (
-                <p className="text-sm text-red-500">{errors.street_address.message as string}</p>
-              )}
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="constituency" className="flex items-center">
-                <MapPin className="h-4 w-4 mr-2" />
-                Constituency
-              </Label>
-              <Select 
-                value={constituency} 
-                onValueChange={(value) => setValue('constituency', value)}
-              >
-                <SelectTrigger id="constituency">
-                  <SelectValue placeholder="Select constituency" />
-                </SelectTrigger>
-                <SelectContent>
-                  {CONSTITUENCIES.map((option) => (
-                    <SelectItem key={option} value={option}>
-                      {option}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {errors.constituency && (
-                <p className="text-sm text-red-500">{errors.constituency.message as string}</p>
-              )}
-            </div>
-            
-            <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="description">Company Description</Label>
-              <Textarea
-                id="description"
-                placeholder="Tell customers about your company..."
-                className="min-h-[150px]"
-                {...register('description')}
+              
+              <FormField
+                control={form.control}
+                name="constituency"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center">
+                      <MapPin className="h-4 w-4 mr-2" />
+                      Constituency
+                    </FormLabel>
+                    <Select 
+                      value={field.value} 
+                      onValueChange={field.onChange}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select constituency" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {CONSTITUENCIES.map((option) => (
+                          <SelectItem key={option} value={option}>
+                            {option}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem className="md:col-span-2">
+                    <FormLabel>Company Description</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Tell customers about your company..."
+                        className="min-h-[150px]"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
             </div>
           </div>
-        </div>
-        
-        <div className="flex gap-4">
-          <Button 
-            type="submit" 
-            className="bg-brand-purple hover:bg-brand-purple-dark" 
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? (
-              <>
-                <div className="mr-2 animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                Saving...
-              </>
-            ) : (
-              <>
-                <Save className="mr-2 h-4 w-4" />
-                Save Changes
-              </>
-            )}
-          </Button>
-        </div>
-      </form>
+          
+          <div className="flex gap-4">
+            <Button 
+              type="submit" 
+              className="bg-brand-purple hover:bg-brand-purple-dark" 
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <>
+                  <div className="mr-2 animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="mr-2 h-4 w-4" />
+                  Save Changes
+                </>
+              )}
+            </Button>
+          </div>
+        </form>
+      </Form>
     </CompanyLayout>
   );
 };
