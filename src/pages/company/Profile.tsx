@@ -7,7 +7,6 @@ import CompanyLayout from '@/components/company/CompanyLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
 import { getCompanyProfile, updateCompanyProfile, createCompanyProfile } from '@/services/companyService';
 import { Building, Phone, Mail, MapPin, User, Save } from 'lucide-react';
 import {
@@ -146,12 +145,13 @@ const CompanyProfile = () => {
         address: JSON.stringify({
           street_address: data.street_address,
           constituency: data.constituency
-        })
+        }),
+        user_id: user.id // Explicitly include user_id to satisfy RLS policy
       };
       
       // Remove the individual fields that we've combined
-      delete formattedData.street_address;
-      delete formattedData.constituency;
+      delete (formattedData as any).street_address;
+      delete (formattedData as any).constituency;
       
       console.log("Saving company profile with data:", formattedData);
       
@@ -176,7 +176,7 @@ const CompanyProfile = () => {
       console.error("Error updating profile:", error);
       toast({
         title: "Error updating profile",
-        description: "Failed to update your company profile",
+        description: "Failed to update your company profile. Please try again.",
         variant: "destructive",
       });
     } finally {

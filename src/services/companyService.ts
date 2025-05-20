@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 // Get company profile by user ID
@@ -10,6 +9,7 @@ export const getCompanyProfile = async (userId: string) => {
     .eq('user_id', userId);
 
   if (error) {
+    console.error("Error fetching company profile:", error);
     throw new Error(error.message);
   }
 
@@ -19,6 +19,8 @@ export const getCompanyProfile = async (userId: string) => {
 
 // Update company profile
 export const updateCompanyProfile = async (userId: string, companyData: any) => {
+  console.log("Updating company profile with data:", companyData);
+  
   const { data, error } = await supabase
     .from('rental_companies')
     .update(companyData)
@@ -26,6 +28,7 @@ export const updateCompanyProfile = async (userId: string, companyData: any) => 
     .select();
 
   if (error) {
+    console.error("Error updating company profile:", error);
     throw new Error(error.message);
   }
 
@@ -34,12 +37,15 @@ export const updateCompanyProfile = async (userId: string, companyData: any) => 
 
 // Create company profile if it doesn't exist
 export const createCompanyProfile = async (userId: string, companyData: any) => {
+  console.log("Creating company profile with data:", companyData);
+  
   const { data, error } = await supabase
     .from('rental_companies')
     .insert([{ ...companyData, user_id: userId }])
     .select();
 
   if (error) {
+    console.error("Error creating company profile:", error);
     throw new Error(error.message);
   }
 
