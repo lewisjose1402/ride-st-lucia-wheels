@@ -1,89 +1,81 @@
 
 import { supabase } from '@/integrations/supabase/client';
 
-export interface SearchParams {
-  pickupLocation?: string;
-  dropoffLocation?: string;
-  pickupDate?: string;
-  dropoffDate?: string;
-  priceRange?: number;
-  vehicleType?: string;
-  seats?: string;
-}
-
-export const fetchFeaturedVehicles = async () => {
+// Get company vehicles
+export const getCompanyVehicles = async (companyId: string) => {
   const { data, error } = await supabase
     .from('vehicles')
     .select(`
       *,
-      vehicle_images(image_url, is_primary),
-      vehicle_types:type_id(name)
+      vehicle_images(*)
     `)
-    .eq('is_featured', true)
-    .eq('is_available', true)
-    .limit(6);
+    .eq('company_id', companyId)
+    .order('created_at', { ascending: false });
 
   if (error) {
-    console.error('Error fetching featured vehicles:', error);
-    throw error;
+    throw new Error(error.message);
   }
 
   return data;
 };
 
-export const searchVehicles = async (params: SearchParams) => {
-  let query = supabase
-    .from('vehicles')
-    .select(`
-      *,
-      vehicle_images(image_url, is_primary),
-      vehicle_types:type_id(name)
-    `)
-    .eq('is_available', true);
-
-  // Filter by price
-  if (params.priceRange) {
-    query = query.lte('price_per_day', params.priceRange);
-  }
-
-  // Filter by vehicle type
-  if (params.vehicleType && params.vehicleType !== 'all') {
-    // Assuming we have a vehicle_types table with type names
-    query = query.eq('vehicle_types.name', params.vehicleType);
-  }
-
-  // Filter by number of seats
-  if (params.seats && params.seats !== 'all') {
-    query = query.eq('seats', parseInt(params.seats));
-  }
-
-  // Execute the query
-  const { data, error } = await query;
-
-  if (error) {
-    console.error('Error searching vehicles:', error);
-    throw error;
-  }
-
-  return data;
-};
-
-export const getVehicleById = async (id: string) => {
+// Get single vehicle
+export const getVehicle = async (id: string) => {
   const { data, error } = await supabase
     .from('vehicles')
     .select(`
       *,
-      vehicle_images(image_url, is_primary),
-      vehicle_types:type_id(name),
-      rental_companies(company_name, phone, email)
+      vehicle_images(*)
     `)
     .eq('id', id)
     .single();
 
   if (error) {
-    console.error('Error fetching vehicle details:', error);
-    throw error;
+    throw new Error(error.message);
   }
 
   return data;
+};
+
+// Create new vehicle
+export const createVehicle = async (vehicleData: any) => {
+  const { data, error } = await supabase
+    .from('vehicles')
+    .insert([vehicleData])
+    .select();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data[0];
+};
+
+// Update vehicle
+export const updateVehicle = async (id: string, vehicleData: any) => {
+  const { data, error } = await supabase
+    .from('vehicles')
+    .update(vehicleData)
+    .eq('id', id)
+    .select();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data[0];
+};
+
+// Delete vehicle
+export const deleteVehicle = async (id: string) => {
+  const { error } = await supabase
+    .from('vehicles')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return true;
 };
