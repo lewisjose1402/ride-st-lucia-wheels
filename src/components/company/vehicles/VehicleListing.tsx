@@ -12,7 +12,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { deleteVehicle } from '@/services/vehicleService';
-import { Car, Edit, Trash, MoreHorizontal, Check, X } from 'lucide-react';
+import { Car, Edit, Trash, MoreHorizontal, Check, X, Calendar } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -140,6 +140,12 @@ const VehicleListing: React.FC<VehicleListingProps> = ({ vehicles, setVehicles, 
                       <DropdownMenuItem>
                         <Edit className="mr-2 h-4 w-4" />
                         Edit
+                      </DropdownMenuItem>
+                    </Link>
+                    <Link to={`/company/vehicles/edit/${vehicle.id}?tab=calendar`}>
+                      <DropdownMenuItem>
+                        <Calendar className="mr-2 h-4 w-4" />
+                        Calendar
                       </DropdownMenuItem>
                     </Link>
                     <AlertDialog open={vehicleToDelete === vehicle.id} onOpenChange={(isOpen) => !isOpen && setVehicleToDelete(null)}>

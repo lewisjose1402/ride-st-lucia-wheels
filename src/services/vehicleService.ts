@@ -79,3 +79,38 @@ export const deleteVehicle = async (id: string) => {
 
   return true;
 };
+
+// Generate or refresh calendar feed token
+export const generateCalendarFeedToken = async (vehicleId: string) => {
+  const { data, error } = await supabase
+    .from('vehicles')
+    .update({ feed_token: supabase.sql`gen_random_uuid()` })
+    .eq('id', vehicleId)
+    .select('feed_token');
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data?.[0]?.feed_token;
+};
+
+// Get vehicle calendar feed URL
+export const getVehicleCalendarFeedUrl = async (vehicleId: string) => {
+  const { data, error } = await supabase
+    .from('vehicles')
+    .select('id, feed_token')
+    .eq('id', vehicleId)
+    .single();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  if (!data.feed_token) {
+    const token = await generateCalendarFeedToken(vehicleId);
+    return `${window.location.origin}/api/calendar/${vehicleId}/${token}`;
+  }
+
+  return `${window.location.origin}/api/calendar/${vehicleId}/${data.feed_token}`;
+};

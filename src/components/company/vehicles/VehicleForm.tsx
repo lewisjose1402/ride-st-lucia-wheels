@@ -1,10 +1,12 @@
 
 import React from 'react';
 import { FormProvider } from 'react-hook-form';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import VehicleImageUploader from './VehicleImageUploader';
 import BasicInformation from './BasicInformation';
 import VehicleDescription from './VehicleDescription';
 import VehicleFeatures from './VehicleFeatures';
+import VehicleCalendar from './VehicleCalendar';
 import VehicleFormActions from './VehicleFormActions';
 import { VehicleImage } from './VehicleFormTypes';
 
@@ -30,22 +32,42 @@ const VehicleForm: React.FC<VehicleFormProps> = ({
   return (
     <FormProvider {...methods}>
       <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-8">
-        {/* Vehicle Images */}
-        <VehicleImageUploader 
-          images={images} 
-          setImages={setImages} 
-          vehicleId={vehicleId} 
-          isEditMode={isEditMode} 
-        />
+        <Tabs defaultValue="details" className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="details">Vehicle Details</TabsTrigger>
+            <TabsTrigger value="photos">Photos</TabsTrigger>
+            {isEditMode && vehicleId && (
+              <TabsTrigger value="calendar">Calendar</TabsTrigger>
+            )}
+          </TabsList>
 
-        {/* Basic Information */}
-        <BasicInformation />
+          <TabsContent value="details" className="space-y-8 pt-4">
+            {/* Basic Information */}
+            <BasicInformation />
 
-        {/* Description */}
-        <VehicleDescription />
+            {/* Description */}
+            <VehicleDescription />
 
-        {/* Features */}
-        <VehicleFeatures />
+            {/* Features */}
+            <VehicleFeatures />
+          </TabsContent>
+
+          <TabsContent value="photos" className="pt-4">
+            {/* Vehicle Images */}
+            <VehicleImageUploader 
+              images={images} 
+              setImages={setImages} 
+              vehicleId={vehicleId} 
+              isEditMode={isEditMode} 
+            />
+          </TabsContent>
+
+          {isEditMode && vehicleId && (
+            <TabsContent value="calendar" className="pt-4">
+              <VehicleCalendar vehicleId={vehicleId} />
+            </TabsContent>
+          )}
+        </Tabs>
 
         {/* Submit Buttons */}
         <VehicleFormActions 

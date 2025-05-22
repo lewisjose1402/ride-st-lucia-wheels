@@ -213,6 +213,50 @@ export type Database = {
           },
         ]
       }
+      vehicle_calendar_feeds: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          feed_name: string
+          feed_url: string
+          id: string
+          is_external: boolean
+          last_synced_at: string | null
+          updated_at: string | null
+          vehicle_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          feed_name: string
+          feed_url: string
+          id?: string
+          is_external?: boolean
+          last_synced_at?: string | null
+          updated_at?: string | null
+          vehicle_id: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          feed_name?: string
+          feed_url?: string
+          id?: string
+          is_external?: boolean
+          last_synced_at?: string | null
+          updated_at?: string | null
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_calendar_feeds_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vehicle_images: {
         Row: {
           created_at: string | null
@@ -269,6 +313,7 @@ export type Database = {
           created_at: string | null
           description: string | null
           features: Json | null
+          feed_token: string | null
           id: string
           is_available: boolean | null
           is_featured: boolean | null
@@ -288,6 +333,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           features?: Json | null
+          feed_token?: string | null
           id?: string
           is_available?: boolean | null
           is_featured?: boolean | null
@@ -307,6 +353,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           features?: Json | null
+          feed_token?: string | null
           id?: string
           is_available?: boolean | null
           is_featured?: boolean | null

@@ -1,11 +1,15 @@
 
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import CompanyLayout from '@/components/company/CompanyLayout';
 import VehicleForm from '@/components/company/vehicles/VehicleForm';
 import { useVehicleForm } from '@/hooks/useVehicleForm';
 
 const AddEditVehicle = () => {
   const { id } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  const initialTab = tabParam || 'details';
+
   const {
     methods,
     isLoading,
