@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useToast } from '@/components/ui/use-toast';
-import { updateCompanyProfile, createCompanyProfile } from '@/services/companyService';
+import { updateCompanyProfile, createCompanyProfile } from '@/services/companyProfileService';
 import { Form } from "@/components/ui/form";
 import { CompanyProfileSchema, CompanyProfileFormValues } from './validation-schema';
 import { getStreetAddressFromCompanyData, getConstituencyFromCompanyData } from './helpers';
@@ -11,6 +11,7 @@ import CompanyInformation from './CompanyInformation';
 import ContactInformation from './ContactInformation';
 import AddressInformation from './AddressInformation';
 import CompanyDescription from './CompanyDescription';
+import CompanyLogoUploader from './CompanyLogoUploader';
 import SubmitButton from './SubmitButton';
 
 interface CompanyProfileFormProps {
@@ -26,6 +27,7 @@ const CompanyProfileForm: React.FC<CompanyProfileFormProps> = ({
 }) => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [logoUrl, setLogoUrl] = useState<string | null>(companyData?.logo_url || null);
   
   // Initialize form with schema validation
   const form = useForm<CompanyProfileFormValues>({
@@ -41,6 +43,10 @@ const CompanyProfileForm: React.FC<CompanyProfileFormProps> = ({
     }
   });
 
+  const handleLogoChange = (url: string) => {
+    setLogoUrl(url);
+  };
+
   const onSubmit = async (data: CompanyProfileFormValues) => {
     if (!userId) return;
     
@@ -50,6 +56,7 @@ const CompanyProfileForm: React.FC<CompanyProfileFormProps> = ({
       // Combine street_address and constituency into a JSON string
       const formattedData = {
         ...data,
+        logo_url: logoUrl,
         address: JSON.stringify({
           street_address: data.street_address,
           constituency: data.constituency
@@ -96,6 +103,13 @@ const CompanyProfileForm: React.FC<CompanyProfileFormProps> = ({
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <div className="bg-white rounded-lg shadow-sm p-6">
+          <div className="flex flex-col items-center mb-6">
+            <CompanyLogoUploader 
+              existingLogoUrl={logoUrl}
+              onLogoChange={handleLogoChange}
+              companyName={form.watch('company_name')}
+            />
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <CompanyInformation form={form} />
             <ContactInformation form={form} />

@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import CompanyLayout from '@/components/company/CompanyLayout';
-import { getCompanyProfile } from '@/services/companyService';
+import { getCompanyProfile } from '@/services/companyProfileService';
 import CompanyProfileHeader from '@/components/company/profile/CompanyProfileHeader';
 import CompanyProfileForm from '@/components/company/profile/CompanyProfileForm';
 

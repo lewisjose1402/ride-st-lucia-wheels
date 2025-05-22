@@ -4,6 +4,7 @@ import { Link, useLocation } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useAuth } from '@/context/AuthContext';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
   Car, 
   LayoutDashboard, 
@@ -29,14 +30,32 @@ const CompanyLayout = ({ children, title }: CompanyLayoutProps) => {
     { path: '/company/settings', icon: <Settings size={18} />, label: 'Settings' },
   ];
 
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(part => part[0])
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
       <div className="flex-grow flex mt-16">
         {/* Sidebar */}
         <aside className="w-64 bg-gray-50 border-r border-gray-200 hidden md:block">
-          <div className="p-6">
-            <h2 className="text-xl font-semibold text-brand-purple">{profile?.company_name || 'Company Dashboard'}</h2>
+          <div className="p-6 flex items-center">
+            <Avatar className="h-10 w-10 mr-3">
+              {profile?.logo_url ? (
+                <AvatarImage src={profile.logo_url} alt={`${profile.company_name} logo`} />
+              ) : (
+                <AvatarFallback className="bg-brand-purple text-white">
+                  {getInitials(profile?.company_name || 'Co')}
+                </AvatarFallback>
+              )}
+            </Avatar>
+            <h2 className="text-xl font-semibold text-brand-purple truncate">{profile?.company_name || 'Company Dashboard'}</h2>
           </div>
           <nav className="mt-2">
             {navItems.map((item) => (
