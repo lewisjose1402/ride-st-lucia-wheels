@@ -6,6 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import { getVehicle, createVehicle, updateVehicle } from '@/services/vehicleService';
 import { getCompanyProfile } from '@/services/companyProfileService';
+import { addVehicleImage } from '@/services/vehicleImageService';
 import { VehicleFormValues, VehicleImage } from '@/components/company/vehicles/VehicleFormTypes';
 
 export const useVehicleForm = (id?: string) => {
@@ -141,10 +142,22 @@ export const useVehicleForm = (id?: string) => {
       delete (vehicleData as any).street_address;
       delete (vehicleData as any).constituency;
       
+      let vehicleId;
+      
       if (isEditMode && id) {
         await updateVehicle(id, vehicleData);
+        vehicleId = id;
       } else {
-        await createVehicle(vehicleData);
+        // Create the vehicle first
+        const newVehicle = await createVehicle(vehicleData);
+        vehicleId = newVehicle.id;
+        
+        // Then add the images
+        if (images.length > 0) {
+          for (let i = 0; i < images.length; i++) {
+            await addVehicleImage(vehicleId, images[i].image_url, images[i].is_primary);
+          }
+        }
       }
       
       toast({

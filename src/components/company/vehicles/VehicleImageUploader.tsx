@@ -8,7 +8,7 @@ import {
   addVehicleImage, 
   deleteVehicleImage, 
   setPrimaryVehicleImage 
-} from '@/services/companyService';
+} from '@/services/vehicleImageService';
 import { VehicleImage } from './VehicleFormTypes';
 
 interface VehicleImageUploaderProps {
