@@ -108,14 +108,14 @@ export const useCompanyDashboard = () => {
               
               // Fetch all bookings for this company's vehicles
               if (vehiclesData && vehiclesData.length > 0) {
-                // Make sure all vehicle IDs are strings
-                const vehicleIds = vehiclesData.map(vehicle => String(vehicle.id));
+                // Convert all vehicle IDs to strings and explicitly provide the type
+                const vehicleIds: string[] = vehiclesData.map(vehicle => String(vehicle.id));
                 
-                // Get all bookings for these vehicles - explicitly type the array as string[]
+                // Get all bookings for these vehicles using the typed string array
                 const { data: bookingsData, error: bookingsError } = await supabase
                   .from('bookings')
                   .select('*')
-                  .in('vehicle_id', vehicleIds as string[]);
+                  .in('vehicle_id', vehicleIds);
                 
                 if (bookingsError) {
                   console.error("Error fetching bookings:", bookingsError);
