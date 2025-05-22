@@ -18,6 +18,7 @@ import CompanyVehicles from "./pages/company/Vehicles";
 import AddEditVehicle from "./pages/company/AddEditVehicle";
 import CompanyProfile from "./pages/company/Profile";
 import CompanyBookings from "./pages/company/Bookings";
+import Settings from "./pages/company/Settings";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
@@ -67,6 +68,11 @@ const App = () => (
             <Route path="/company/bookings" element={
               <ProtectedRoute requiredRole="rental_company">
                 <CompanyBookings />
+              </ProtectedRoute>
+            } />
+            <Route path="/company/settings" element={
+              <ProtectedRoute requiredRole="rental_company">
+                <Settings />
               </ProtectedRoute>
             } />
             
