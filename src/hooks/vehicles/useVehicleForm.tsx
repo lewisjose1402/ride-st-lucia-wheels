@@ -1,6 +1,5 @@
 
 import { useForm } from 'react-hook-form';
-import { useState } from 'react';
 import { useVehicleData } from './useVehicleData';
 import { useVehicleFormSubmit } from './useVehicleFormSubmit';
 import { useFormInitialization } from './useFormInitialization';
@@ -20,11 +19,9 @@ export const useVehicleForm = (id?: string) => {
       features: {
         air_conditioning: false,
         bluetooth: false,
-        gps_navigation: false,
-        usb_port: false,
-        roof_rack: false,
-        child_seat: false,
-        backup_camera: false
+        gps: false,
+        usb: false,
+        child_seat: false
       }
     }
   });
