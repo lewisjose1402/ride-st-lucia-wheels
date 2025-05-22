@@ -67,6 +67,9 @@ export const useVehicleFormSubmit = ({ isEditMode, companyData, images, id }: Us
       delete (vehicleData as any).street_address;
       delete (vehicleData as any).constituency;
       
+      // Remove vehicle_type from the data object as it's not a column in the database
+      delete (vehicleData as any).vehicle_type;
+      
       console.log("Final vehicle data to submit:", vehicleData);
       
       let vehicleId;
