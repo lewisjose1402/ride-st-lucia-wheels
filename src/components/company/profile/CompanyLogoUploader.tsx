@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Image, Upload } from 'lucide-react';
+import { Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
@@ -63,6 +63,8 @@ const CompanyLogoUploader: React.FC<CompanyLogoUploaderProps> = ({
         .getPublicUrl(filePath);
       
       const newLogoUrl = urlData.publicUrl;
+      
+      console.log("Logo uploaded successfully, URL:", newLogoUrl);
       
       // Update both local state and parent component
       setLogoUrl(newLogoUrl);

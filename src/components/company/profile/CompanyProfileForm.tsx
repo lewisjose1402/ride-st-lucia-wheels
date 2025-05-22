@@ -44,6 +44,7 @@ const CompanyProfileForm: React.FC<CompanyProfileFormProps> = ({
   });
 
   const handleLogoChange = (url: string) => {
+    console.log("Logo URL changed:", url);
     setLogoUrl(url);
   };
 
