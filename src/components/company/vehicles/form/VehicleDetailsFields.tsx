@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { VehicleFormValues } from "../VehicleFormTypes";
+import VehicleTypeField from "./VehicleTypeField";
 
 const VehicleDetailsFields = () => {
   const { register, setValue, watch, formState: { errors } } = useFormContext<VehicleFormValues>();
@@ -42,6 +43,9 @@ const VehicleDetailsFields = () => {
           <p className="text-sm text-red-500">{errors.price_per_day.message}</p>
         )}
       </div>
+      
+      {/* Vehicle Type field */}
+      <VehicleTypeField />
       
       <div className="space-y-2">
         <Label htmlFor="seats">Number of Seats</Label>

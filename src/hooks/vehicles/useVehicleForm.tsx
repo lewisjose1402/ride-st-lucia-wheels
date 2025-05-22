@@ -15,6 +15,7 @@ export const useVehicleForm = (id?: string) => {
       description: '',
       seats: '',
       transmission: '',
+      vehicle_type: '',
       is_available: true,
       features: {
         air_conditioning: false,
