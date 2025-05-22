@@ -80,6 +80,62 @@ export type Database = {
           },
         ]
       }
+      company_settings: {
+        Row: {
+          accept_bookings: boolean
+          company_id: string
+          created_at: string | null
+          id: string
+          minimum_driver_age: number
+          minimum_driving_experience: number
+          notification_booking_cancellation: boolean
+          notification_booking_fee_collected: boolean
+          notification_new_booking: boolean
+          require_driver_license: boolean
+          require_driving_experience: boolean
+          require_minimum_age: boolean
+          updated_at: string | null
+        }
+        Insert: {
+          accept_bookings?: boolean
+          company_id: string
+          created_at?: string | null
+          id?: string
+          minimum_driver_age?: number
+          minimum_driving_experience?: number
+          notification_booking_cancellation?: boolean
+          notification_booking_fee_collected?: boolean
+          notification_new_booking?: boolean
+          require_driver_license?: boolean
+          require_driving_experience?: boolean
+          require_minimum_age?: boolean
+          updated_at?: string | null
+        }
+        Update: {
+          accept_bookings?: boolean
+          company_id?: string
+          created_at?: string | null
+          id?: string
+          minimum_driver_age?: number
+          minimum_driving_experience?: number
+          notification_booking_cancellation?: boolean
+          notification_booking_fee_collected?: boolean
+          notification_new_booking?: boolean
+          require_driver_license?: boolean
+          require_driving_experience?: boolean
+          require_minimum_age?: boolean
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_settings_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "rental_companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string | null

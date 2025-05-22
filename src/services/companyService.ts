@@ -3,3 +3,4 @@
 export * from './companyProfileService';
 export * from './vehicleService';
 export * from './vehicleImageService';
+export * from './companySettingsService';
