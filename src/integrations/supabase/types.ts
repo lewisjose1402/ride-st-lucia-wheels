@@ -318,7 +318,7 @@ export type Database = {
           is_available: boolean | null
           is_featured: boolean | null
           latitude: number | null
-          location: string
+          location: Json
           longitude: number | null
           name: string
           price_per_day: number
@@ -338,7 +338,7 @@ export type Database = {
           is_available?: boolean | null
           is_featured?: boolean | null
           latitude?: number | null
-          location: string
+          location: Json
           longitude?: number | null
           name: string
           price_per_day: number
@@ -358,7 +358,7 @@ export type Database = {
           is_available?: boolean | null
           is_featured?: boolean | null
           latitude?: number | null
-          location?: string
+          location?: Json
           longitude?: number | null
           name?: string
           price_per_day?: number

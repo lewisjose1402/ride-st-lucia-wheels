@@ -2,7 +2,8 @@
 export interface VehicleFormValues {
   name: string;
   price_per_day: string;
-  location: string;
+  street_address: string;
+  constituency: string;
   description: string;
   seats: string;
   transmission: string;

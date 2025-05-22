@@ -20,11 +20,39 @@ export const useVehicleForm = (id?: string) => {
   
   const isEditMode = !!id;
 
+  function getAddressFromLocationData(location: any): { street_address: string, constituency: string } {
+    if (!location) return { street_address: '', constituency: '' };
+    
+    try {
+      // If location is already a JSON object
+      if (typeof location === 'object') {
+        return {
+          street_address: location.street_address || '',
+          constituency: location.constituency || ''
+        };
+      }
+      
+      // If location is a JSON string
+      const parsedLocation = JSON.parse(location);
+      return {
+        street_address: parsedLocation.street_address || '',
+        constituency: parsedLocation.constituency || ''
+      };
+    } catch (e) {
+      // If location is just a string or invalid JSON
+      return {
+        street_address: String(location),
+        constituency: ''
+      };
+    }
+  }
+
   const methods = useForm<VehicleFormValues>({
     defaultValues: {
       name: '',
       price_per_day: '',
-      location: '',
+      street_address: '',
+      constituency: '',
       description: '',
       seats: '',
       transmission: 'automatic',
@@ -54,10 +82,14 @@ export const useVehicleForm = (id?: string) => {
           setVehicle(vehicleData);
           setImages(vehicleData.vehicle_images || []);
           
+          // Get address data
+          const { street_address, constituency } = getAddressFromLocationData(vehicleData.location);
+          
           // Set form values
           methods.setValue('name', vehicleData.name);
           methods.setValue('price_per_day', vehicleData.price_per_day.toString());
-          methods.setValue('location', vehicleData.location);
+          methods.setValue('street_address', street_address);
+          methods.setValue('constituency', constituency);
           methods.setValue('description', vehicleData.description || '');
           methods.setValue('seats', vehicleData.seats.toString());
           methods.setValue('transmission', vehicleData.transmission);
@@ -92,13 +124,22 @@ export const useVehicleForm = (id?: string) => {
     try {
       setIsSubmitting(true);
       
+      // Format location as JSON structure
       const vehicleData = {
         ...data,
         company_id: companyData.id,
         price_per_day: parseFloat(data.price_per_day),
         seats: parseInt(data.seats),
-        features: data.features
+        features: data.features,
+        location: {
+          street_address: data.street_address,
+          constituency: data.constituency
+        }
       };
+      
+      // Remove the individual address fields since they're now in the location object
+      delete (vehicleData as any).street_address;
+      delete (vehicleData as any).constituency;
       
       if (isEditMode && id) {
         await updateVehicle(id, vehicleData);
