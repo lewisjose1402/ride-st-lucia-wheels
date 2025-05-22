@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -56,7 +55,24 @@ export const useVehicleData = (id?: string) => {
           console.log("Retrieved vehicle data:", vehicleData);
           
           if (vehicleData) {
+            // Ensure location is properly formatted
+            if (vehicleData.location && typeof vehicleData.location === 'object') {
+              // Keep the location object as is, it will be handled by the formatLocation function
+            } else if (vehicleData.location) {
+              // Try to parse if it's a string
+              try {
+                vehicleData.location = JSON.parse(vehicleData.location);
+              } catch (e) {
+                // If parsing fails, create a default object
+                vehicleData.location = { 
+                  street_address: String(vehicleData.location),
+                  constituency: ''
+                };
+              }
+            }
+            
             setVehicle(vehicleData);
+            
             // Make sure we're loading images correctly
             if (vehicleData.vehicle_images && vehicleData.vehicle_images.length > 0) {
               console.log(`Found ${vehicleData.vehicle_images.length} images for vehicle:`, vehicleData.vehicle_images);

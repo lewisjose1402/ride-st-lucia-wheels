@@ -81,7 +81,7 @@ const VehicleListing: React.FC<VehicleListingProps> = ({ vehicles, setVehicles, 
     return vehicle.vehicle_images[0].image_url;
   };
 
-  // Function to format location from object or string
+  // Function to format location from object or string - Fixed to always return a string
   const formatLocation = (location: any) => {
     if (!location) return "N/A";
     
