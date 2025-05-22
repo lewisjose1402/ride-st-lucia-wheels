@@ -1,9 +1,9 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
-import { getVehicle, getCompanyProfile } from '@/services/vehicleService';
+import { getVehicle } from '@/services/vehicleService';
+import { getCompanyProfile } from '@/services/companyProfileService';
 import { VehicleImage } from '@/components/company/vehicles/VehicleFormTypes';
 
 export const useVehicleData = (id?: string) => {

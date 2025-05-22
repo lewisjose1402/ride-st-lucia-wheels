@@ -2,7 +2,7 @@
 import { useParams, useSearchParams } from 'react-router-dom';
 import CompanyLayout from '@/components/company/CompanyLayout';
 import VehicleForm from '@/components/company/vehicles/VehicleForm';
-import { useVehicleForm } from '@/hooks/useVehicleForm';
+import { useVehicleForm } from '@/hooks/vehicles/useVehicleForm';
 
 const AddEditVehicle = () => {
   const { id } = useParams<{ id: string }>();

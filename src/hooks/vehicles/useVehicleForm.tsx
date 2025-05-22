@@ -1,0 +1,65 @@
+
+import { useForm } from 'react-hook-form';
+import { useState } from 'react';
+import { useVehicleData } from './useVehicleData';
+import { useVehicleFormSubmit } from './useVehicleFormSubmit';
+import { useFormInitialization } from './useFormInitialization';
+import { VehicleFormValues, VehicleImage } from '@/components/company/vehicles/VehicleFormTypes';
+
+export const useVehicleForm = (id?: string) => {
+  const methods = useForm<VehicleFormValues>({
+    defaultValues: {
+      name: '',
+      price_per_day: '',
+      street_address: '',
+      constituency: '',
+      description: '',
+      seats: '',
+      transmission: '',
+      is_available: true,
+      features: {
+        air_conditioning: false,
+        bluetooth: false,
+        gps_navigation: false,
+        usb_port: false,
+        roof_rack: false,
+        child_seat: false,
+        backup_camera: false
+      }
+    }
+  });
+
+  const {
+    isLoading,
+    companyData,
+    vehicle,
+    images,
+    setImages,
+    isEditMode
+  } = useVehicleData(id);
+
+  // Initialize form with vehicle data when in edit mode
+  useFormInitialization({
+    setValue: methods.setValue,
+    isEditMode,
+    vehicle
+  });
+
+  // Handle form submission
+  const { isSubmitting, onSubmit } = useVehicleFormSubmit({
+    isEditMode,
+    companyData,
+    images,
+    id
+  });
+
+  return {
+    methods,
+    isLoading,
+    isSubmitting,
+    images,
+    setImages,
+    onSubmit,
+    isEditMode
+  };
+};
