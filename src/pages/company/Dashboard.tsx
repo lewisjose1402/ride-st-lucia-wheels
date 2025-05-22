@@ -10,7 +10,7 @@ import MissingProfileState from '@/components/company/dashboard/MissingProfileSt
 import { useCompanyDashboard } from '@/hooks/useCompanyDashboard';
 
 const CompanyDashboard = () => {
-  const { isLoading, companyData, vehicles } = useCompanyDashboard();
+  const { isLoading, companyData, vehicles, bookingStats } = useCompanyDashboard();
 
   if (isLoading) {
     return (
@@ -32,7 +32,11 @@ const CompanyDashboard = () => {
   return (
     <CompanyLayout title="Dashboard">
       <DashboardWelcome companyName={companyData?.company_name} />
-      <StatsCards vehicleCount={vehicles.length} />
+      <StatsCards 
+        vehicleCount={vehicles.length} 
+        activeBookings={bookingStats.activeBookings} 
+        totalRevenue={bookingStats.totalRevenue}
+      />
       <QuickActions />
       <RecentVehicles vehicles={vehicles} />
     </CompanyLayout>

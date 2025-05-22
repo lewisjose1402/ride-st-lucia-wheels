@@ -11,6 +11,11 @@ export const useCompanyDashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [companyData, setCompanyData] = useState<any>(null);
   const [vehicles, setVehicles] = useState<any[]>([]);
+  const [bookings, setBookings] = useState<any[]>([]);
+  const [bookingStats, setBookingStats] = useState({
+    activeBookings: 0,
+    totalRevenue: 0
+  });
 
   useEffect(() => {
     const loadDashboardData = async () => {
@@ -97,8 +102,50 @@ export const useCompanyDashboard = () => {
           
           try {
             if (company.id) {
+              // Fetch vehicles
               const vehiclesData = await getCompanyVehicles(company.id);
               setVehicles(vehiclesData || []);
+              
+              // Fetch all bookings for this company's vehicles
+              if (vehiclesData && vehiclesData.length > 0) {
+                const vehicleIds = vehiclesData.map(vehicle => vehicle.id);
+                
+                // Get all bookings for these vehicles
+                const { data: bookingsData, error: bookingsError } = await supabase
+                  .from('bookings')
+                  .select('*')
+                  .in('vehicle_id', vehicleIds);
+                
+                if (bookingsError) {
+                  console.error("Error fetching bookings:", bookingsError);
+                } else {
+                  setBookings(bookingsData || []);
+                  
+                  // Calculate stats
+                  const currentDate = new Date();
+                  
+                  // Count active bookings (not completed/cancelled and current date is between pickup and dropoff)
+                  const active = bookingsData?.filter(booking => 
+                    booking.status !== 'completed' && 
+                    booking.status !== 'cancelled' &&
+                    new Date(booking.pickup_date) <= currentDate &&
+                    new Date(booking.dropoff_date) >= currentDate
+                  ).length || 0;
+                  
+                  // Calculate total revenue from completed bookings
+                  const revenue = bookingsData?.reduce((total, booking) => {
+                    if (booking.status === 'completed') {
+                      return total + (parseFloat(booking.total_price) || 0);
+                    }
+                    return total;
+                  }, 0) || 0;
+                  
+                  setBookingStats({
+                    activeBookings: active,
+                    totalRevenue: revenue
+                  });
+                }
+              }
             }
           } catch (vehicleError) {
             console.error("Error loading vehicles:", vehicleError);
@@ -127,6 +174,8 @@ export const useCompanyDashboard = () => {
   return {
     isLoading,
     companyData,
-    vehicles
+    vehicles,
+    bookings,
+    bookingStats
   };
 };
