@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { FormProvider } from 'react-hook-form';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import VehicleImageUploader from './VehicleImageUploader';
+import VehicleImageUploader from './image-uploader/VehicleImageUploader';
 import BasicInformation from './BasicInformation';
 import VehicleDescription from './VehicleDescription';
 import VehicleFeatures from './VehicleFeatures';
