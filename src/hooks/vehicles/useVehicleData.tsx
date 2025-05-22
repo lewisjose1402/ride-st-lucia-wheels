@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -54,8 +55,17 @@ export const useVehicleData = (id?: string) => {
           const vehicleData = await getVehicle(id);
           console.log("Retrieved vehicle data:", vehicleData);
           
-          setVehicle(vehicleData);
-          setImages(vehicleData.vehicle_images || []);
+          if (vehicleData) {
+            setVehicle(vehicleData);
+            // Make sure we're loading images correctly
+            if (vehicleData.vehicle_images && vehicleData.vehicle_images.length > 0) {
+              console.log(`Found ${vehicleData.vehicle_images.length} images for vehicle:`, vehicleData.vehicle_images);
+              setImages(vehicleData.vehicle_images);
+            } else {
+              console.log("No images found for vehicle");
+              setImages([]);
+            }
+          }
         }
       } catch (error) {
         console.error("Error in initialization:", error);
