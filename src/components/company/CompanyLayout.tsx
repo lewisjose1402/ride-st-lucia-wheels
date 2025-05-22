@@ -45,17 +45,19 @@ const CompanyLayout = ({ children, title }: CompanyLayoutProps) => {
       <div className="flex-grow flex mt-16">
         {/* Sidebar */}
         <aside className="w-64 bg-gray-50 border-r border-gray-200 hidden md:block">
-          <div className="p-6 flex items-center">
-            <Avatar className="h-10 w-10 mr-3">
+          <div className="p-6 flex flex-col items-center space-y-3">
+            <Avatar className="h-16 w-16">
               {profile?.logo_url ? (
                 <AvatarImage src={profile.logo_url} alt={`${profile.company_name} logo`} />
               ) : (
-                <AvatarFallback className="bg-brand-purple text-white">
+                <AvatarFallback className="bg-brand-purple text-white text-xl">
                   {getInitials(profile?.company_name || 'Co')}
                 </AvatarFallback>
               )}
             </Avatar>
-            <h2 className="text-xl font-semibold text-brand-purple truncate">{profile?.company_name || 'Company Dashboard'}</h2>
+            <h2 className="text-lg font-semibold text-brand-purple text-center truncate w-full">
+              {profile?.company_name || 'Company Dashboard'}
+            </h2>
           </div>
           <nav className="mt-2">
             {navItems.map((item) => (
