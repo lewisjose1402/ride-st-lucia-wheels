@@ -39,6 +39,10 @@ const CompanyLayout = ({ children, title }: CompanyLayoutProps) => {
       .substring(0, 2);
   };
 
+  // Debug logging for profile data
+  console.log("Company Layout - Profile Data:", profile);
+  console.log("Company Logo URL:", profile?.logo_url);
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -48,7 +52,11 @@ const CompanyLayout = ({ children, title }: CompanyLayoutProps) => {
           <div className="p-6 flex flex-col items-center space-y-3">
             <Avatar className="h-16 w-16">
               {profile?.logo_url ? (
-                <AvatarImage src={profile.logo_url} alt={`${profile.company_name} logo`} />
+                <AvatarImage 
+                  src={profile.logo_url} 
+                  alt={`${profile.company_name} logo`} 
+                  onError={(e) => console.error("Error loading logo image:", e)}
+                />
               ) : (
                 <AvatarFallback className="bg-brand-purple text-white text-xl">
                   {getInitials(profile?.company_name || 'Co')}

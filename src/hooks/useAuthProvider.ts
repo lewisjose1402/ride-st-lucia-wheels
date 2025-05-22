@@ -60,20 +60,38 @@ export function useAuthProvider() {
         setIsRentalCompany(true);
       }
       
-      // Also check profile table as fallback
-      const { data, error } = await supabase
-        .from('profiles')
+      // Also check company profile directly from rental_companies table
+      const { data: companyData, error: companyError } = await supabase
+        .from('rental_companies')
         .select('*')
-        .eq('id', userId)
+        .eq('user_id', userId)
         .single();
+        
+      if (companyError) {
+        console.error('Error fetching company profile:', companyError);
+      } else if (companyData) {
+        console.log("Company profile data loaded:", companyData);
+        setProfile(companyData);
+        setIsRentalCompany(true);
+        
+        // Debug log to verify logo URL is being loaded correctly
+        console.log("Company logo URL from fetch:", companyData.logo_url);
+      } else {
+        // Fallback to checking profiles table
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .single();
 
-      if (error) {
-        console.error('Error fetching profile:', error);
-      } else if (data) {
-        console.log("Profile data:", data);
-        setProfile(data);
-        setIsAdmin(data.role === 'admin');
-        setIsRentalCompany(data.role === 'rental_company' || isRentalCompany);
+        if (profileError) {
+          console.error('Error fetching user profile:', profileError);
+        } else if (profileData) {
+          console.log("Profile data:", profileData);
+          setProfile(profileData);
+          setIsAdmin(profileData.role === 'admin');
+          setIsRentalCompany(profileData.role === 'rental_company' || isRentalCompany);
+        }
       }
     } catch (error) {
       console.error('Unexpected error fetching profile:', error);
