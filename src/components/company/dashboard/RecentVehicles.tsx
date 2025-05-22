@@ -3,12 +3,13 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Car, Plus } from 'lucide-react';
+import { getAddressFromLocationData } from '@/utils/locationHelpers';
 
 type VehicleType = {
   id: string;
   name: string;
   price_per_day: number;
-  location: string;
+  location: any;
   is_available: boolean;
   transmission: string;
   seats: number;
@@ -20,6 +21,18 @@ type RecentVehiclesProps = {
 };
 
 const RecentVehicles = ({ vehicles }: RecentVehiclesProps) => {
+  // Format location for display
+  const formatLocation = (location: any): string => {
+    if (!location) return "N/A";
+    
+    const { street_address, constituency } = getAddressFromLocationData(location);
+    const parts = [];
+    if (street_address) parts.push(street_address);
+    if (constituency) parts.push(constituency);
+    
+    return parts.join(', ') || "N/A";
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-sm p-6">
       <div className="flex justify-between items-center mb-4">
@@ -94,7 +107,7 @@ const RecentVehicles = ({ vehicles }: RecentVehiclesProps) => {
                     <div className="text-sm text-gray-900">${vehicle.price_per_day}/day</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{vehicle.location}</div>
+                    <div className="text-sm text-gray-900">{formatLocation(vehicle.location)}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${vehicle.is_available ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>

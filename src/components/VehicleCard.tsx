@@ -3,6 +3,7 @@ import { Star } from 'lucide-react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Link } from 'react-router-dom';
+import { getAddressFromLocationData } from '@/utils/locationHelpers';
 
 interface VehicleCardProps {
   id: number;
@@ -13,7 +14,7 @@ interface VehicleCardProps {
   transmission: string;
   price: number;
   rating: number;
-  location: string;
+  location: any;
   featured?: boolean;
 }
 
@@ -29,6 +30,18 @@ const VehicleCard = ({
   location,
   featured = false
 }: VehicleCardProps) => {
+  // Format location for display
+  const formatLocationDisplay = (loc: any): string => {
+    if (typeof loc === 'string') return loc;
+    
+    const { street_address, constituency } = getAddressFromLocationData(loc);
+    const parts = [];
+    if (street_address) parts.push(street_address);
+    if (constituency) parts.push(constituency);
+    
+    return parts.join(', ') || "N/A";
+  };
+
   return (
     <div className={`bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow ${featured ? 'border-2 border-brand-orange' : ''}`}>
       {featured && (
@@ -54,7 +67,7 @@ const VehicleCard = ({
           </div>
         </div>
         
-        <p className="text-sm text-gray-600 mb-3">{location}</p>
+        <p className="text-sm text-gray-600 mb-3">{formatLocationDisplay(location)}</p>
         
         {/* Vehicle details */}
         <div className="flex flex-wrap gap-2 mb-4">

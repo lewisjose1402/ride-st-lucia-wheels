@@ -17,6 +17,7 @@ import { Edit, Trash2, Image as ImageIcon } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { deleteVehicle } from '@/services/vehicleService';
 import VehicleEmptyState from './VehicleEmptyState';
+import { getAddressFromLocationData } from '@/utils/locationHelpers';
 
 interface VehicleListingProps {
   vehicles: any[];
@@ -85,16 +86,11 @@ const VehicleListing: React.FC<VehicleListingProps> = ({ vehicles, setVehicles, 
   const formatLocation = (location: any) => {
     if (!location) return "N/A";
     
-    // If location is an object with constituency and street_address
-    if (typeof location === 'object' && location !== null) {
-      const parts = [];
-      if (location.street_address) parts.push(location.street_address);
-      if (location.constituency) parts.push(location.constituency);
-      return parts.join(', ') || "N/A";
-    }
-    
-    // If it's a string or anything else, convert to string
-    return String(location);
+    const { street_address, constituency } = getAddressFromLocationData(location);
+    const parts = [];
+    if (street_address) parts.push(street_address);
+    if (constituency) parts.push(constituency);
+    return parts.join(', ') || "N/A";
   };
   
   if (isLoading) {
