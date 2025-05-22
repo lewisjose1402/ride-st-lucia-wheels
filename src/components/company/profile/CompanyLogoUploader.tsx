@@ -1,9 +1,10 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Image, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/components/ui/use-toast';
 
 interface CompanyLogoUploaderProps {
   existingLogoUrl: string | null;
@@ -16,8 +17,14 @@ const CompanyLogoUploader: React.FC<CompanyLogoUploaderProps> = ({
   onLogoChange,
   companyName
 }) => {
+  const { toast } = useToast();
   const [isUploading, setIsUploading] = useState(false);
   const [logoUrl, setLogoUrl] = useState<string | null>(existingLogoUrl);
+
+  // Update local state when prop changes
+  useEffect(() => {
+    setLogoUrl(existingLogoUrl);
+  }, [existingLogoUrl]);
 
   const getInitials = (name: string) => {
     return name
@@ -56,10 +63,22 @@ const CompanyLogoUploader: React.FC<CompanyLogoUploaderProps> = ({
         .getPublicUrl(filePath);
       
       const newLogoUrl = urlData.publicUrl;
+      
+      // Update both local state and parent component
       setLogoUrl(newLogoUrl);
       onLogoChange(newLogoUrl);
+      
+      toast({
+        title: "Logo uploaded",
+        description: "Your company logo has been successfully uploaded",
+      });
     } catch (error) {
       console.error('Error uploading logo:', error);
+      toast({
+        title: "Upload failed",
+        description: "There was a problem uploading your logo. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsUploading(false);
     }

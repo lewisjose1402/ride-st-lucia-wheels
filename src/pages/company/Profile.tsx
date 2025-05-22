@@ -32,6 +32,7 @@ const CompanyProfile = () => {
           return;
         }
         
+        console.log("Loaded company profile:", profile);
         setCompanyData(profile);
       } catch (error) {
         console.error("Error loading profile:", error);
