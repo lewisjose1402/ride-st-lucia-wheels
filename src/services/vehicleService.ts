@@ -13,6 +13,7 @@ export const getCompanyVehicles = async (companyId: string) => {
     .order('created_at', { ascending: false });
 
   if (error) {
+    console.error("Error fetching vehicles:", error);
     throw new Error(error.message);
   }
 
@@ -31,6 +32,7 @@ export const getVehicle = async (id: string) => {
     .single();
 
   if (error) {
+    console.error("Error fetching vehicle:", error);
     throw new Error(error.message);
   }
 
@@ -39,15 +41,23 @@ export const getVehicle = async (id: string) => {
 
 // Create new vehicle
 export const createVehicle = async (vehicleData: any) => {
+  console.log("Creating vehicle with data:", vehicleData);
+  
   const { data, error } = await supabase
     .from('vehicles')
     .insert([vehicleData])
     .select();
 
   if (error) {
+    console.error("Error creating vehicle:", error);
     throw new Error(error.message);
   }
 
+  if (!data || data.length === 0) {
+    throw new Error("No data returned from vehicle creation");
+  }
+
+  console.log("Vehicle created:", data[0]);
   return data[0];
 };
 
@@ -60,6 +70,7 @@ export const updateVehicle = async (id: string, vehicleData: any) => {
     .select();
 
   if (error) {
+    console.error("Error updating vehicle:", error);
     throw new Error(error.message);
   }
 
@@ -74,6 +85,7 @@ export const deleteVehicle = async (id: string) => {
     .eq('id', id);
 
   if (error) {
+    console.error("Error deleting vehicle:", error);
     throw new Error(error.message);
   }
 

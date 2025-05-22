@@ -70,16 +70,41 @@ export const useVehicleForm = (id?: string) => {
 
   useEffect(() => {
     const initializeForm = async () => {
-      if (!user) return;
+      if (!user) {
+        console.log("No authenticated user found");
+        toast({
+          title: "Authentication required",
+          description: "You need to be signed in to access this page",
+          variant: "destructive",
+        });
+        navigate('/signin');
+        return;
+      }
       
       try {
         setIsLoading(true);
+        console.log("Initializing vehicle form for user:", user.id);
         
         const companyProfile = await getCompanyProfile(user.id);
+        console.log("Retrieved company profile:", companyProfile);
+        
+        if (!companyProfile) {
+          toast({
+            title: "Company profile not found",
+            description: "Please complete your company profile first",
+            variant: "destructive",
+          });
+          navigate('/company/profile');
+          return;
+        }
+        
         setCompanyData(companyProfile);
         
         if (isEditMode && id) {
+          console.log("Edit mode enabled, fetching vehicle:", id);
           const vehicleData = await getVehicle(id);
+          console.log("Retrieved vehicle data:", vehicleData);
+          
           setVehicle(vehicleData);
           setImages(vehicleData.vehicle_images || []);
           
@@ -105,56 +130,77 @@ export const useVehicleForm = (id?: string) => {
           }
         }
       } catch (error) {
+        console.error("Error in initialization:", error);
         toast({
           title: isEditMode ? "Error loading vehicle" : "Error initializing form",
           description: "Something went wrong",
           variant: "destructive",
         });
-        console.error(error);
       } finally {
         setIsLoading(false);
       }
     };
     
     initializeForm();
-  }, [user, id, isEditMode, methods, toast]);
+  }, [user, id, isEditMode, methods, toast, navigate]);
 
   const onSubmit = async (data: VehicleFormValues) => {
-    if (!companyData) return;
+    if (!companyData) {
+      console.error("No company data available");
+      toast({
+        title: "Company profile missing",
+        description: "Please complete your company profile first",
+        variant: "destructive",
+      });
+      return;
+    }
     
     try {
       setIsSubmitting(true);
+      console.log("Submitting vehicle form with data:", data);
+      console.log("Company data:", companyData);
       
       // Format location as JSON structure
+      const locationData = {
+        street_address: data.street_address,
+        constituency: data.constituency
+      };
+      
+      console.log("Formatted location data:", locationData);
+      
       const vehicleData = {
         ...data,
         company_id: companyData.id,
         price_per_day: parseFloat(data.price_per_day),
         seats: parseInt(data.seats),
         features: data.features,
-        location: {
-          street_address: data.street_address,
-          constituency: data.constituency
-        }
+        location: locationData
       };
       
       // Remove the individual address fields since they're now in the location object
       delete (vehicleData as any).street_address;
       delete (vehicleData as any).constituency;
       
+      console.log("Final vehicle data to submit:", vehicleData);
+      
       let vehicleId;
       
       if (isEditMode && id) {
+        console.log("Updating existing vehicle:", id);
         await updateVehicle(id, vehicleData);
         vehicleId = id;
       } else {
+        console.log("Creating new vehicle");
         // Create the vehicle first
         const newVehicle = await createVehicle(vehicleData);
+        console.log("New vehicle created:", newVehicle);
         vehicleId = newVehicle.id;
         
         // Then add the images
         if (images.length > 0) {
+          console.log(`Adding ${images.length} images to new vehicle:`, vehicleId);
           for (let i = 0; i < images.length; i++) {
+            console.log(`Adding image ${i+1}/${images.length}:`, images[i].image_url);
             await addVehicleImage(vehicleId, images[i].image_url, images[i].is_primary);
           }
         }
@@ -167,12 +213,12 @@ export const useVehicleForm = (id?: string) => {
       
       navigate('/company/vehicles');
     } catch (error) {
+      console.error("Error submitting vehicle form:", error);
       toast({
         title: isEditMode ? "Error updating vehicle" : "Error creating vehicle",
-        description: "Something went wrong",
+        description: error instanceof Error ? error.message : "Something went wrong",
         variant: "destructive",
       });
-      console.error(error);
     } finally {
       setIsSubmitting(false);
     }
