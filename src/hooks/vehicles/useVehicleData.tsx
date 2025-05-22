@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -61,7 +62,16 @@ export const useVehicleData = (id?: string) => {
             } else if (vehicleData.location) {
               // Try to parse if it's a string
               try {
-                vehicleData.location = JSON.parse(vehicleData.location);
+                // Only attempt to parse if it's actually a string
+                if (typeof vehicleData.location === 'string') {
+                  vehicleData.location = JSON.parse(vehicleData.location);
+                } else {
+                  // For any other type, create an object with safely converted string value
+                  vehicleData.location = { 
+                    street_address: String(vehicleData.location),
+                    constituency: ''
+                  };
+                }
               } catch (e) {
                 // If parsing fails, create a default object
                 vehicleData.location = { 

@@ -28,7 +28,7 @@ export function getAddressFromLocationData(location: any): { street_address: str
       }
     }
     
-    // Fallback for any other type
+    // Fallback for any other type (number, boolean, etc.)
     return {
       street_address: String(location),
       constituency: ''
