@@ -390,7 +390,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_uuid_v4: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          uuid: string
+        }[]
+      }
     }
     Enums: {
       booking_status: "pending" | "confirmed" | "cancelled" | "completed"

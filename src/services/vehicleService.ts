@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 // Get company vehicles
@@ -97,7 +96,6 @@ export const generateCalendarFeedToken = async (vehicleId: string) => {
     // Generate a UUID for the feed token
     const { data: updateData, error: updateError } = await supabase
       .rpc('generate_uuid_v4')
-      .select('uuid')
       .single();
       
     if (updateError) {
