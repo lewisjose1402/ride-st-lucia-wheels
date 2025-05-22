@@ -10,6 +10,7 @@ import {
   setPrimaryVehicleImage 
 } from '@/services/vehicleImageService';
 import { VehicleImage } from './VehicleFormTypes';
+import { useAuth } from '@/context/AuthContext';
 
 interface VehicleImageUploaderProps {
   images: VehicleImage[];
@@ -25,10 +26,19 @@ const VehicleImageUploader = ({
   isEditMode 
 }: VehicleImageUploaderProps) => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [uploadingImages, setUploadingImages] = useState(false);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "You need to be signed in to upload images",
+        variant: "destructive",
+      });
+      return;
+    }
     
     try {
       setUploadingImages(true);

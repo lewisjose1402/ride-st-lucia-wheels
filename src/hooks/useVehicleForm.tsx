@@ -155,6 +155,16 @@ export const useVehicleForm = (id?: string) => {
       return;
     }
     
+    if (!user) {
+      console.error("User authentication required");
+      toast({
+        title: "Authentication required",
+        description: "You need to be signed in to create a vehicle",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     try {
       setIsSubmitting(true);
       console.log("Submitting vehicle form with data:", data);
@@ -185,33 +195,48 @@ export const useVehicleForm = (id?: string) => {
       
       let vehicleId;
       
-      if (isEditMode && id) {
-        console.log("Updating existing vehicle:", id);
-        await updateVehicle(id, vehicleData);
-        vehicleId = id;
-      } else {
-        console.log("Creating new vehicle");
-        // Create the vehicle first
-        const newVehicle = await createVehicle(vehicleData);
-        console.log("New vehicle created:", newVehicle);
-        vehicleId = newVehicle.id;
-        
-        // Then add the images
-        if (images.length > 0) {
-          console.log(`Adding ${images.length} images to new vehicle:`, vehicleId);
-          for (let i = 0; i < images.length; i++) {
-            console.log(`Adding image ${i+1}/${images.length}:`, images[i].image_url);
-            await addVehicleImage(vehicleId, images[i].image_url, images[i].is_primary);
+      try {
+        if (isEditMode && id) {
+          console.log("Updating existing vehicle:", id);
+          await updateVehicle(id, vehicleData);
+          vehicleId = id;
+        } else {
+          console.log("Creating new vehicle");
+          // Create the vehicle first
+          const newVehicle = await createVehicle(vehicleData);
+          console.log("New vehicle created:", newVehicle);
+          vehicleId = newVehicle.id;
+          
+          // Then add the images
+          if (images.length > 0) {
+            console.log(`Adding ${images.length} images to new vehicle:`, vehicleId);
+            for (let i = 0; i < images.length; i++) {
+              try {
+                console.log(`Adding image ${i+1}/${images.length}:`, images[i].image_url);
+                await addVehicleImage(vehicleId, images[i].image_url, images[i].is_primary);
+              } catch (imageError) {
+                console.error(`Error adding image ${i+1}:`, imageError);
+                toast({
+                  title: `Error adding image ${i+1}`,
+                  description: imageError instanceof Error ? imageError.message : "Failed to associate image with vehicle",
+                  variant: "destructive",
+                });
+                // Continue with other images even if one fails
+              }
+            }
           }
         }
+        
+        toast({
+          title: isEditMode ? "Vehicle updated" : "Vehicle created",
+          description: isEditMode ? "Vehicle has been updated successfully" : "Vehicle has been added successfully",
+        });
+        
+        navigate('/company/vehicles');
+      } catch (vehicleError) {
+        console.error("Error with vehicle operation:", vehicleError);
+        throw vehicleError;
       }
-      
-      toast({
-        title: isEditMode ? "Vehicle updated" : "Vehicle created",
-        description: isEditMode ? "Vehicle has been updated successfully" : "Vehicle has been added successfully",
-      });
-      
-      navigate('/company/vehicles');
     } catch (error) {
       console.error("Error submitting vehicle form:", error);
       toast({

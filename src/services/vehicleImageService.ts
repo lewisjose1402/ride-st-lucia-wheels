@@ -39,6 +39,23 @@ export const uploadVehicleImage = async (file: File) => {
 export const addVehicleImage = async (vehicleId: string, imageUrl: string, isPrimary: boolean = false) => {
   console.log("Adding image to vehicle:", vehicleId, "URL:", imageUrl, "isPrimary:", isPrimary);
   
+  // First, verify the vehicle belongs to the user's company
+  const { data: vehicleData, error: vehicleError } = await supabase
+    .from('vehicles')
+    .select('company_id')
+    .eq('id', vehicleId)
+    .single();
+    
+  if (vehicleError) {
+    console.error("Error verifying vehicle ownership:", vehicleError);
+    throw new Error("Failed to verify vehicle ownership. " + vehicleError.message);
+  }
+  
+  if (!vehicleData) {
+    throw new Error("Vehicle not found or you don't have permission to access it.");
+  }
+  
+  // Now insert the vehicle image with the verified vehicle_id
   const { data, error } = await supabase
     .from('vehicle_images')
     .insert([
@@ -48,7 +65,11 @@ export const addVehicleImage = async (vehicleId: string, imageUrl: string, isPri
 
   if (error) {
     console.error("Error adding vehicle image:", error);
-    throw new Error(error.message);
+    throw new Error("Failed to add vehicle image. " + error.message);
+  }
+
+  if (!data || data.length === 0) {
+    throw new Error("No data returned from vehicle image creation");
   }
 
   console.log("Image added to database:", data[0]);
@@ -59,6 +80,23 @@ export const addVehicleImage = async (vehicleId: string, imageUrl: string, isPri
 export const deleteVehicleImage = async (id: string) => {
   console.log("Deleting vehicle image:", id);
   
+  // First get the image to verify ownership
+  const { data: imageData, error: getError } = await supabase
+    .from('vehicle_images')
+    .select('vehicle_id')
+    .eq('id', id)
+    .single();
+    
+  if (getError) {
+    console.error("Error getting vehicle image:", getError);
+    throw new Error("Failed to verify image ownership. " + getError.message);
+  }
+  
+  if (!imageData) {
+    throw new Error("Image not found or you don't have permission to delete it.");
+  }
+  
+  // Delete the image
   const { error } = await supabase
     .from('vehicle_images')
     .delete()
@@ -66,7 +104,7 @@ export const deleteVehicleImage = async (id: string) => {
 
   if (error) {
     console.error("Error deleting vehicle image:", error);
-    throw new Error(error.message);
+    throw new Error("Failed to delete vehicle image. " + error.message);
   }
 
   console.log("Vehicle image deleted successfully");
@@ -77,6 +115,18 @@ export const deleteVehicleImage = async (id: string) => {
 export const setPrimaryVehicleImage = async (vehicleId: string, imageId: string) => {
   console.log("Setting primary image for vehicle:", vehicleId, "Image ID:", imageId);
   
+  // First verify the vehicle belongs to the user's company
+  const { data: vehicleData, error: vehicleError } = await supabase
+    .from('vehicles')
+    .select('company_id')
+    .eq('id', vehicleId)
+    .single();
+    
+  if (vehicleError) {
+    console.error("Error verifying vehicle ownership:", vehicleError);
+    throw new Error("Failed to verify vehicle ownership. " + vehicleError.message);
+  }
+  
   // First, set all images of this vehicle to non-primary
   const { error: resetError } = await supabase
     .from('vehicle_images')
@@ -85,7 +135,7 @@ export const setPrimaryVehicleImage = async (vehicleId: string, imageId: string)
 
   if (resetError) {
     console.error("Error resetting primary images:", resetError);
-    throw new Error(resetError.message);
+    throw new Error("Failed to reset primary images. " + resetError.message);
   }
 
   // Then, set the selected image as primary
@@ -97,7 +147,7 @@ export const setPrimaryVehicleImage = async (vehicleId: string, imageId: string)
 
   if (error) {
     console.error("Error setting primary image:", error);
-    throw new Error(error.message);
+    throw new Error("Failed to set primary image. " + error.message);
   }
 
   console.log("Primary image updated:", data[0]);
