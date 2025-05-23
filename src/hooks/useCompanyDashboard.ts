@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { getCompanyVehicles } from '@/services/companyService';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -108,11 +108,10 @@ export const useCompanyDashboard = () => {
               
               // Fetch all bookings for this company's vehicles
               if (vehiclesData && vehiclesData.length > 0) {
-                // Create an array of vehicle IDs converted to strings
-                // Make sure each ID is explicitly converted to string
+                // Create an array of vehicle IDs explicitly converted to strings
                 const vehicleIds = vehiclesData.map((vehicle: any) => String(vehicle.id));
                 // Force TypeScript to recognize this as string[]
-                const vehicleIdStrings: string[] = [...vehicleIds];
+                const vehicleIdStrings: string[] = vehicleIds.map(id => String(id));
                 
                 // Use the string array with Supabase
                 const { data: bookingsData, error: bookingsError } = await supabase
