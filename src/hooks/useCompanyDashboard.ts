@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
@@ -107,14 +108,14 @@ export const useCompanyDashboard = () => {
               
               // Fetch all bookings for this company's vehicles
               if (vehiclesData && vehiclesData.length > 0) {
-                // Create an array of vehicle IDs converted to strings
-                const vehicleIds: string[] = vehiclesData.map((vehicle: any) => `${vehicle.id}`);
+                // Create an array of vehicle IDs using String()
+                const vehicleIds = vehiclesData.map((vehicle: any) => String(vehicle.id));
                 
-                // Use the string array with Supabase
+                // Use the string array with Supabase with explicit type casting
                 const { data: bookingsData, error: bookingsError } = await supabase
                   .from('bookings')
                   .select('*')
-                  .in('vehicle_id', vehicleIds);
+                  .in('vehicle_id', vehicleIds as string[]);
                 
                 if (bookingsError) {
                   console.error("Error fetching bookings:", bookingsError);
