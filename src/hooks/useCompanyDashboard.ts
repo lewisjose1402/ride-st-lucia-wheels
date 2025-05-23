@@ -108,7 +108,7 @@ export const useCompanyDashboard = () => {
               // Fetch all bookings for this company's vehicles
               if (vehiclesData && vehiclesData.length > 0) {
                 // Create an array of vehicle IDs converted to strings
-                const vehicleIds: string[] = vehiclesData.map(vehicle => vehicle.id.toString());
+                const vehicleIds: string[] = vehiclesData.map((vehicle: any) => `${vehicle.id}`);
                 
                 // Use the string array with Supabase
                 const { data: bookingsData, error: bookingsError } = await supabase
