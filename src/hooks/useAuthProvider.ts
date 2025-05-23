@@ -135,12 +135,13 @@ export function useAuthProvider() {
           const companyData = {
             user_id: data.user.id,
             company_name: metadata.company_name || '',
-            email: email
+            email: email,
+            phone: '000-000-0000' // Adding default phone as it's required
           };
           
           const { error: profileError } = await supabase
             .from('rental_companies')
-            .insert([companyData]);
+            .insert(companyData);
             
           if (profileError) {
             console.error("Error creating company profile:", profileError);
