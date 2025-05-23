@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -7,7 +6,6 @@ import { useAuth } from '@/context/AuthContext';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Building, Info } from 'lucide-react';
-
 const SignUp = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -16,34 +14,30 @@ const SignUp = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [companyName, setCompanyName] = useState('');
   const [registrationNumber, setRegistrationNumber] = useState('');
-  const { signUp } = useAuth();
+  const {
+    signUp
+  } = useAuth();
   const navigate = useNavigate();
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (password !== confirmPassword) {
       setPasswordError("Passwords don't match");
       return;
     }
-    
     if (password.length < 6) {
       setPasswordError("Password must be at least 6 characters");
       return;
     }
-    
     setPasswordError('');
     setIsSubmitting(true);
-
     try {
       // Include company metadata
-      const metadata = { 
-        company_name: companyName, 
-        registration_number: registrationNumber, 
+      const metadata = {
+        company_name: companyName,
+        registration_number: registrationNumber,
         is_company: true,
         role: 'rental_company' // Explicitly set the role for company accounts
       };
-      
       const result = await signUp(email, password, metadata);
       if (result.success) {
         // Redirect to sign in page after successful registration
@@ -53,9 +47,7 @@ const SignUp = () => {
       setIsSubmitting(false);
     }
   };
-
-  return (
-    <div className="min-h-screen flex flex-col">
+  return <div className="min-h-screen flex flex-col">
       <Navbar />
       <main className="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gray-50">
         <div className="max-w-md w-full space-y-8 bg-white p-8 shadow-md rounded-lg">
@@ -88,93 +80,37 @@ const SignUp = () => {
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                   Email address
                 </label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="mt-1"
-                  placeholder="Enter your business email"
-                />
+                <Input id="email" name="email" type="email" autoComplete="email" required value={email} onChange={e => setEmail(e.target.value)} className="mt-1" placeholder="Enter your business email" />
               </div>
 
               <div>
-                <label htmlFor="companyName" className="block text-sm font-medium text-gray-700">
-                  Company Name
-                </label>
-                <Input
-                  id="companyName"
-                  name="companyName"
-                  type="text"
-                  required
-                  value={companyName}
-                  onChange={(e) => setCompanyName(e.target.value)}
-                  className="mt-1"
-                  placeholder="Enter your company name"
-                />
+                <label htmlFor="companyName" className="block text-sm font-medium text-gray-700">Company / Registered Business Name</label>
+                <Input id="companyName" name="companyName" type="text" required value={companyName} onChange={e => setCompanyName(e.target.value)} className="mt-1" placeholder="Enter your company name" />
               </div>
               
               <div>
                 <label htmlFor="registrationNumber" className="block text-sm font-medium text-gray-700">
                   Registration Number
                 </label>
-                <Input
-                  id="registrationNumber"
-                  name="registrationNumber"
-                  type="text"
-                  required
-                  value={registrationNumber}
-                  onChange={(e) => setRegistrationNumber(e.target.value)}
-                  className="mt-1"
-                  placeholder="Enter company registration number"
-                />
+                <Input id="registrationNumber" name="registrationNumber" type="text" required value={registrationNumber} onChange={e => setRegistrationNumber(e.target.value)} className="mt-1" placeholder="Enter company registration number" />
               </div>
 
               <div>
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                   Password
                 </label>
-                <Input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="new-password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="mt-1"
-                  placeholder="Create a password"
-                />
+                <Input id="password" name="password" type="password" autoComplete="new-password" required value={password} onChange={e => setPassword(e.target.value)} className="mt-1" placeholder="Create a password" />
               </div>
               <div>
                 <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
                   Confirm Password
                 </label>
-                <Input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type="password"
-                  autoComplete="new-password"
-                  required
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="mt-1"
-                  placeholder="Confirm your password"
-                />
-                {passwordError && (
-                  <p className="mt-1 text-sm text-red-600">{passwordError}</p>
-                )}
+                <Input id="confirmPassword" name="confirmPassword" type="password" autoComplete="new-password" required value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className="mt-1" placeholder="Confirm your password" />
+                {passwordError && <p className="mt-1 text-sm text-red-600">{passwordError}</p>}
               </div>
             </div>
 
-            <Button
-              type="submit"
-              className="w-full bg-brand-purple hover:bg-brand-purple-dark flex items-center justify-center"
-              disabled={isSubmitting}
-            >
+            <Button type="submit" className="w-full bg-brand-purple hover:bg-brand-purple-dark flex items-center justify-center" disabled={isSubmitting}>
               <Building className="mr-2 h-4 w-4" />
               {isSubmitting ? 'Creating account...' : 'Create company account'}
             </Button>
@@ -182,8 +118,6 @@ const SignUp = () => {
         </div>
       </main>
       <Footer />
-    </div>
-  );
+    </div>;
 };
-
 export default SignUp;
