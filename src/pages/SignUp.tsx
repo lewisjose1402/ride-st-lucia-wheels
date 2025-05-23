@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -6,6 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Building, Info } from 'lucide-react';
+
 const SignUp = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -13,11 +15,12 @@ const SignUp = () => {
   const [passwordError, setPasswordError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [companyName, setCompanyName] = useState('');
-  const [registrationNumber, setRegistrationNumber] = useState('');
+  
   const {
     signUp
   } = useAuth();
   const navigate = useNavigate();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password !== confirmPassword) {
@@ -34,7 +37,6 @@ const SignUp = () => {
       // Include company metadata
       const metadata = {
         company_name: companyName,
-        registration_number: registrationNumber,
         is_company: true,
         role: 'rental_company' // Explicitly set the role for company accounts
       };
@@ -47,6 +49,7 @@ const SignUp = () => {
       setIsSubmitting(false);
     }
   };
+
   return <div className="min-h-screen flex flex-col">
       <Navbar />
       <main className="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gray-50">
@@ -87,13 +90,6 @@ const SignUp = () => {
                 <label htmlFor="companyName" className="block text-sm font-medium text-gray-700">Company / Registered Business Name</label>
                 <Input id="companyName" name="companyName" type="text" required value={companyName} onChange={e => setCompanyName(e.target.value)} className="mt-1" placeholder="Enter your company name" />
               </div>
-              
-              <div>
-                <label htmlFor="registrationNumber" className="block text-sm font-medium text-gray-700">
-                  Registration Number
-                </label>
-                <Input id="registrationNumber" name="registrationNumber" type="text" required value={registrationNumber} onChange={e => setRegistrationNumber(e.target.value)} className="mt-1" placeholder="Enter company registration number" />
-              </div>
 
               <div>
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700">
@@ -120,4 +116,5 @@ const SignUp = () => {
       <Footer />
     </div>;
 };
+
 export default SignUp;
