@@ -129,6 +129,27 @@ export function useAuthProvider() {
         return { success: false, error: error.message };
       }
       
+      // Create a rental company profile with the initial data
+      if (data?.user) {
+        try {
+          const companyData = {
+            user_id: data.user.id,
+            company_name: metadata.company_name || '',
+            email: email
+          };
+          
+          const { error: profileError } = await supabase
+            .from('rental_companies')
+            .insert([companyData]);
+            
+          if (profileError) {
+            console.error("Error creating company profile:", profileError);
+          }
+        } catch (profileError) {
+          console.error("Error creating initial company profile:", profileError);
+        }
+      }
+      
       toast({
         title: "Sign up successful",
         description: "Please check your email to verify your account before signing in.",
