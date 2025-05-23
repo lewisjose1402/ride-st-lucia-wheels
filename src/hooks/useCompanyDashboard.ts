@@ -20,7 +20,14 @@ interface Company {
   is_approved?: boolean;
 }
 
-interface Vehicle {
+interface VehicleImage {
+  id: string;
+  vehicle_id: string;
+  image_url: string;
+  is_primary?: boolean;
+}
+
+export interface Vehicle {
   id: string;
   name: string;
   company_id: string;
@@ -30,15 +37,9 @@ interface Vehicle {
   description?: string;
   is_available?: boolean;
   feed_token?: string;
+  location: any; // Added location property to match VehicleType
   vehicle_images?: VehicleImage[];
   [key: string]: any; // For other properties that might be present
-}
-
-interface VehicleImage {
-  id: string;
-  vehicle_id: string;
-  image_url: string;
-  is_primary?: boolean;
 }
 
 interface Booking {

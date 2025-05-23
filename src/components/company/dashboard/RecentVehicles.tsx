@@ -4,20 +4,10 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Car, Plus } from 'lucide-react';
 import { getAddressFromLocationData } from '@/utils/locationHelpers';
-
-type VehicleType = {
-  id: string;
-  name: string;
-  price_per_day: number;
-  location: any;
-  is_available: boolean;
-  transmission: string;
-  seats: number;
-  vehicle_images: { is_primary: boolean; image_url: string }[];
-};
+import { Vehicle } from '@/hooks/useCompanyDashboard';
 
 type RecentVehiclesProps = {
-  vehicles: VehicleType[];
+  vehicles: Vehicle[];
 };
 
 const RecentVehicles = ({ vehicles }: RecentVehiclesProps) => {
