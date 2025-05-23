@@ -102,8 +102,8 @@ export const useCompanyDashboard = () => {
           
           try {
             if (company.id) {
-              // Fetch vehicles
-              const vehiclesData = await getCompanyVehicles(company.id);
+              // Convert company.id to string when calling getCompanyVehicles
+              const vehiclesData = await getCompanyVehicles(String(company.id));
               setVehicles(vehiclesData || []);
               
               // Fetch all bookings for this company's vehicles
