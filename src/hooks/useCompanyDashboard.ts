@@ -109,6 +109,7 @@ export const useCompanyDashboard = () => {
               // Fetch all bookings for this company's vehicles
               if (vehiclesData && vehiclesData.length > 0) {
                 // Create an array of vehicle IDs converted to strings
+                // Make sure each ID is explicitly converted to string
                 const vehicleIds = vehiclesData.map((vehicle: any) => String(vehicle.id));
                 // Force TypeScript to recognize this as string[]
                 const vehicleIdStrings: string[] = [...vehicleIds];
