@@ -108,12 +108,13 @@ export const useCompanyDashboard = () => {
               
               // Fetch all bookings for this company's vehicles
               if (vehiclesData && vehiclesData.length > 0) {
-                // Create an array of vehicle IDs explicitly converted to strings
-                const vehicleIds = vehiclesData.map((vehicle: any) => String(vehicle.id));
-                // Force TypeScript to recognize this as string[]
-                const vehicleIdStrings: string[] = vehicleIds.map(id => String(id));
+                // Create an array of vehicle IDs
+                const vehicleIdStrings: string[] = vehiclesData.map((vehicle: any) => {
+                  // Ensure each ID is a string
+                  return String(vehicle.id);
+                });
                 
-                // Use the string array with Supabase
+                // Use the strictly typed string array with Supabase
                 const { data: bookingsData, error: bookingsError } = await supabase
                   .from('bookings')
                   .select('*')
