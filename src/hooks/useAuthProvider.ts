@@ -102,6 +102,27 @@ export function useAuthProvider() {
 
   const signUp = async (email: string, password: string, metadata: Record<string, any> = {}) => {
     try {
+      // Check if email already exists in rental_companies table
+      const { data: existingCompany, error: checkError } = await supabase
+        .from('rental_companies')
+        .select('email')
+        .eq('email', email)
+        .single();
+      
+      if (existingCompany) {
+        toast({
+          title: "Email already registered",
+          description: "This email is already in use by another company account.",
+          variant: "destructive"
+        });
+        return { success: false, error: "Email already registered" };
+      }
+      
+      if (checkError && checkError.code !== 'PGRST116') {
+        // If there's an error other than "no rows returned", handle it
+        console.error("Error checking existing company:", checkError);
+      }
+
       // Always set company flag for all signups
       if (!metadata.is_company) {
         metadata.is_company = true;

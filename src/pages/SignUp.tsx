@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -5,7 +6,8 @@ import { Input } from '@/components/ui/input';
 import { useAuth } from '@/context/AuthContext';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { Building, Info } from 'lucide-react';
+import { Building, Info, AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const SignUp = () => {
   const [email, setEmail] = useState('');
@@ -14,6 +16,7 @@ const SignUp = () => {
   const [passwordError, setPasswordError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [companyName, setCompanyName] = useState('');
+  const [generalError, setGeneralError] = useState('');
   
   const {
     signUp
@@ -22,6 +25,11 @@ const SignUp = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Reset errors
+    setPasswordError('');
+    setGeneralError('');
+    
     if (password !== confirmPassword) {
       setPasswordError("Passwords don't match");
       return;
@@ -30,7 +38,7 @@ const SignUp = () => {
       setPasswordError("Password must be at least 6 characters");
       return;
     }
-    setPasswordError('');
+    
     setIsSubmitting(true);
     try {
       // Include company metadata
@@ -43,6 +51,8 @@ const SignUp = () => {
       if (result.success) {
         // Redirect to sign in page after successful registration
         navigate('/signin');
+      } else if (result.error) {
+        setGeneralError(result.error);
       }
     } finally {
       setIsSubmitting(false);
@@ -75,6 +85,13 @@ const SignUp = () => {
               </div>
             </div>
           </div>
+          
+          {generalError && (
+            <Alert variant="destructive" className="my-4">
+              <AlertCircle className="h-4 w-4 mr-2" />
+              <AlertDescription>{generalError}</AlertDescription>
+            </Alert>
+          )}
           
           <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
             <div className="space-y-4">
