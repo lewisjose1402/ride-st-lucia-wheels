@@ -10,7 +10,10 @@ const FeaturedVehicles = () => {
   useEffect(() => {
     const fetchFeaturedVehicles = async () => {
       try {
-        const { data, error } = await supabase
+        console.log('Fetching vehicles...');
+        
+        // First try to get featured vehicles
+        let { data: featuredData, error: featuredError } = await supabase
           .from('vehicles')
           .select(`
             *,
@@ -22,12 +25,38 @@ const FeaturedVehicles = () => {
           .limit(4)
           .order('created_at', { ascending: false });
 
-        if (error) {
-          console.error('Error fetching featured vehicles:', error);
-          return;
-        }
+        console.log('Featured vehicles query result:', featuredData);
 
-        setVehicles(data || []);
+        // If no featured vehicles, get any available vehicles
+        if (!featuredData || featuredData.length === 0) {
+          console.log('No featured vehicles found, fetching any available vehicles...');
+          
+          const { data: anyData, error: anyError } = await supabase
+            .from('vehicles')
+            .select(`
+              *,
+              vehicle_images(*),
+              rental_companies(company_name)
+            `)
+            .eq('is_available', true)
+            .limit(4)
+            .order('created_at', { ascending: false });
+
+          console.log('Any available vehicles query result:', anyData);
+
+          if (anyError) {
+            console.error('Error fetching any available vehicles:', anyError);
+            return;
+          }
+
+          setVehicles(anyData || []);
+        } else {
+          if (featuredError) {
+            console.error('Error fetching featured vehicles:', featuredError);
+            return;
+          }
+          setVehicles(featuredData);
+        }
       } catch (error) {
         console.error('Error fetching vehicles:', error);
       } finally {
@@ -81,14 +110,23 @@ const FeaturedVehicles = () => {
         
         {vehicles.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-gray-600 text-lg">No featured vehicles available at the moment.</p>
+            <p className="text-gray-600 text-lg">No vehicles available at the moment.</p>
+            <p className="text-gray-500 text-sm mt-2">Please check back later or contact us for more information.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {vehicles.map(vehicle => {
+              console.log('Rendering vehicle:', vehicle);
+              
               // Get the primary image or first available image
               const primaryImage = vehicle.vehicle_images?.find(img => img.is_primary);
               const imageUrl = primaryImage?.image_url || vehicle.vehicle_images?.[0]?.image_url || '/placeholder.svg';
+              
+              // Check if vehicle has required fields
+              if (!vehicle.name || !vehicle.price_per_day) {
+                console.warn('Vehicle missing required fields:', vehicle);
+                return null;
+              }
               
               return (
                 <VehicleCard 
@@ -97,12 +135,12 @@ const FeaturedVehicles = () => {
                   name={vehicle.name}
                   image={imageUrl}
                   type={vehicle.vehicle_type || 'Vehicle'}
-                  seats={vehicle.seats}
-                  transmission={vehicle.transmission}
+                  seats={vehicle.seats || 4}
+                  transmission={vehicle.transmission || 'Manual'}
                   price={vehicle.price_per_day}
                   rating={vehicle.rating || 4.5}
-                  location={vehicle.location}
-                  featured={true}
+                  location={vehicle.location || 'St. Lucia'}
+                  featured={vehicle.is_featured || false}
                 />
               );
             })}
