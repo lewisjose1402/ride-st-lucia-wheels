@@ -37,8 +37,8 @@ export interface Vehicle {
   transmission: string;
   seats: number;
   price_per_day: number;
-  features?: Record<string, any>;
-  location: Record<string, any>;
+  features?: any; // Changed from Record<string, any> to any to be compatible with Supabase Json type
+  location: any; // Changed from Record<string, any> to any to be compatible with Supabase Json type
   latitude?: number;
   longitude?: number;
   is_featured: boolean;

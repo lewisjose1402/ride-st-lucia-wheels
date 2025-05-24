@@ -1,4 +1,3 @@
-
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import Navbar from '@/components/Navbar';
@@ -6,6 +5,7 @@ import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import VehicleDetailContent from '@/components/vehicle-detail/VehicleDetailContent';
+import { Vehicle } from '@/types/vehicle';
 
 const VehicleDetail = () => {
   const navigate = useNavigate();
@@ -40,7 +40,9 @@ const VehicleDetail = () => {
       }
 
       console.log('Successfully fetched vehicle with company data:', vehicle);
-      return vehicle;
+      
+      // Type cast the vehicle data to match our Vehicle interface
+      return vehicle as Vehicle;
     },
     enabled: !!id,
   });
