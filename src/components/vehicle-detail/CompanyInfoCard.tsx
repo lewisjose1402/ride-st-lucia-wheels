@@ -48,11 +48,11 @@ const CompanyInfoCard = ({ companyData }: CompanyInfoCardProps) => {
         <div className="flex items-center">
           <Avatar className="h-12 w-12 mr-3">
             <AvatarImage 
-              src={companyData?.logo_url} 
-              alt={companyData?.company_name}
+              src={companyData.logo_url} 
+              alt={companyData.company_name}
             />
             <AvatarFallback className="bg-brand-purple text-white text-lg font-bold">
-              {companyData?.company_name?.charAt(0) || 'RC'}
+              {companyData.company_name?.charAt(0) || 'RC'}
             </AvatarFallback>
           </Avatar>
           <div>

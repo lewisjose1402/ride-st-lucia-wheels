@@ -29,18 +29,31 @@ const VehicleDetailPage = () => {
       
       console.log('Fetching company data for company_id:', vehicle.company_id);
       
+      // Try fetching with both select methods to debug
       const { data, error } = await supabase
         .from('rental_companies')
         .select('*')
         .eq('id', vehicle.company_id)
-        .maybeSingle();
+        .single();
       
       if (error) {
         console.error('Error fetching company:', error);
-        return null;
+        // If single() fails, try without it
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from('rental_companies')
+          .select('*')
+          .eq('id', vehicle.company_id);
+        
+        if (fallbackError) {
+          console.error('Fallback query also failed:', fallbackError);
+          return null;
+        }
+        
+        console.log('Fallback company data:', fallbackData);
+        return fallbackData && fallbackData.length > 0 ? fallbackData[0] : null;
       }
       
-      console.log('Company data fetched:', data);
+      console.log('Company data fetched successfully:', data);
       return data;
     },
     enabled: !!vehicle?.company_id,
@@ -48,7 +61,7 @@ const VehicleDetailPage = () => {
 
   // Add debugging logs
   console.log('Vehicle data:', vehicle);
-  console.log('Company data:', companyData);
+  console.log('Company data in VehicleDetail:', companyData);
 
   if (isLoading) {
     return (
