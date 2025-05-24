@@ -1,7 +1,6 @@
 
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
@@ -11,10 +10,9 @@ import VehicleDetailContent from '@/components/vehicle-detail/VehicleDetailConte
 const VehicleDetail = () => {
   const navigate = useNavigate();
   const { id } = useParams();
-  const [companyData, setCompanyData] = useState(null);
 
-  // Optimized query to fetch vehicle with images and type in a single request
-  const { data: vehicleData, isLoading, error } = useQuery({
+  // Fetch vehicle data with images and type
+  const { data: vehicleData, isLoading: vehicleLoading, error: vehicleError } = useQuery({
     queryKey: ['vehicle-detail', id],
     queryFn: async () => {
       if (!id) throw new Error('Vehicle ID is required');
@@ -42,13 +40,13 @@ const VehicleDetail = () => {
     enabled: !!id,
   });
 
-  // Fetch company data when vehicle data is available
-  useEffect(() => {
-    const fetchCompany = async () => {
+  // Fetch company data based on vehicle's company_id
+  const { data: companyData, isLoading: companyLoading } = useQuery({
+    queryKey: ['company-detail', vehicleData?.company_id],
+    queryFn: async () => {
       if (!vehicleData?.company_id) {
         console.log('No company_id found on vehicle');
-        setCompanyData(null);
-        return;
+        return null;
       }
 
       console.log('Fetching company data for company_id:', vehicleData.company_id);
@@ -61,18 +59,21 @@ const VehicleDetail = () => {
 
       if (error) {
         console.error("Error fetching company:", error);
-        setCompanyData(null);
-      } else if (data) {
+        return null;
+      }
+
+      if (data) {
         console.log('Fetched company data:', data);
-        setCompanyData(data);
       } else {
         console.log('No company found for ID:', vehicleData.company_id);
-        setCompanyData(null);
       }
-    };
 
-    fetchCompany();
-  }, [vehicleData]);
+      return data;
+    },
+    enabled: !!vehicleData?.company_id,
+  });
+
+  const isLoading = vehicleLoading || companyLoading;
 
   if (isLoading) {
     return (
@@ -99,7 +100,7 @@ const VehicleDetail = () => {
     );
   }
 
-  if (error || !vehicleData) {
+  if (vehicleError || !vehicleData) {
     return (
       <div className="min-h-screen flex flex-col">
         <Navbar />
