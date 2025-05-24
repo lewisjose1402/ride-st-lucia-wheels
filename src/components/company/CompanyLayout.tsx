@@ -54,14 +54,18 @@ const CompanyLayout = ({ children, title }: CompanyLayoutProps) => {
               {profile?.logo_url ? (
                 <AvatarImage 
                   src={profile.logo_url} 
-                  alt={`${profile.company_name} logo`} 
-                  onError={(e) => console.error("Error loading logo image:", e)}
+                  alt={`${profile.company_name} logo`}
+                  className="object-cover"
+                  onError={(e) => {
+                    console.error("Error loading logo image:", e);
+                    // Hide the image element if it fails to load
+                    e.currentTarget.style.display = 'none';
+                  }}
                 />
-              ) : (
-                <AvatarFallback className="bg-brand-purple text-white text-xl">
-                  {getInitials(profile?.company_name || 'Co')}
-                </AvatarFallback>
-              )}
+              ) : null}
+              <AvatarFallback className="bg-brand-purple text-white text-xl">
+                {getInitials(profile?.company_name || 'Co')}
+              </AvatarFallback>
             </Avatar>
             <h2 className="text-lg font-semibold text-brand-purple text-center truncate w-full">
               {profile?.company_name || 'Company Dashboard'}
