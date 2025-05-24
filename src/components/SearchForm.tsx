@@ -1,6 +1,7 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,24 +14,7 @@ import {
 } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Calendar } from 'lucide-react';
-
-// Vehicle type options
-const vehicleTypes = [
-  { value: "all", label: "All Vehicle Types" },
-  { value: "suv", label: "SUV" },
-  { value: "sedan", label: "Sedan" },
-  { value: "jeep", label: "Jeep" },
-  { value: "van", label: "Van" }
-];
-
-// Number of seats options
-const seatOptions = [
-  { value: "all", label: "Any" },
-  { value: "2", label: "2 seats" },
-  { value: "4", label: "4 seats" },
-  { value: "5", label: "5 seats" },
-  { value: "7", label: "7+ seats" }
-];
+import { supabase } from '@/integrations/supabase/client';
 
 const SearchForm = () => {
   const navigate = useNavigate();
@@ -41,9 +25,69 @@ const SearchForm = () => {
   const [vehicleType, setVehicleType] = useState('all');
   const [seats, setSeats] = useState('all');
 
+  // Fetch vehicles to get actual data for filters
+  const { data: vehicles = [] } = useQuery({
+    queryKey: ['vehicles-for-filters'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('vehicles')
+        .select('transmission, seats, price_per_day')
+        .eq('is_available', true);
+
+      if (error) {
+        console.error('Error fetching vehicles for filters:', error);
+        return [];
+      }
+
+      return data || [];
+    },
+  });
+
+  // Get unique transmission types from actual vehicles
+  const getVehicleTypes = () => {
+    const transmissions = vehicles
+      .map(v => v.transmission)
+      .filter((transmission, index, arr) => 
+        transmission && arr.indexOf(transmission) === index
+      )
+      .sort();
+
+    return [
+      { value: "all", label: "All Transmissions" },
+      ...transmissions.map(transmission => ({
+        value: transmission.toLowerCase(),
+        label: transmission
+      }))
+    ];
+  };
+
+  // Get unique seat counts from actual vehicles
+  const getSeatOptions = () => {
+    const seatCounts = vehicles
+      .map(v => v.seats)
+      .filter((seats, index, arr) => 
+        seats && arr.indexOf(seats) === index
+      )
+      .sort((a, b) => a - b);
+
+    return [
+      { value: "all", label: "Any" },
+      ...seatCounts.map(seatCount => ({
+        value: seatCount.toString(),
+        label: `${seatCount} seats`
+      }))
+    ];
+  };
+
+  // Get max price from actual vehicles
+  const getMaxPrice = () => {
+    if (vehicles.length === 0) return 200;
+    const maxPrice = Math.max(...vehicles.map(v => v.price_per_day || 0));
+    return Math.ceil(maxPrice / 10) * 10; // Round up to nearest 10
+  };
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    // For now, just navigate to vehicles page with query params
     navigate('/vehicles', { 
       state: { 
         pickupLocation,
@@ -55,6 +99,10 @@ const SearchForm = () => {
       } 
     });
   };
+
+  const vehicleTypes = getVehicleTypes();
+  const seatOptions = getSeatOptions();
+  const maxPrice = getMaxPrice();
 
   return (
     <div className="bg-white rounded-lg shadow-lg p-6">
@@ -121,7 +169,7 @@ const SearchForm = () => {
               id="priceRange"
               value={priceRange}
               min={10}
-              max={200}
+              max={maxPrice}
               step={5}
               onValueChange={setPriceRange}
               className="py-4"
@@ -130,10 +178,10 @@ const SearchForm = () => {
           
           {/* Vehicle Type */}
           <div>
-            <Label htmlFor="vehicleType" className="mb-1 block">Vehicle Type</Label>
+            <Label htmlFor="vehicleType" className="mb-1 block">Transmission</Label>
             <Select value={vehicleType} onValueChange={setVehicleType}>
               <SelectTrigger id="vehicleType" className="w-full">
-                <SelectValue placeholder="Select vehicle type" />
+                <SelectValue placeholder="Select transmission" />
               </SelectTrigger>
               <SelectContent>
                 {vehicleTypes.map((type) => (
