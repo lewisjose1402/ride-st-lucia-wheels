@@ -49,7 +49,7 @@ const VehicleDetailPage = () => {
         .from('rental_companies')
         .select('*')
         .eq('id', vehicle.company_id)
-        .single();
+        .maybeSingle();
       
       if (error) {
         console.error('Error fetching company:', error);
