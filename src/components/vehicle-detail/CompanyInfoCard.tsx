@@ -6,6 +6,7 @@ import {
   CardHeader, 
   CardTitle 
 } from '@/components/ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 
 interface CompanyInfoCardProps {
@@ -17,22 +18,18 @@ const CompanyInfoCard = ({ companyData }: CompanyInfoCardProps) => {
     <Card>
       <CardHeader>
         <div className="flex items-center">
-          <div className="h-12 w-12 rounded-full overflow-hidden bg-gray-100 mr-3">
-            {companyData?.logo_url ? (
-              <img 
-                src={companyData.logo_url} 
-                alt={companyData.company_name}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <div className="h-full w-full bg-brand-purple text-white flex items-center justify-center text-lg font-bold">
-                {companyData?.company_name?.charAt(0) || 'RC'}
-              </div>
-            )}
-          </div>
+          <Avatar className="h-12 w-12 mr-3">
+            <AvatarImage 
+              src={companyData?.logo_url} 
+              alt={companyData?.company_name}
+            />
+            <AvatarFallback className="bg-brand-purple text-white text-lg font-bold">
+              {companyData?.company_name?.charAt(0) || 'RC'}
+            </AvatarFallback>
+          </Avatar>
           <div>
-            <CardTitle className="text-lg">{companyData?.company_name || 'Rental Company'}</CardTitle>
-            <CardDescription>{companyData?.contact_person || 'Vehicle Provider'}</CardDescription>
+            <h3 className="text-lg font-semibold">{companyData?.company_name || 'Rental Company'}</h3>
+            <p className="text-sm text-gray-600">{companyData?.contact_person || 'Vehicle Provider'}</p>
           </div>
         </div>
       </CardHeader>
