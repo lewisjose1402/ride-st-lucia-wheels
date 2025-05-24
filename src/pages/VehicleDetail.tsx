@@ -51,13 +51,17 @@ const VehicleDetail = () => {
         .from('rental_companies')
         .select('*')
         .eq('id', vehicleData.company_id)
-        .single();
+        .maybeSingle();
 
-      if (!error) {
+      if (error) {
+        console.error("Error fetching company:", error);
+        setCompanyData(null);
+      } else if (data) {
         console.log('Fetched company data:', data);
         setCompanyData(data);
       } else {
-        console.error("Error fetching company:", error);
+        console.log('No company found for ID:', vehicleData.company_id);
+        setCompanyData(null);
       }
     };
 
