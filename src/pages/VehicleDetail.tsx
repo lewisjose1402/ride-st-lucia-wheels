@@ -1,6 +1,7 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Star, Calendar, Check, Car, MapPin } from 'lucide-react';
@@ -22,76 +23,118 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-
-// Sample vehicle data
-const vehicleData = {
-  id: 1,
-  name: "Jeep Wrangler Sport",
-  type: "Jeep",
-  company: "Island Car Rentals",
-  company_logo: "/logos/island-car-rentals.png",
-  price: 89,
-  rating: 4.8,
-  reviews: 24,
-  year: 2022,
-  transmission: "Automatic",
-  fuel: "Gasoline",
-  seats: 4,
-  luggage: 3,
-  location: "Castries, St. Lucia",
-  latitude: 14.0101,
-  longitude: -60.9970,
-  description: "Experience the rugged beauty of St. Lucia with our Jeep Wrangler Sport. Perfect for exploring the island's diverse terrains, this 4x4 vehicle offers comfort, reliability, and adventure in one package. Its high clearance makes it ideal for navigating St. Lucia's mountainous roads and accessing remote beaches.",
-  features: [
-    "Air Conditioning", 
-    "Bluetooth", 
-    "USB Ports", 
-    "4-Wheel Drive", 
-    "Convertible Top",
-    "GPS Navigation",
-    "Backup Camera"
-  ],
-  images: [
-    "/vehicles/jeep-wrangler.jpg",
-    "/vehicles/jeep-wrangler-interior.jpg",
-    "/vehicles/jeep-wrangler-back.jpg",
-    "/vehicles/jeep-wrangler-side.jpg"
-  ],
-  reviews_data: [
-    {
-      id: 1,
-      user: "Michael S.",
-      date: "2023-09-15",
-      rating: 5,
-      comment: "Perfect vehicle for exploring the island. The 4-wheel drive made it easy to navigate the hilly terrain."
-    },
-    {
-      id: 2,
-      user: "Jennifer T.",
-      date: "2023-08-22",
-      rating: 4,
-      comment: "Great Jeep, very clean and well-maintained. Pickup was a bit slow but otherwise excellent experience."
-    }
-  ]
-};
+import { getVehicle } from '@/services/vehicleService';
+import { getAddressFromLocationData } from '@/utils/locationHelpers';
 
 const VehicleDetailPage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
-  const vehicle = vehicleData; // In a real app, fetch vehicle data based on id
-  
-  const [selectedImage, setSelectedImage] = useState(vehicle.images[0]);
+  const [selectedImage, setSelectedImage] = useState('');
   const [pickupDate, setPickupDate] = useState('');
   const [dropoffDate, setDropoffDate] = useState('');
-  
-  if (!vehicle) {
-    return <div>Loading...</div>; // Or redirect to not found
+
+  const { data: vehicle, isLoading, error } = useQuery({
+    queryKey: ['vehicle', id],
+    queryFn: () => getVehicle(id!),
+    enabled: !!id,
+  });
+
+  useEffect(() => {
+    if (vehicle?.vehicle_images?.length > 0) {
+      const primaryImage = vehicle.vehicle_images.find(img => img.is_primary);
+      setSelectedImage(primaryImage?.image_url || vehicle.vehicle_images[0]?.image_url || '/placeholder.svg');
+    }
+  }, [vehicle]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <main className="flex-grow pt-16 pb-12 bg-gray-50">
+          <div className="container mx-auto px-4 py-8">
+            <div className="animate-pulse">
+              <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="lg:col-span-2">
+                  <div className="h-64 bg-gray-200 rounded mb-4"></div>
+                  <div className="h-32 bg-gray-200 rounded"></div>
+                </div>
+                <div>
+                  <div className="h-48 bg-gray-200 rounded"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (error || !vehicle) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <main className="flex-grow pt-16 pb-12 bg-gray-50">
+          <div className="container mx-auto px-4 py-8">
+            <div className="text-center py-12">
+              <h1 className="text-2xl font-bold text-gray-800 mb-4">Vehicle Not Found</h1>
+              <p className="text-gray-600 mb-4">The vehicle you're looking for doesn't exist or is no longer available.</p>
+              <Button onClick={() => navigate('/vehicles')} className="bg-brand-purple hover:bg-brand-purple-dark">
+                Browse All Vehicles
+              </Button>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
   }
 
   const handleBooking = () => {
-    // In a real app, navigate to booking page with vehicle details
     navigate('/booking', { state: { vehicleId: vehicle.id, pickupDate, dropoffDate } });
   };
+
+  // Format location for display
+  const formatLocationDisplay = (loc: any): string => {
+    if (typeof loc === 'string') return loc;
+    
+    const { street_address, constituency } = getAddressFromLocationData(loc);
+    const parts = [];
+    if (street_address) parts.push(street_address);
+    if (constituency) parts.push(constituency);
+    
+    return parts.join(', ') || "St. Lucia";
+  };
+
+  // Get vehicle type from features or default
+  const getVehicleType = () => {
+    return vehicle.vehicle_type || 'Vehicle';
+  };
+
+  // Get features array from vehicle.features object
+  const getFeaturesList = () => {
+    if (!vehicle.features || typeof vehicle.features !== 'object') return [];
+    
+    const featureMap = {
+      air_conditioning: 'Air Conditioning',
+      bluetooth: 'Bluetooth',
+      gps: 'GPS Navigation',
+      usb: 'USB Ports',
+      child_seat: 'Child Seat Available',
+      backup_camera: 'Backup Camera',
+      roof_rack: 'Roof Rack',
+      gps_navigation: 'GPS Navigation',
+      usb_port: 'USB Port'
+    };
+
+    return Object.entries(vehicle.features)
+      .filter(([key, value]) => value === true)
+      .map(([key]) => featureMap[key] || key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()));
+  };
+
+  const features = getFeaturesList();
+  const images = vehicle.vehicle_images || [];
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -115,45 +158,49 @@ const VehicleDetailPage = () => {
               <div className="mb-6">
                 <div className="flex items-center justify-between">
                   <h1 className="text-3xl font-bold text-brand-dark">{vehicle.name}</h1>
-                  <Badge className="bg-brand-purple">{vehicle.type}</Badge>
+                  <Badge className="bg-brand-purple">{getVehicleType()}</Badge>
                 </div>
                 <div className="flex items-center mt-2">
                   <MapPin size={16} className="text-gray-500 mr-1" />
-                  <span className="text-gray-600">{vehicle.location}</span>
+                  <span className="text-gray-600">{formatLocationDisplay(vehicle.location)}</span>
                   
                   <div className="flex items-center ml-4">
                     <Star size={16} className="text-brand-orange fill-brand-orange mr-1" />
-                    <span className="font-medium">{vehicle.rating}</span>
-                    <span className="text-gray-500 ml-1">({vehicle.reviews} reviews)</span>
+                    <span className="font-medium">{vehicle.rating || 4.5}</span>
+                    <span className="text-gray-500 ml-1">(0 reviews)</span>
                   </div>
                 </div>
               </div>
               
               {/* Vehicle images */}
               <div className="mb-8">
-                <div className="w-full h-[300px] md:h-[400px] bg-white rounded-lg overflow-hidden mb-2">
-                  <img 
-                    src={selectedImage} 
-                    alt={vehicle.name} 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="grid grid-cols-4 gap-2">
-                  {vehicle.images.map((image, index) => (
-                    <div 
-                      key={index} 
-                      className={`h-16 md:h-24 bg-white rounded overflow-hidden cursor-pointer
-                        ${selectedImage === image ? 'ring-2 ring-brand-purple' : ''}`}
-                      onClick={() => setSelectedImage(image)}
-                    >
-                      <img 
-                        src={image} 
-                        alt={`${vehicle.name} view ${index + 1}`} 
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  ))}
-                </div>
+                {selectedImage && (
+                  <div className="w-full h-[300px] md:h-[400px] bg-white rounded-lg overflow-hidden mb-2">
+                    <img 
+                      src={selectedImage} 
+                      alt={vehicle.name} 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+                {images.length > 1 && (
+                  <div className="grid grid-cols-4 gap-2">
+                    {images.map((image, index) => (
+                      <div 
+                        key={image.id} 
+                        className={`h-16 md:h-24 bg-white rounded overflow-hidden cursor-pointer
+                          ${selectedImage === image.image_url ? 'ring-2 ring-brand-purple' : ''}`}
+                        onClick={() => setSelectedImage(image.image_url)}
+                      >
+                        <img 
+                          src={image.image_url} 
+                          alt={`${vehicle.name} view ${index + 1}`} 
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
               
               {/* Tabs for Description, Features, Reviews */}
@@ -169,7 +216,7 @@ const VehicleDetailPage = () => {
                     <CardHeader>
                       <CardTitle>About this vehicle</CardTitle>
                       <CardDescription>
-                        {vehicle.year} {vehicle.name} • Available from {vehicle.company}
+                        {vehicle.name} • Available for rent
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -177,17 +224,17 @@ const VehicleDetailPage = () => {
                         <div className="text-center p-3 bg-gray-50 rounded">
                           <Car size={20} className="mx-auto text-brand-purple mb-1" />
                           <p className="text-xs text-gray-500">Type</p>
-                          <p className="font-medium">{vehicle.type}</p>
+                          <p className="font-medium">{getVehicleType()}</p>
                         </div>
                         <div className="text-center p-3 bg-gray-50 rounded">
                           <span className="block text-xl text-brand-purple mb-1">A</span>
                           <p className="text-xs text-gray-500">Transmission</p>
-                          <p className="font-medium">{vehicle.transmission}</p>
+                          <p className="font-medium">{vehicle.transmission || 'Manual'}</p>
                         </div>
                         <div className="text-center p-3 bg-gray-50 rounded">
                           <span className="block text-xl text-brand-purple mb-1">⛽</span>
                           <p className="text-xs text-gray-500">Fuel</p>
-                          <p className="font-medium">{vehicle.fuel}</p>
+                          <p className="font-medium">Gasoline</p>
                         </div>
                         <div className="text-center p-3 bg-gray-50 rounded">
                           <span className="block text-xl text-brand-purple mb-1">👤</span>
@@ -197,7 +244,7 @@ const VehicleDetailPage = () => {
                       </div>
                       
                       <p className="text-gray-700 leading-relaxed">
-                        {vehicle.description}
+                        {vehicle.description || `Experience the beauty of St. Lucia with our ${vehicle.name}. This reliable vehicle offers comfort and convenience for your island adventure.`}
                       </p>
                     </CardContent>
                   </Card>
@@ -209,14 +256,18 @@ const VehicleDetailPage = () => {
                       <CardTitle>Vehicle Features</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                        {vehicle.features.map((feature, index) => (
-                          <div key={index} className="flex items-center">
-                            <Check size={16} className="text-brand-purple mr-2" />
-                            <span>{feature}</span>
-                          </div>
-                        ))}
-                      </div>
+                      {features.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                          {features.map((feature, index) => (
+                            <div key={index} className="flex items-center">
+                              <Check size={16} className="text-brand-purple mr-2" />
+                              <span>{feature}</span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-gray-500">No specific features listed for this vehicle.</p>
+                      )}
                     </CardContent>
                   </Card>
                 </TabsContent>
@@ -226,34 +277,11 @@ const VehicleDetailPage = () => {
                     <CardHeader>
                       <CardTitle>Customer Reviews</CardTitle>
                       <CardDescription>
-                        {vehicle.rating} out of 5 stars • {vehicle.reviews} reviews
+                        No reviews yet for this vehicle
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      {vehicle.reviews_data.map((review) => (
-                        <div key={review.id} className="mb-4 pb-4 border-b border-gray-200 last:border-0 last:mb-0 last:pb-0">
-                          <div className="flex items-center justify-between mb-1">
-                            <div className="font-medium">{review.user}</div>
-                            <div className="text-sm text-gray-500">
-                              {new Date(review.date).toLocaleDateString('en-US', { 
-                                year: 'numeric', 
-                                month: 'long', 
-                                day: 'numeric' 
-                              })}
-                            </div>
-                          </div>
-                          <div className="flex mb-2">
-                            {[...Array(5)].map((_, i) => (
-                              <Star 
-                                key={i} 
-                                size={14} 
-                                className={i < review.rating ? 'text-brand-orange fill-brand-orange' : 'text-gray-300'} 
-                              />
-                            ))}
-                          </div>
-                          <p className="text-gray-700">{review.comment}</p>
-                        </div>
-                      ))}
+                      <p className="text-gray-500">Be the first to review this vehicle!</p>
                     </CardContent>
                   </Card>
                 </TabsContent>
@@ -266,7 +294,7 @@ const VehicleDetailPage = () => {
               <Card className="mb-6">
                 <CardHeader>
                   <CardTitle>
-                    <span className="text-2xl font-bold">${vehicle.price}</span>
+                    <span className="text-2xl font-bold">${vehicle.price_per_day}</span>
                     <span className="text-gray-500 text-base font-normal"> / day</span>
                   </CardTitle>
                   <CardDescription>Inclusive of standard insurance</CardDescription>
@@ -321,34 +349,28 @@ const VehicleDetailPage = () => {
                 <CardHeader>
                   <div className="flex items-center">
                     <div className="h-12 w-12 rounded-full overflow-hidden bg-gray-100 mr-3">
-                      <img 
-                        src={vehicle.company_logo} 
-                        alt={vehicle.company} 
-                        className="h-full w-full object-contain"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.src = 'https://via.placeholder.com/48?text=CR';
-                        }}
-                      />
+                      <div className="h-full w-full bg-brand-purple text-white flex items-center justify-center text-lg font-bold">
+                        RC
+                      </div>
                     </div>
                     <div>
-                      <CardTitle className="text-lg">{vehicle.company}</CardTitle>
-                      <CardDescription>Rental Provider</CardDescription>
+                      <CardTitle className="text-lg">Rental Company</CardTitle>
+                      <CardDescription>Vehicle Provider</CardDescription>
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent>
                   <div className="text-sm text-gray-600 mb-4">
-                    <p className="mb-2">Reputable car rental company with locations across St. Lucia. Known for quality vehicles and excellent service.</p>
+                    <p className="mb-2">Quality vehicle rental service in St. Lucia.</p>
                   </div>
                   <Separator className="my-4" />
                   <div className="flex justify-between text-sm">
-                    <span>Member since</span>
-                    <span className="font-medium">2018</span>
+                    <span>Status</span>
+                    <span className="font-medium text-green-600">Available</span>
                   </div>
                   <div className="flex justify-between text-sm mt-2">
                     <span>Response rate</span>
-                    <span className="font-medium">98%</span>
+                    <span className="font-medium">95%</span>
                   </div>
                 </CardContent>
               </Card>
