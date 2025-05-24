@@ -1,6 +1,7 @@
 
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
@@ -10,21 +11,21 @@ import VehicleDetailContent from '@/components/vehicle-detail/VehicleDetailConte
 const VehicleDetail = () => {
   const navigate = useNavigate();
   const { id } = useParams();
+  const [companyData, setCompanyData] = useState(null);
 
   const { data: vehicleData, isLoading, error } = useQuery({
-    queryKey: ['vehicle-with-company', id],
+    queryKey: ['vehicle-with-images', id],
     queryFn: async () => {
       if (!id) throw new Error('Vehicle ID is required');
       
-      console.log('Fetching vehicle and company data for ID:', id);
+      console.log('Fetching vehicle data for ID:', id);
       
-      // Fetch vehicle with images and company data using proper join
+      // Fetch vehicle with images only
       const { data: vehicle, error: vehicleError } = await supabase
         .from('vehicles')
         .select(`
           *,
-          vehicle_images(*),
-          rental_companies!vehicles_company_id_fkey(*)
+          vehicle_images(*)
         `)
         .eq('id', id)
         .single();
@@ -39,6 +40,29 @@ const VehicleDetail = () => {
     },
     enabled: !!id,
   });
+
+  useEffect(() => {
+    const fetchCompany = async () => {
+      if (!vehicleData?.company_id) return;
+
+      console.log('Fetching company data for company_id:', vehicleData.company_id);
+
+      const { data, error } = await supabase
+        .from('rental_companies')
+        .select('*')
+        .eq('id', vehicleData.company_id)
+        .single();
+
+      if (!error) {
+        console.log('Fetched company data:', data);
+        setCompanyData(data);
+      } else {
+        console.error("Error fetching company:", error);
+      }
+    };
+
+    fetchCompany();
+  }, [vehicleData]);
 
   if (isLoading) {
     return (
@@ -91,7 +115,7 @@ const VehicleDetail = () => {
       <main className="flex-grow pt-16 pb-12 bg-gray-50">
         <VehicleDetailContent 
           vehicle={vehicleData} 
-          companyData={vehicleData.rental_companies} 
+          companyData={companyData} 
         />
       </main>
       <Footer />

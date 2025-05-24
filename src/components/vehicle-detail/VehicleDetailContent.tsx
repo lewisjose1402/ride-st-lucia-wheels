@@ -55,7 +55,7 @@ const VehicleDetailContent = ({ vehicle, companyData }: VehicleDetailContentProp
         {/* Right column - Booking and company info */}
         <div>
           <BookingCard vehicle={vehicle} />
-          <CompanyInfoCard companyData={companyData} vehicle={vehicle} />
+          <CompanyInfoCard vehicle={vehicle} companyData={companyData} />
         </div>
       </div>
     </div>
