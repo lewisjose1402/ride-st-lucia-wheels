@@ -22,7 +22,12 @@ const VehicleDetailPage = () => {
   const { data: companyData } = useQuery({
     queryKey: ['company', vehicle?.company_id],
     queryFn: async () => {
-      if (!vehicle?.company_id) return null;
+      if (!vehicle?.company_id) {
+        console.log('No company_id found for vehicle:', vehicle);
+        return null;
+      }
+      
+      console.log('Fetching company data for company_id:', vehicle.company_id);
       
       const { data, error } = await supabase
         .from('rental_companies')
@@ -35,10 +40,15 @@ const VehicleDetailPage = () => {
         return null;
       }
       
+      console.log('Company data fetched:', data);
       return data;
     },
     enabled: !!vehicle?.company_id,
   });
+
+  // Add debugging logs
+  console.log('Vehicle data:', vehicle);
+  console.log('Company data:', companyData);
 
   if (isLoading) {
     return (
