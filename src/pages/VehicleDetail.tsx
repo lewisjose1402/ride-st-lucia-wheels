@@ -4,51 +4,41 @@ import { useQuery } from '@tanstack/react-query';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
-import { getVehicle } from '@/services/vehicleService';
 import { supabase } from '@/integrations/supabase/client';
-import VehicleDetailContent from '@/components/vehicle-detail/VehicleDetailContent';
+import VehicleDetailPage from '@/components/vehicle-detail/VehicleDetailPage';
 
-const VehicleDetailPage = () => {
+const VehicleDetail = () => {
   const navigate = useNavigate();
   const { id } = useParams();
 
-  const { data: vehicle, isLoading, error } = useQuery({
-    queryKey: ['vehicle', id],
-    queryFn: () => getVehicle(id!),
+  const { data: vehicleData, isLoading, error } = useQuery({
+    queryKey: ['vehicle-with-company', id],
+    queryFn: async () => {
+      if (!id) throw new Error('Vehicle ID is required');
+      
+      console.log('Fetching vehicle and company data for ID:', id);
+      
+      // Fetch vehicle with images
+      const { data: vehicle, error: vehicleError } = await supabase
+        .from('vehicles')
+        .select(`
+          *,
+          vehicle_images(*),
+          rental_companies(*)
+        `)
+        .eq('id', id)
+        .single();
+
+      if (vehicleError) {
+        console.error('Error fetching vehicle:', vehicleError);
+        throw new Error(vehicleError.message);
+      }
+
+      console.log('Fetched vehicle data:', vehicle);
+      return vehicle;
+    },
     enabled: !!id,
   });
-
-  // Fetch company data for the vehicle
-  const { data: companyData } = useQuery({
-    queryKey: ['company', vehicle?.company_id],
-    queryFn: async () => {
-      if (!vehicle?.company_id) {
-        console.log('No company_id found for vehicle:', vehicle);
-        return null;
-      }
-      
-      console.log('Fetching company data for company_id:', vehicle.company_id);
-      
-      const { data, error } = await supabase
-        .from('rental_companies')
-        .select('*')
-        .eq('id', vehicle.company_id)
-        .maybeSingle();
-      
-      if (error) {
-        console.error('Error fetching company:', error);
-        return null;
-      }
-      
-      console.log('Company data fetched successfully:', data);
-      return data;
-    },
-    enabled: !!vehicle?.company_id,
-  });
-
-  // Add debugging logs
-  console.log('Vehicle data:', vehicle);
-  console.log('Company data in VehicleDetail:', companyData);
 
   if (isLoading) {
     return (
@@ -75,7 +65,7 @@ const VehicleDetailPage = () => {
     );
   }
 
-  if (error || !vehicle) {
+  if (error || !vehicleData) {
     return (
       <div className="min-h-screen flex flex-col">
         <Navbar />
@@ -99,11 +89,11 @@ const VehicleDetailPage = () => {
     <div className="min-h-screen flex flex-col">
       <Navbar />
       <main className="flex-grow pt-16 pb-12 bg-gray-50">
-        <VehicleDetailContent vehicle={vehicle} companyData={companyData} />
+        <VehicleDetailPage vehicle={vehicleData} />
       </main>
       <Footer />
     </div>
   );
 };
 
-export default VehicleDetailPage;
+export default VehicleDetail;
