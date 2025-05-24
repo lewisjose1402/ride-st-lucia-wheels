@@ -1,6 +1,8 @@
 
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import VehicleCard from '@/components/VehicleCard';
@@ -17,110 +19,17 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Calendar, SlidersHorizontal } from 'lucide-react';
 
-// Sample vehicle data for demonstration
-const sampleVehicles = [
-  {
-    id: 1,
-    name: "Jeep Wrangler",
-    image: "/vehicles/jeep-wrangler.jpg", 
-    type: "Jeep",
-    seats: 4,
-    transmission: "Automatic",
-    price: 89,
-    rating: 4.8,
-    location: "Castries, St. Lucia",
-  },
-  {
-    id: 2,
-    name: "Toyota RAV4",
-    image: "/vehicles/toyota-rav4.jpg",
-    type: "SUV",
-    seats: 5,
-    transmission: "Automatic",
-    price: 65,
-    rating: 4.7,
-    location: "Rodney Bay, St. Lucia",
-  },
-  {
-    id: 3,
-    name: "Hyundai Tucson",
-    image: "/vehicles/hyundai-tucson.jpg",
-    type: "SUV",
-    seats: 5,
-    transmission: "Automatic",
-    price: 59,
-    rating: 4.6,
-    location: "Soufrière, St. Lucia"
-  },
-  {
-    id: 4,
-    name: "Suzuki Jimny",
-    image: "/vehicles/suzuki-jimny.jpg",
-    type: "Jeep",
-    seats: 4,
-    transmission: "Manual",
-    price: 45,
-    rating: 4.5,
-    location: "Vieux Fort, St. Lucia"
-  },
-  {
-    id: 5,
-    name: "Honda Civic",
-    image: "/vehicles/honda-civic.jpg",
-    type: "Sedan",
-    seats: 5,
-    transmission: "Automatic",
-    price: 50,
-    rating: 4.3,
-    location: "Castries, St. Lucia"
-  },
-  {
-    id: 6,
-    name: "Toyota Hiace",
-    image: "/vehicles/toyota-hiace.jpg",
-    type: "Van",
-    seats: 12,
-    transmission: "Automatic",
-    price: 110,
-    rating: 4.4,
-    location: "Rodney Bay, St. Lucia"
-  },
-  {
-    id: 7,
-    name: "Nissan X-Trail",
-    image: "/vehicles/nissan-xtrail.jpg",
-    type: "SUV",
-    seats: 5,
-    transmission: "Automatic",
-    price: 70,
-    rating: 4.2,
-    location: "Soufrière, St. Lucia"
-  },
-  {
-    id: 8,
-    name: "Kia Sportage",
-    image: "/vehicles/kia-sportage.jpg",
-    type: "SUV",
-    seats: 5,
-    transmission: "Automatic",
-    price: 68,
-    rating: 4.5,
-    location: "Rodney Bay, St. Lucia"
-  }
-];
-
 const VehiclesPage = () => {
   const location = useLocation();
   const searchParams = location.state || {};
   
-  const [vehicles, setVehicles] = useState(sampleVehicles);
-  const [filteredVehicles, setFilteredVehicles] = useState(sampleVehicles);
+  const [filteredVehicles, setFilteredVehicles] = useState<any[]>([]);
   const [isFilterMobileOpen, setIsFilterMobileOpen] = useState(false);
   
   // Filter states
   const [vehicleType, setVehicleType] = useState(searchParams.vehicleType || 'all');
   const [seats, setSeats] = useState(searchParams.seats || 'all');
-  const [priceRange, setPriceRange] = useState([searchParams.priceRange || 100]);
+  const [priceRange, setPriceRange] = useState([searchParams.priceRange || 200]);
   const [sortBy, setSortBy] = useState('recommended');
   
   // Form values from search
@@ -129,13 +38,50 @@ const VehiclesPage = () => {
   const [pickupDate] = useState(searchParams.pickupDate || '');
   const [dropoffDate] = useState(searchParams.dropoffDate || '');
 
+  // Fetch vehicles from Supabase
+  const { data: vehicles = [], isLoading, error } = useQuery({
+    queryKey: ['vehicles'],
+    queryFn: async () => {
+      console.log('Fetching vehicles from database...');
+      
+      const { data, error } = await supabase
+        .from('vehicles')
+        .select(`
+          *,
+          vehicle_images(*),
+          rental_companies(company_name)
+        `)
+        .eq('is_available', true)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching vehicles:', error);
+        throw new Error(error.message);
+      }
+
+      console.log('Fetched vehicles:', data);
+      return data || [];
+    },
+  });
+
   // Apply filters
   useEffect(() => {
+    if (!vehicles) return;
+    
     let filtered = [...vehicles];
     
-    // Filter by vehicle type
+    // Filter by vehicle type (using transmission as a proxy since we don't have vehicle_type field)
     if (vehicleType !== 'all') {
-      filtered = filtered.filter(vehicle => vehicle.type.toLowerCase() === vehicleType.toLowerCase());
+      filtered = filtered.filter(vehicle => {
+        // Map transmission types to general vehicle categories
+        const transmission = vehicle.transmission?.toLowerCase() || '';
+        if (vehicleType === 'automatic') {
+          return transmission.includes('automatic');
+        } else if (vehicleType === 'manual') {
+          return transmission.includes('manual');
+        }
+        return true;
+      });
     }
     
     // Filter by seats
@@ -144,19 +90,56 @@ const VehiclesPage = () => {
     }
     
     // Filter by price
-    filtered = filtered.filter(vehicle => vehicle.price <= priceRange[0]);
+    filtered = filtered.filter(vehicle => vehicle.price_per_day <= priceRange[0]);
     
     // Sort results
     if (sortBy === 'price-low') {
-      filtered.sort((a, b) => a.price - b.price);
+      filtered.sort((a, b) => a.price_per_day - b.price_per_day);
     } else if (sortBy === 'price-high') {
-      filtered.sort((a, b) => b.price - a.price);
+      filtered.sort((a, b) => b.price_per_day - a.price_per_day);
     } else if (sortBy === 'rating') {
-      filtered.sort((a, b) => b.rating - a.rating);
+      filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
     }
     
     setFilteredVehicles(filtered);
   }, [vehicles, vehicleType, seats, priceRange, sortBy]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <main className="flex-grow pt-16 bg-gray-50">
+          <div className="container mx-auto px-4 py-8">
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-purple mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading vehicles...</p>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <main className="flex-grow pt-16 bg-gray-50">
+          <div className="container mx-auto px-4 py-8">
+            <div className="text-center py-12">
+              <h1 className="text-2xl font-bold text-gray-800 mb-4">Error Loading Vehicles</h1>
+              <p className="text-gray-600 mb-4">We're having trouble loading the vehicles. Please try again later.</p>
+              <Button onClick={() => window.location.reload()} className="bg-brand-purple hover:bg-brand-purple-dark">
+                Try Again
+              </Button>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -245,21 +228,19 @@ const VehiclesPage = () => {
             <div className="md:w-1/4 bg-white p-4 rounded-lg shadow-sm h-fit">
               <h2 className="text-xl font-bold text-brand-dark mb-4">Filters</h2>
               
-              {/* Vehicle Type */}
+              {/* Transmission Type */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Vehicle Type
+                  Transmission
                 </label>
                 <Select value={vehicleType} onValueChange={setVehicleType}>
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="All Vehicle Types" />
+                    <SelectValue placeholder="All Transmissions" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Vehicle Types</SelectItem>
-                    <SelectItem value="suv">SUV</SelectItem>
-                    <SelectItem value="sedan">Sedan</SelectItem>
-                    <SelectItem value="jeep">Jeep</SelectItem>
-                    <SelectItem value="van">Van</SelectItem>
+                    <SelectItem value="all">All Transmissions</SelectItem>
+                    <SelectItem value="automatic">Automatic</SelectItem>
+                    <SelectItem value="manual">Manual</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -309,7 +290,7 @@ const VehiclesPage = () => {
                 onClick={() => {
                   setVehicleType('all');
                   setSeats('all');
-                  setPriceRange([100]);
+                  setPriceRange([200]);
                 }}
               >
                 Reset Filters
@@ -342,9 +323,27 @@ const VehiclesPage = () => {
               {/* Results grid */}
               {filteredVehicles.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredVehicles.map(vehicle => (
-                    <VehicleCard key={vehicle.id} {...vehicle} />
-                  ))}
+                  {filteredVehicles.map(vehicle => {
+                    // Get the primary image or first available image
+                    const primaryImage = vehicle.vehicle_images?.find(img => img.is_primary);
+                    const imageUrl = primaryImage?.image_url || vehicle.vehicle_images?.[0]?.image_url || '/placeholder.svg';
+                    
+                    return (
+                      <VehicleCard 
+                        key={vehicle.id}
+                        id={vehicle.id}
+                        name={vehicle.name}
+                        image={imageUrl}
+                        type={vehicle.transmission || 'Vehicle'}
+                        seats={vehicle.seats}
+                        transmission={vehicle.transmission}
+                        price={vehicle.price_per_day}
+                        rating={vehicle.rating || 4.0}
+                        location={vehicle.location}
+                        featured={vehicle.is_featured}
+                      />
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="text-center py-10">
@@ -355,7 +354,7 @@ const VehiclesPage = () => {
                     onClick={() => {
                       setVehicleType('all');
                       setSeats('all');
-                      setPriceRange([100]);
+                      setPriceRange([200]);
                     }}
                   >
                     Reset Filters
