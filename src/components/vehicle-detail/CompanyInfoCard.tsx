@@ -2,9 +2,7 @@
 import { 
   Card, 
   CardContent, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle 
+  CardHeader 
 } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
@@ -19,7 +17,7 @@ const CompanyInfoCard = ({ companyData, vehicle }: CompanyInfoCardProps) => {
   console.log('CompanyInfoCard received vehicle:', vehicle);
 
   // If no company data is available, show vehicle-based fallback info
-  if (!companyData || (Array.isArray(companyData) && companyData.length === 0)) {
+  if (!companyData) {
     return (
       <Card>
         <CardHeader>
