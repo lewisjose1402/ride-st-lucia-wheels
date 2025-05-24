@@ -165,8 +165,8 @@ const VehiclesPage = () => {
               </div>
               
               <Button 
-                variant="outline" 
-                className="text-white border-white hover:bg-brand-purple-dark mt-2 sm:mt-0"
+                variant="secondary" 
+                className="bg-white text-brand-purple hover:bg-gray-100 border-white mt-2 sm:mt-0"
                 onClick={() => setIsFilterMobileOpen(!isFilterMobileOpen)}
               >
                 <SlidersHorizontal className="mr-2 h-4 w-4" />
