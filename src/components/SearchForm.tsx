@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -15,6 +14,7 @@ import {
 import { Slider } from "@/components/ui/slider";
 import { Calendar } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { CONSTITUENCIES } from '@/components/company/profile/constants';
 
 const SearchForm = () => {
   const navigate = useNavigate();
@@ -111,14 +111,18 @@ const SearchForm = () => {
           {/* Pickup Location */}
           <div>
             <Label htmlFor="pickupLocation" className="mb-1 block">Pickup Location</Label>
-            <Input
-              id="pickupLocation"
-              placeholder="Enter pickup location"
-              value={pickupLocation}
-              onChange={(e) => setPickupLocation(e.target.value)}
-              required
-              className="w-full"
-            />
+            <Select value={pickupLocation} onValueChange={setPickupLocation}>
+              <SelectTrigger id="pickupLocation" className="w-full">
+                <SelectValue placeholder="Select pickup location" />
+              </SelectTrigger>
+              <SelectContent>
+                {CONSTITUENCIES.map((constituency) => (
+                  <SelectItem key={constituency} value={constituency}>
+                    {constituency}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
