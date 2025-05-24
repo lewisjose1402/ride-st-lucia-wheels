@@ -5,7 +5,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
-import VehicleDetailPage from '@/components/vehicle-detail/VehicleDetailPage';
+import VehicleDetailContent from '@/components/vehicle-detail/VehicleDetailContent';
 
 const VehicleDetail = () => {
   const navigate = useNavigate();
@@ -89,7 +89,10 @@ const VehicleDetail = () => {
     <div className="min-h-screen flex flex-col">
       <Navbar />
       <main className="flex-grow pt-16 pb-12 bg-gray-50">
-        <VehicleDetailPage vehicle={vehicleData} />
+        <VehicleDetailContent 
+          vehicle={vehicleData} 
+          companyData={vehicleData.rental_companies} 
+        />
       </main>
       <Footer />
     </div>
