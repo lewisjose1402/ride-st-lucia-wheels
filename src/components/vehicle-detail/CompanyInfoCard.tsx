@@ -75,7 +75,9 @@ const CompanyInfoCard = ({ companyData, vehicle }: CompanyInfoCardProps) => {
           </Avatar>
           <div className="flex-1">
             <h3 className="text-lg font-semibold">{companyData.company_name}</h3>
-            <p className="text-sm text-gray-600">{companyData.contact_person}</p>
+            {companyData.contact_person && (
+              <p className="text-sm text-gray-600">{companyData.contact_person}</p>
+            )}
           </div>
         </div>
       </CardHeader>
@@ -115,6 +117,15 @@ const CompanyInfoCard = ({ companyData, vehicle }: CompanyInfoCardProps) => {
             {companyData.is_approved ? 'Verified' : 'Unverified'}
           </Badge>
         </div>
+        
+        {companyData.created_at && (
+          <div className="flex items-center justify-between mt-2">
+            <span className="text-sm text-gray-600">Member since</span>
+            <span className="text-sm font-medium">
+              {new Date(companyData.created_at).getFullYear()}
+            </span>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

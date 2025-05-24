@@ -13,19 +13,20 @@ const VehicleDetail = () => {
   const { id } = useParams();
   const [companyData, setCompanyData] = useState(null);
 
+  // Optimized query to fetch vehicle with images and type in a single request
   const { data: vehicleData, isLoading, error } = useQuery({
-    queryKey: ['vehicle-with-images', id],
+    queryKey: ['vehicle-detail', id],
     queryFn: async () => {
       if (!id) throw new Error('Vehicle ID is required');
       
       console.log('Fetching vehicle data for ID:', id);
       
-      // Fetch vehicle with images only
       const { data: vehicle, error: vehicleError } = await supabase
         .from('vehicles')
         .select(`
           *,
-          vehicle_images(*)
+          vehicle_images(*),
+          vehicle_types(name)
         `)
         .eq('id', id)
         .single();
@@ -41,9 +42,14 @@ const VehicleDetail = () => {
     enabled: !!id,
   });
 
+  // Fetch company data when vehicle data is available
   useEffect(() => {
     const fetchCompany = async () => {
-      if (!vehicleData?.company_id) return;
+      if (!vehicleData?.company_id) {
+        console.log('No company_id found on vehicle');
+        setCompanyData(null);
+        return;
+      }
 
       console.log('Fetching company data for company_id:', vehicleData.company_id);
 
