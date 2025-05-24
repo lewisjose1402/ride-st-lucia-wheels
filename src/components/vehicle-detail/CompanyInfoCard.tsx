@@ -6,6 +6,8 @@ import {
 } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
+import { MapPin, Phone, Mail } from 'lucide-react';
 
 interface CompanyInfoCardProps {
   companyData: any;
@@ -27,26 +29,31 @@ const CompanyInfoCard = ({ companyData, vehicle }: CompanyInfoCardProps) => {
                 VP
               </AvatarFallback>
             </Avatar>
-            <div>
+            <div className="flex-1">
               <h3 className="text-lg font-semibold">Vehicle Provider</h3>
               <p className="text-sm text-gray-600">Rental Company</p>
             </div>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="text-sm text-gray-600 mb-4">
-            <p className="mb-2">Professional vehicle rental service in St. Lucia.</p>
-            <p className="mb-2">📍 St. Lucia</p>
-            <p className="mb-2">📞 Contact for details</p>
+          <div className="space-y-3">
+            <div className="flex items-center text-sm text-gray-600">
+              <MapPin className="h-4 w-4 mr-2" />
+              <span>St. Lucia</span>
+            </div>
+            <div className="flex items-center text-sm text-gray-600">
+              <Phone className="h-4 w-4 mr-2" />
+              <span>Contact for details</span>
+            </div>
           </div>
+          
           <Separator className="my-4" />
-          <div className="flex justify-between text-sm">
-            <span>Status</span>
-            <span className="font-medium text-green-600">Active</span>
-          </div>
-          <div className="flex justify-between text-sm mt-2">
-            <span>Vehicle ID</span>
-            <span className="font-medium text-xs">{vehicle?.id?.slice(-8) || 'N/A'}</span>
+          
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-gray-600">Status</span>
+            <Badge variant="secondary" className="bg-green-100 text-green-800">
+              Active
+            </Badge>
           </div>
         </CardContent>
       </Card>
@@ -66,37 +73,47 @@ const CompanyInfoCard = ({ companyData, vehicle }: CompanyInfoCardProps) => {
               {companyData.company_name?.charAt(0) || 'RC'}
             </AvatarFallback>
           </Avatar>
-          <div>
+          <div className="flex-1">
             <h3 className="text-lg font-semibold">{companyData.company_name}</h3>
             <p className="text-sm text-gray-600">{companyData.contact_person}</p>
           </div>
         </div>
       </CardHeader>
       <CardContent>
-        <div className="text-sm text-gray-600 mb-4">
-          <p className="mb-2">{companyData.description || 'Quality vehicle rental service in St. Lucia.'}</p>
+        <div className="space-y-3">
           {companyData.address && (
-            <p className="mb-2">📍 {companyData.address}</p>
+            <div className="flex items-center text-sm text-gray-600">
+              <MapPin className="h-4 w-4 mr-2" />
+              <span>{companyData.address}</span>
+            </div>
           )}
           {companyData.phone && (
-            <p className="mb-2">📞 {companyData.phone}</p>
+            <div className="flex items-center text-sm text-gray-600">
+              <Phone className="h-4 w-4 mr-2" />
+              <span>{companyData.phone}</span>
+            </div>
           )}
           {companyData.email && (
-            <p className="mb-2">✉️ {companyData.email}</p>
+            <div className="flex items-center text-sm text-gray-600">
+              <Mail className="h-4 w-4 mr-2" />
+              <span>{companyData.email}</span>
+            </div>
           )}
         </div>
+        
         <Separator className="my-4" />
-        <div className="flex justify-between text-sm">
-          <span>Status</span>
-          <span className={`font-medium ${companyData.is_approved ? 'text-green-600' : 'text-yellow-600'}`}>
-            {companyData.is_approved ? 'Verified' : 'Pending Verification'}
-          </span>
-        </div>
-        <div className="flex justify-between text-sm mt-2">
-          <span>Member since</span>
-          <span className="font-medium">
-            {companyData.created_at ? new Date(companyData.created_at).getFullYear() : new Date().getFullYear()}
-          </span>
+        
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-gray-600">Status</span>
+          <Badge 
+            variant={companyData.is_approved ? "default" : "secondary"}
+            className={companyData.is_approved 
+              ? "bg-green-100 text-green-800" 
+              : "bg-yellow-100 text-yellow-800"
+            }
+          >
+            {companyData.is_approved ? 'Verified' : 'Unverified'}
+          </Badge>
         </div>
       </CardContent>
     </Card>
