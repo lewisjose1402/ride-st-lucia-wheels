@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { MapPin, Star, Calendar, Car, Check } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -24,6 +23,9 @@ const VehicleDetailPage = ({ vehicle }: VehicleDetailPageProps) => {
 
   const images = vehicle.vehicle_images || [];
   const companyData = vehicle.rental_companies;
+
+  console.log('VehicleDetailPage received vehicle:', vehicle);
+  console.log('VehicleDetailPage companyData:', companyData);
 
   useEffect(() => {
     if (images.length > 0) {
@@ -287,18 +289,18 @@ const VehicleDetailPage = ({ vehicle }: VehicleDetailPageProps) => {
                     alt={companyData?.company_name || 'Company'}
                   />
                   <AvatarFallback className="bg-brand-purple text-white text-lg font-bold">
-                    {companyData?.company_name?.charAt(0) || 'BH'}
+                    {companyData?.company_name?.charAt(0) || 'C'}
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <h3 className="text-lg font-semibold">{companyData?.company_name || 'BeBe Homes'}</h3>
-                  <p className="text-sm text-gray-600">{companyData?.contact_person || 'Jose Lewis'}</p>
+                  <h3 className="text-lg font-semibold">{companyData?.company_name || 'Rental Company'}</h3>
+                  <p className="text-sm text-gray-600">{companyData?.contact_person || 'Contact Person'}</p>
                 </div>
               </div>
             </CardHeader>
             <CardContent>
               <div className="text-sm text-gray-600 mb-4">
-                <p className="mb-2">{companyData?.description || 'Quality vehicle rental service in St. Lucia.'}</p>
+                <p className="mb-2">{companyData?.description || 'Professional vehicle rental service in St. Lucia.'}</p>
                 {companyData?.address && (
                   <p className="mb-2">📍 {companyData.address}</p>
                 )}

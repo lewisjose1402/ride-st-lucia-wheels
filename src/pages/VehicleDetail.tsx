@@ -18,13 +18,13 @@ const VehicleDetail = () => {
       
       console.log('Fetching vehicle and company data for ID:', id);
       
-      // Fetch vehicle with images
+      // Fetch vehicle with images and company data using proper join
       const { data: vehicle, error: vehicleError } = await supabase
         .from('vehicles')
         .select(`
           *,
           vehicle_images(*),
-          rental_companies(*)
+          rental_companies!vehicles_company_id_fkey(*)
         `)
         .eq('id', id)
         .single();
