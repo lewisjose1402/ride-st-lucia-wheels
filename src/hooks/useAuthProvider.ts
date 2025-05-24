@@ -142,6 +142,16 @@ export function useAuthProvider() {
       });
       
       if (error) {
+        // Handle specific Supabase Auth errors for duplicate emails
+        if (error.message.includes('already registered') || error.message.includes('already exists')) {
+          toast({
+            title: "Email already registered",
+            description: "This email is already in use. Please use a different email or try signing in.",
+            variant: "destructive"
+          });
+          return { success: false, error: "Email already registered" };
+        }
+        
         toast({
           title: "Sign up failed",
           description: error.message,
@@ -166,6 +176,8 @@ export function useAuthProvider() {
             
           if (profileError) {
             console.error("Error creating company profile:", profileError);
+            // If company profile creation fails, we should still consider the signup successful
+            // since the user was created in Supabase Auth
           }
         } catch (profileError) {
           console.error("Error creating initial company profile:", profileError);
