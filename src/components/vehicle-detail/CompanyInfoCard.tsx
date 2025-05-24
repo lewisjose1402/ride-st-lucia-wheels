@@ -15,11 +15,17 @@ interface CompanyInfoCardProps {
 }
 
 const CompanyInfoCard = ({ companyData, vehicle }: CompanyInfoCardProps) => {
-  console.log('CompanyInfoCard received companyData:', companyData);
-  console.log('CompanyInfoCard received vehicle:', vehicle);
+  console.log('CompanyInfoCard rendering with:', {
+    companyData,
+    hasCompanyData: !!companyData,
+    companyDataType: typeof companyData,
+    companyDataKeys: companyData ? Object.keys(companyData) : null,
+    vehicle: vehicle?.id
+  });
 
   // If no company data is available, show vehicle-based fallback info
   if (!companyData) {
+    console.log('No company data available, showing fallback');
     return (
       <Card>
         <CardHeader>
@@ -60,6 +66,15 @@ const CompanyInfoCard = ({ companyData, vehicle }: CompanyInfoCardProps) => {
     );
   }
 
+  console.log('Rendering with actual company data:', {
+    companyName: companyData.company_name,
+    contactPerson: companyData.contact_person,
+    address: companyData.address,
+    phone: companyData.phone,
+    email: companyData.email,
+    isApproved: companyData.is_approved
+  });
+
   return (
     <Card>
       <CardHeader>
@@ -74,7 +89,9 @@ const CompanyInfoCard = ({ companyData, vehicle }: CompanyInfoCardProps) => {
             </AvatarFallback>
           </Avatar>
           <div className="flex-1">
-            <h3 className="text-lg font-semibold">{companyData.company_name}</h3>
+            <h3 className="text-lg font-semibold">
+              {companyData.company_name || 'Rental Company'}
+            </h3>
             {companyData.contact_person && (
               <p className="text-sm text-gray-600">{companyData.contact_person}</p>
             )}

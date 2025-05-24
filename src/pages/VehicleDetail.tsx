@@ -11,69 +11,39 @@ const VehicleDetail = () => {
   const navigate = useNavigate();
   const { id } = useParams();
 
-  // Fetch vehicle data with images and type
-  const { data: vehicleData, isLoading: vehicleLoading, error: vehicleError } = useQuery({
-    queryKey: ['vehicle-detail', id],
+  // Single optimized query to fetch vehicle with company data, images, and type
+  const { data: vehicleData, isLoading, error } = useQuery({
+    queryKey: ['vehicle-with-company-detail', id],
     queryFn: async () => {
       if (!id) throw new Error('Vehicle ID is required');
       
-      console.log('Fetching vehicle data for ID:', id);
+      console.log('Fetching vehicle and company data for ID:', id);
       
       const { data: vehicle, error: vehicleError } = await supabase
         .from('vehicles')
         .select(`
           *,
           vehicle_images(*),
-          vehicle_types(name)
+          vehicle_types(name),
+          rental_companies(*)
         `)
         .eq('id', id)
         .single();
 
       if (vehicleError) {
-        console.error('Error fetching vehicle:', vehicleError);
+        console.error('Error fetching vehicle with company data:', vehicleError);
         throw new Error(vehicleError.message);
       }
 
-      console.log('Fetched vehicle data:', vehicle);
+      if (!vehicle) {
+        throw new Error('Vehicle not found');
+      }
+
+      console.log('Successfully fetched vehicle with company data:', vehicle);
       return vehicle;
     },
     enabled: !!id,
   });
-
-  // Fetch company data based on vehicle's company_id
-  const { data: companyData, isLoading: companyLoading } = useQuery({
-    queryKey: ['company-detail', vehicleData?.company_id],
-    queryFn: async () => {
-      if (!vehicleData?.company_id) {
-        console.log('No company_id found on vehicle');
-        return null;
-      }
-
-      console.log('Fetching company data for company_id:', vehicleData.company_id);
-
-      const { data, error } = await supabase
-        .from('rental_companies')
-        .select('*')
-        .eq('id', vehicleData.company_id)
-        .maybeSingle();
-
-      if (error) {
-        console.error("Error fetching company:", error);
-        return null;
-      }
-
-      if (data) {
-        console.log('Fetched company data:', data);
-      } else {
-        console.log('No company found for ID:', vehicleData.company_id);
-      }
-
-      return data;
-    },
-    enabled: !!vehicleData?.company_id,
-  });
-
-  const isLoading = vehicleLoading || companyLoading;
 
   if (isLoading) {
     return (
@@ -100,7 +70,8 @@ const VehicleDetail = () => {
     );
   }
 
-  if (vehicleError || !vehicleData) {
+  if (error || !vehicleData) {
+    console.error('Vehicle detail page error:', error);
     return (
       <div className="min-h-screen flex flex-col">
         <Navbar />
@@ -108,7 +79,9 @@ const VehicleDetail = () => {
           <div className="container mx-auto px-4 py-8">
             <div className="text-center py-12">
               <h1 className="text-2xl font-bold text-gray-800 mb-4">Vehicle Not Found</h1>
-              <p className="text-gray-600 mb-4">The vehicle you're looking for doesn't exist or is no longer available.</p>
+              <p className="text-gray-600 mb-4">
+                {error?.message || 'The vehicle you\'re looking for doesn\'t exist or is no longer available.'}
+              </p>
               <Button onClick={() => navigate('/vehicles')} className="bg-brand-purple hover:bg-brand-purple-dark">
                 Browse All Vehicles
               </Button>
@@ -119,6 +92,14 @@ const VehicleDetail = () => {
       </div>
     );
   }
+
+  // Extract company data from the joined result
+  const companyData = vehicleData.rental_companies;
+  
+  console.log('Rendering VehicleDetail with data:', {
+    vehicle: vehicleData,
+    company: companyData
+  });
 
   return (
     <div className="min-h-screen flex flex-col">

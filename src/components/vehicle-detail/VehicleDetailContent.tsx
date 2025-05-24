@@ -9,16 +9,25 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getAddressFromLocationData } from '@/utils/locationHelpers';
 import CompanyInfoCard from './CompanyInfoCard';
+import { Vehicle, RentalCompany } from '@/types/vehicle';
 
 interface VehicleDetailContentProps {
-  vehicle: any;
-  companyData: any;
+  vehicle: Vehicle;
+  companyData: RentalCompany | null;
 }
 
 const VehicleDetailContent = ({ vehicle, companyData }: VehicleDetailContentProps) => {
   const [selectedImage, setSelectedImage] = useState('');
   const [pickupDate, setPickupDate] = useState('');
   const [dropoffDate, setDropoffDate] = useState('');
+
+  console.log('VehicleDetailContent received:', {
+    vehicle: vehicle?.id,
+    vehicleName: vehicle?.name,
+    companyData: companyData?.id,
+    companyName: companyData?.company_name,
+    hasVehicleImages: vehicle?.vehicle_images?.length || 0
+  });
 
   const images = vehicle.vehicle_images || [];
 
