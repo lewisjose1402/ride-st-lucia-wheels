@@ -1,4 +1,3 @@
-
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -10,7 +9,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { User, LogOut, Car, Settings, UserCircle, Building } from 'lucide-react';
+import { LogOut, Settings, Building } from 'lucide-react';
 
 const AuthButtons = () => {
   const { user, signOut, isRentalCompany, isAdmin } = useAuth();
@@ -42,12 +41,6 @@ const AuthButtons = () => {
               {user.email || 'User Account'}
             </div>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link to="/profile" className="w-full flex items-center cursor-pointer">
-                <UserCircle className="mr-2 h-4 w-4" />
-                <span>My Profile</span>
-              </Link>
-            </DropdownMenuItem>
             
             {isRentalCompany && (
               <DropdownMenuItem asChild>
