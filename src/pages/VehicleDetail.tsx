@@ -107,9 +107,24 @@ const VehicleDetailPage = () => {
     return parts.join(', ') || "St. Lucia";
   };
 
-  // Get vehicle type from features or default
+  // Get vehicle type from name or create a default based on vehicle characteristics
   const getVehicleType = () => {
-    return vehicle.vehicle_type || 'Vehicle';
+    if (!vehicle.name) return 'Vehicle';
+    
+    const name = vehicle.name.toLowerCase();
+    
+    // Try to determine type from the vehicle name
+    if (name.includes('suv') || name.includes('rav4') || name.includes('cr-v')) return 'SUV';
+    if (name.includes('jeep') || name.includes('wrangler')) return 'Jeep';
+    if (name.includes('van') || name.includes('minivan')) return 'Van';
+    if (name.includes('convertible') || name.includes('cabrio')) return 'Convertible';
+    if (name.includes('hatchback')) return 'Hatchback';
+    if (name.includes('sedan') || name.includes('camry') || name.includes('accord')) return 'Sedan';
+    
+    // Default fallback based on seats
+    if (vehicle.seats >= 7) return 'Van';
+    if (vehicle.seats >= 5) return 'SUV';
+    return 'Sedan';
   };
 
   // Get features array from vehicle.features object
