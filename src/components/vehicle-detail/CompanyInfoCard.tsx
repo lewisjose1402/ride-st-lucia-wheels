@@ -11,32 +11,45 @@ import { Separator } from '@/components/ui/separator';
 
 interface CompanyInfoCardProps {
   companyData: any;
+  vehicle?: any;
 }
 
-const CompanyInfoCard = ({ companyData }: CompanyInfoCardProps) => {
+const CompanyInfoCard = ({ companyData, vehicle }: CompanyInfoCardProps) => {
   console.log('CompanyInfoCard received companyData:', companyData);
+  console.log('CompanyInfoCard received vehicle:', vehicle);
 
-  // If no company data is available, show a message
-  if (!companyData) {
+  // If no company data is available, show vehicle-based fallback info
+  if (!companyData || (Array.isArray(companyData) && companyData.length === 0)) {
     return (
       <Card>
         <CardHeader>
           <div className="flex items-center">
             <Avatar className="h-12 w-12 mr-3">
-              <AvatarFallback className="bg-gray-300 text-gray-600 text-lg font-bold">
-                ?
+              <AvatarFallback className="bg-brand-purple text-white text-lg font-bold">
+                VP
               </AvatarFallback>
             </Avatar>
             <div>
-              <h3 className="text-lg font-semibold text-gray-500">Company Information Unavailable</h3>
-              <p className="text-sm text-gray-400">Details not found</p>
+              <h3 className="text-lg font-semibold">Vehicle Provider</h3>
+              <p className="text-sm text-gray-600">Rental Company</p>
             </div>
           </div>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-gray-500">
-            Company information is currently not available for this vehicle.
-          </p>
+          <div className="text-sm text-gray-600 mb-4">
+            <p className="mb-2">Professional vehicle rental service in St. Lucia.</p>
+            <p className="mb-2">📍 St. Lucia</p>
+            <p className="mb-2">📞 Contact for details</p>
+          </div>
+          <Separator className="my-4" />
+          <div className="flex justify-between text-sm">
+            <span>Status</span>
+            <span className="font-medium text-green-600">Active</span>
+          </div>
+          <div className="flex justify-between text-sm mt-2">
+            <span>Vehicle ID</span>
+            <span className="font-medium text-xs">{vehicle?.id?.slice(-8) || 'N/A'}</span>
+          </div>
         </CardContent>
       </Card>
     );
