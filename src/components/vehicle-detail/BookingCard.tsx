@@ -8,12 +8,13 @@ import {
   CardHeader, 
   CardTitle 
 } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import DateFields from './DateFields';
 import PersonalInfoFields from './PersonalInfoFields';
 import DriverInfoFields from './DriverInfoFields';
 import PriceBreakdown from './PriceBreakdown';
+import BookingRequirementsDisplay from './BookingRequirementsDisplay';
+import BookingActions from './BookingActions';
 import { useBookingRequirements } from '@/hooks/useBookingRequirements';
 import { calculatePricing } from '@/utils/pricingCalculations';
 import { validateBookingForm } from '@/utils/bookingValidation';
@@ -165,19 +166,7 @@ const BookingCard = ({ vehicle }: BookingCardProps) => {
       <CardContent>
         <div className="space-y-4">
           {/* Company Requirements Display */}
-          <div className="bg-blue-50 p-3 rounded-lg text-sm">
-            <h4 className="font-semibold text-blue-800 mb-2">Booking Requirements</h4>
-            <ul className="text-blue-700 space-y-1">
-              {requirements.requireDriverLicense && (
-                <li>• Valid driver's license required</li>
-              )}
-              <li>• Minimum age: {requirements.minimumDriverAge} years</li>
-              <li>• Minimum driving experience: {requirements.minimumDrivingExperience} years</li>
-              {requirements.requireDamageDeposit && (
-                <li>• Damage deposit: ${requirements.damageDepositAmount} ({requirements.damageDepositType})</li>
-              )}
-            </ul>
-          </div>
+          <BookingRequirementsDisplay requirements={requirements} />
 
           {/* Date Selection */}
           <DateFields 
@@ -226,17 +215,11 @@ const BookingCard = ({ vehicle }: BookingCardProps) => {
             />
           )}
 
-          <Button 
-            className="w-full bg-brand-orange hover:bg-brand-orange/90 text-white"
-            onClick={handleBooking}
-            disabled={!validation.isValid}
-          >
-            Book Now
-          </Button>
-          
-          <div className="text-center text-sm text-gray-500 mt-2">
-            Only 10% deposit required to confirm
-          </div>
+          {/* Booking Actions */}
+          <BookingActions 
+            onBooking={handleBooking}
+            isValid={validation.isValid}
+          />
         </div>
       </CardContent>
     </Card>
