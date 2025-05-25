@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getAddressFromLocationData } from '@/utils/locationHelpers';
 import CompanyInfoCard from './CompanyInfoCard';
+import BookingCard from './BookingCard';
 import { Vehicle, RentalCompany } from '@/types/vehicle';
 
 interface VehicleDetailContentProps {
@@ -18,8 +19,6 @@ interface VehicleDetailContentProps {
 
 const VehicleDetailContent = ({ vehicle, companyData }: VehicleDetailContentProps) => {
   const [selectedImage, setSelectedImage] = useState('');
-  const [pickupDate, setPickupDate] = useState('');
-  const [dropoffDate, setDropoffDate] = useState('');
 
   console.log('VehicleDetailContent received:', {
     vehicle: vehicle?.id,
@@ -246,57 +245,8 @@ const VehicleDetailContent = ({ vehicle, companyData }: VehicleDetailContentProp
         
         {/* Right column - Booking and company info */}
         <div>
-          {/* Booking Card */}
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>
-                <span className="text-2xl font-bold">${vehicle.price_per_day}</span>
-                <span className="text-gray-500 text-base font-normal"> / day</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="pickupDate">Pickup Date</Label>
-                  <div className="relative mt-1">
-                    <Input
-                      id="pickupDate"
-                      type="date"
-                      value={pickupDate}
-                      onChange={(e) => setPickupDate(e.target.value)}
-                      className="w-full"
-                      min={new Date().toISOString().split('T')[0]}
-                    />
-                    <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="dropoffDate">Dropoff Date</Label>
-                  <div className="relative mt-1">
-                    <Input
-                      id="dropoffDate"
-                      type="date"
-                      value={dropoffDate}
-                      onChange={(e) => setDropoffDate(e.target.value)}
-                      className="w-full"
-                      min={pickupDate || new Date().toISOString().split('T')[0]}
-                    />
-                    <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                  </div>
-                </div>
-                <Button 
-                  className="w-full bg-brand-orange hover:bg-brand-orange/90 text-white"
-                  disabled={!pickupDate || !dropoffDate}
-                >
-                  Book Now
-                </Button>
-                
-                <div className="text-center text-sm text-gray-500 mt-2">
-                  Only 10% deposit required to confirm
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Booking Card with all required fields */}
+          <BookingCard vehicle={vehicle} />
 
           {/* Company Information Card */}
           <CompanyInfoCard vehicle={vehicle} companyData={companyData} />
