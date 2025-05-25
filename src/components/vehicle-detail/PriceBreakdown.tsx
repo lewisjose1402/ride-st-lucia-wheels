@@ -48,7 +48,7 @@ const PriceBreakdown = ({
       </div>
       
       <div className="flex justify-between">
-        <span>Government Tax (25%)</span>
+        <span>Government Tax (12.5%)</span>
         <span className="font-medium">{formatCurrency(governmentTax)}</span>
       </div>
       

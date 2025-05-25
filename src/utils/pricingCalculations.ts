@@ -54,8 +54,8 @@ export const calculatePricing = (inputs: PricingInputs): PricingBreakdown => {
   // Taxable Amount = Base Cost - Booking Confirmation Fee
   const taxableAmount = baseCost - confirmationFee;
   
-  // Government Tax (25%) applied to taxable amount
-  const governmentTax = taxableAmount * 0.25;
+  // Government Tax (12.5%) applied to taxable amount
+  const governmentTax = taxableAmount * 0.125;
   
   // Permit fee applies if NOT international license
   const permitFee = !isInternationalLicense ? 23 : 0;
