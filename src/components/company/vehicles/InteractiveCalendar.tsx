@@ -7,6 +7,7 @@ import CalendarLegend from './calendar/CalendarLegend';
 import SelectionInstructions from './calendar/SelectionInstructions';
 import ClearBlocksActions from './calendar/ClearBlocksActions';
 import BlockCreationDialog from './calendar/BlockCreationDialog';
+import BlockDetailsDialog from './calendar/BlockDetailsDialog';
 import { isSameDay } from 'date-fns';
 
 interface InteractiveCalendarProps {
@@ -19,12 +20,15 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({ vehicleId }) 
   const {
     availability,
     selectedDates,
+    selectedBlock,
     isLoading,
     getDateStatus,
     handleDateClick,
     handleCreateBlock,
+    handleRemoveBlock,
     handleClearVehicleBlocks,
     handleClearAllCompanyBlocks,
+    handleCloseBlockDialog,
     setSelectedDates
   } = useInteractiveCalendar({ vehicleId });
 
@@ -94,6 +98,14 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({ vehicleId }) 
           selectedDates={selectedDates}
           isLoading={isLoading}
           onCreateBlock={handleBlockCreate}
+        />
+
+        <BlockDetailsDialog
+          isOpen={!!selectedBlock}
+          onClose={handleCloseBlockDialog}
+          block={selectedBlock}
+          isLoading={isLoading}
+          onRemoveBlock={handleRemoveBlock}
         />
       </div>
     </TooltipProvider>

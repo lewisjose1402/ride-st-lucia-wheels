@@ -6,7 +6,10 @@ import {
   addManualBlock,
   clearAllManualBlocks,
   clearAllCompanyManualBlocks,
-  AvailabilityData
+  getManualBlockByDate,
+  removeManualBlock,
+  AvailabilityData,
+  CalendarBlock
 } from '@/services/calendarService';
 import { format, isSameDay } from 'date-fns';
 
@@ -18,6 +21,7 @@ export const useInteractiveCalendar = ({ vehicleId }: UseInteractiveCalendarProp
   const { toast } = useToast();
   const [availability, setAvailability] = useState<AvailabilityData[]>([]);
   const [selectedDates, setSelectedDates] = useState<Date[]>([]);
+  const [selectedBlock, setSelectedBlock] = useState<CalendarBlock | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const loadAvailability = async () => {
@@ -50,7 +54,7 @@ export const useInteractiveCalendar = ({ vehicleId }: UseInteractiveCalendarProp
     return dateEntry || { date, status: 'available' as const };
   };
 
-  const handleDateClick = (date: Date) => {
+  const handleDateClick = async (date: Date) => {
     const dateStatus = getDateStatus(date);
     
     // Prevent interaction with iCal booked dates
@@ -63,9 +67,21 @@ export const useInteractiveCalendar = ({ vehicleId }: UseInteractiveCalendarProp
       return;
     }
 
-    // If date is manually blocked, remove the block
+    // If date is manually blocked, show block details
     if (dateStatus.status === 'blocked-manual') {
-      handleRemoveBlock(date);
+      try {
+        const block = await getManualBlockByDate(vehicleId, date);
+        if (block) {
+          setSelectedBlock(block);
+        }
+      } catch (error) {
+        console.error('Error fetching block details:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to load block details',
+          variant: 'destructive',
+        });
+      }
       return;
     }
 
@@ -86,14 +102,16 @@ export const useInteractiveCalendar = ({ vehicleId }: UseInteractiveCalendarProp
     }
   };
 
-  const handleRemoveBlock = async (date: Date) => {
+  const handleRemoveBlock = async (blockId: string) => {
     try {
       setIsLoading(true);
+      await removeManualBlock(blockId);
       await loadAvailability();
+      setSelectedBlock(null);
       
       toast({
         title: 'Block Removed',
-        description: 'The manual block has been removed',
+        description: 'The manual block has been removed successfully',
       });
     } catch (error) {
       console.error('Error removing block:', error);
@@ -184,15 +202,22 @@ export const useInteractiveCalendar = ({ vehicleId }: UseInteractiveCalendarProp
     }
   };
 
+  const handleCloseBlockDialog = () => {
+    setSelectedBlock(null);
+  };
+
   return {
     availability,
     selectedDates,
+    selectedBlock,
     isLoading,
     getDateStatus,
     handleDateClick,
     handleCreateBlock,
+    handleRemoveBlock,
     handleClearVehicleBlocks,
     handleClearAllCompanyBlocks,
+    handleCloseBlockDialog,
     setSelectedDates
   };
 };

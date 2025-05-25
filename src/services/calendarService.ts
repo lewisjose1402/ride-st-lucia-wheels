@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export interface CalendarFeed {
@@ -29,6 +28,7 @@ export interface AvailabilityData {
   status: 'available' | 'booked-ical' | 'blocked-manual';
   reason?: string;
   source?: string;
+  blockId?: string;
 }
 
 // Get calendar feeds for a vehicle
@@ -78,6 +78,28 @@ export const addManualBlock = async (blockData: {
     .single();
 
   if (error) {
+    throw new Error(error.message);
+  }
+
+  return data;
+};
+
+// Get manual block by date
+export const getManualBlockByDate = async (vehicleId: string, date: Date): Promise<CalendarBlock | null> => {
+  const dateString = date.toISOString().split('T')[0];
+  
+  const { data, error } = await supabase
+    .from('vehicle_calendar_blocks')
+    .select('*')
+    .eq('vehicle_id', vehicleId)
+    .lte('start_date', dateString)
+    .gte('end_date', dateString)
+    .single();
+
+  if (error) {
+    if (error.code === 'PGRST116') {
+      return null; // No block found
+    }
     throw new Error(error.message);
   }
 
@@ -165,13 +187,11 @@ export const getVehicleAvailability = async (vehicleId: string): Promise<Availab
         date: new Date(date),
         status: 'blocked-manual',
         reason: block.reason || 'Manually blocked',
-        source: 'manual'
+        source: 'manual',
+        blockId: block.id
       });
     }
   });
-
-  // TODO: Add iCal feed data processing here when iCal parsing is implemented
-  // For now, no mock dates are added - only real data from external feeds will be shown
 
   return availabilityData;
 };
