@@ -45,7 +45,7 @@ export interface AvailabilityData {
   feedName?: string;
 }
 
-// Get calendar feeds for a vehicle
+// Get calendar feeds for a vehicle (public access)
 export const getVehicleCalendarFeeds = async (vehicleId: string): Promise<CalendarFeed[]> => {
   const { data, error } = await supabase
     .from('vehicle_calendar_feeds')
@@ -54,13 +54,14 @@ export const getVehicleCalendarFeeds = async (vehicleId: string): Promise<Calend
     .order('created_at', { ascending: false });
 
   if (error) {
-    throw new Error(error.message);
+    console.error('Error fetching calendar feeds:', error);
+    return []; // Return empty array instead of throwing for public access
   }
 
   return data || [];
 };
 
-// Get manual blocks for a vehicle
+// Get manual blocks for a vehicle (public access)
 export const getVehicleManualBlocks = async (vehicleId: string): Promise<CalendarBlock[]> => {
   const { data, error } = await supabase
     .from('vehicle_calendar_blocks')
@@ -69,13 +70,14 @@ export const getVehicleManualBlocks = async (vehicleId: string): Promise<Calenda
     .order('start_date', { ascending: true });
 
   if (error) {
-    throw new Error(error.message);
+    console.error('Error fetching manual blocks:', error);
+    return []; // Return empty array instead of throwing for public access
   }
 
   return data || [];
 };
 
-// Get iCal bookings for a vehicle
+// Get iCal bookings for a vehicle (public access)
 export const getVehicleICalBookings = async (vehicleId: string): Promise<ICalBooking[]> => {
   const { data, error } = await supabase
     .from('ical_bookings')
@@ -87,13 +89,84 @@ export const getVehicleICalBookings = async (vehicleId: string): Promise<ICalBoo
     .order('start_date', { ascending: true });
 
   if (error) {
-    throw new Error(error.message);
+    console.error('Error fetching iCal bookings:', error);
+    return []; // Return empty array instead of throwing for public access
   }
 
   return data || [];
 };
 
-// Add a manual block
+// Get combined availability data (iCal + manual blocks) - public access
+export const getVehicleAvailability = async (vehicleId: string): Promise<AvailabilityData[]> => {
+  try {
+    const [manualBlocks, icalBookings] = await Promise.all([
+      getVehicleManualBlocks(vehicleId),
+      getVehicleICalBookings(vehicleId)
+    ]);
+    
+    const availabilityData: AvailabilityData[] = [];
+    
+    // Add manual blocks to availability data
+    manualBlocks.forEach(block => {
+      const startDate = new Date(block.start_date);
+      const endDate = new Date(block.end_date);
+      
+      for (let date = new Date(startDate); date <= endDate; date.setDate(date.getDate() + 1)) {
+        availabilityData.push({
+          date: new Date(date),
+          status: 'blocked-manual',
+          reason: block.reason || 'Manually blocked',
+          source: 'manual',
+          blockId: block.id
+        });
+      }
+    });
+
+    // Add iCal bookings to availability data
+    icalBookings.forEach(booking => {
+      const startDate = new Date(booking.start_date);
+      const endDate = new Date(booking.end_date);
+      const feedName = (booking as any).vehicle_calendar_feeds?.feed_name || 'External Calendar';
+      
+      for (let date = new Date(startDate); date <= endDate; date.setDate(date.getDate() + 1)) {
+        availabilityData.push({
+          date: new Date(date),
+          status: 'booked-ical',
+          reason: booking.summary || 'External booking',
+          source: 'ical',
+          feedName: feedName
+        });
+      }
+    });
+
+    return availabilityData;
+  } catch (error) {
+    console.error('Error fetching vehicle availability:', error);
+    return []; // Return empty array for public access on error
+  }
+};
+
+// Check if a date range conflicts with existing bookings (public access)
+export const checkDateConflicts = async (vehicleId: string, startDate: string, endDate: string): Promise<boolean> => {
+  try {
+    const availability = await getVehicleAvailability(vehicleId);
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    
+    return availability.some(item => {
+      const itemDate = new Date(item.date);
+      return itemDate >= start && itemDate <= end && item.status !== 'available';
+    });
+  } catch (error) {
+    console.error('Error checking date conflicts:', error);
+    return false; // Assume no conflicts on error for public access
+  }
+};
+
+// --- AUTHENTICATED FUNCTIONS BELOW ---
+// These require authentication and are for rental company management
+
+// Add a manual block (requires auth)
 export const addManualBlock = async (blockData: {
   vehicle_id: string;
   start_date: string;
@@ -116,7 +189,7 @@ export const addManualBlock = async (blockData: {
   return data;
 };
 
-// Get manual block by date
+// Get manual block by date (requires auth)
 export const getManualBlockByDate = async (vehicleId: string, date: Date): Promise<CalendarBlock | null> => {
   const dateString = date.toISOString().split('T')[0];
   
@@ -138,7 +211,7 @@ export const getManualBlockByDate = async (vehicleId: string, date: Date): Promi
   return data;
 };
 
-// Remove a manual block
+// Remove a manual block (requires auth)
 export const removeManualBlock = async (blockId: string): Promise<void> => {
   const { error } = await supabase
     .from('vehicle_calendar_blocks')
@@ -150,7 +223,7 @@ export const removeManualBlock = async (blockId: string): Promise<void> => {
   }
 };
 
-// Clear all manual blocks for a vehicle
+// Clear all manual blocks for a vehicle (requires auth)
 export const clearAllManualBlocks = async (vehicleId: string): Promise<void> => {
   const { error } = await supabase
     .from('vehicle_calendar_blocks')
@@ -162,7 +235,7 @@ export const clearAllManualBlocks = async (vehicleId: string): Promise<void> => 
   }
 };
 
-// Clear all manual blocks for all vehicles of a company
+// Clear all manual blocks for all vehicles of a company (requires auth)
 export const clearAllCompanyManualBlocks = async (): Promise<void> => {
   // Get current user
   const { data: user } = await supabase.auth.getUser();
@@ -204,52 +277,7 @@ export const clearAllCompanyManualBlocks = async (): Promise<void> => {
   }
 };
 
-// Get combined availability data (iCal + manual blocks)
-export const getVehicleAvailability = async (vehicleId: string): Promise<AvailabilityData[]> => {
-  const [manualBlocks, icalBookings] = await Promise.all([
-    getVehicleManualBlocks(vehicleId),
-    getVehicleICalBookings(vehicleId)
-  ]);
-  
-  const availabilityData: AvailabilityData[] = [];
-  
-  // Add manual blocks to availability data
-  manualBlocks.forEach(block => {
-    const startDate = new Date(block.start_date);
-    const endDate = new Date(block.end_date);
-    
-    for (let date = new Date(startDate); date <= endDate; date.setDate(date.getDate() + 1)) {
-      availabilityData.push({
-        date: new Date(date),
-        status: 'blocked-manual',
-        reason: block.reason || 'Manually blocked',
-        source: 'manual',
-        blockId: block.id
-      });
-    }
-  });
-
-  // Add iCal bookings to availability data
-  icalBookings.forEach(booking => {
-    const startDate = new Date(booking.start_date);
-    const endDate = new Date(booking.end_date);
-    const feedName = (booking as any).vehicle_calendar_feeds?.feed_name || 'External Calendar';
-    
-    for (let date = new Date(startDate); date <= endDate; date.setDate(date.getDate() + 1)) {
-      availabilityData.push({
-        date: new Date(date),
-        status: 'booked-ical',
-        reason: booking.summary || 'External booking',
-        source: 'ical',
-        feedName: feedName
-      });
-    }
-  });
-
-  return availabilityData;
-};
-
-// Sync external calendar feed
+// Sync external calendar feed (requires auth)
 export const syncExternalCalendarFeed = async (feedId: string, vehicleId: string): Promise<void> => {
   const { error } = await supabase.functions.invoke('parse-ical-feeds', {
     body: { feedId, vehicleId }
@@ -260,19 +288,7 @@ export const syncExternalCalendarFeed = async (feedId: string, vehicleId: string
   }
 };
 
-// Check if a date range conflicts with existing bookings
-export const checkDateConflicts = async (vehicleId: string, startDate: string, endDate: string): Promise<boolean> => {
-  const availability = await getVehicleAvailability(vehicleId);
-  const start = new Date(startDate);
-  const end = new Date(endDate);
-  
-  return availability.some(item => {
-    const itemDate = new Date(item.date);
-    return itemDate >= start && itemDate <= end && item.status !== 'available';
-  });
-};
-
-// Add a new external calendar feed
+// Add a new external calendar feed (requires auth)
 export const addExternalCalendarFeed = async (feedData: {
   vehicle_id: string;
   feed_name: string;
@@ -295,7 +311,7 @@ export const addExternalCalendarFeed = async (feedData: {
   return data;
 };
 
-// Remove calendar feed
+// Remove calendar feed (requires auth)
 export const deleteCalendarFeed = async (id: string): Promise<void> => {
   const { error } = await supabase
     .from('vehicle_calendar_feeds')

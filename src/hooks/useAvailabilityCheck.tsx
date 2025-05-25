@@ -17,8 +17,11 @@ export const useAvailabilityCheck = ({ vehicleId }: UseAvailabilityCheckProps) =
       setIsLoading(true);
       const data = await getVehicleAvailability(vehicleId);
       setAvailability(data);
+      console.log('Loaded availability data:', data);
     } catch (error) {
       console.error('Error loading availability:', error);
+      // Set empty availability on error to allow public access
+      setAvailability([]);
     } finally {
       setIsLoading(false);
     }
@@ -29,20 +32,26 @@ export const useAvailabilityCheck = ({ vehicleId }: UseAvailabilityCheckProps) =
   }, [vehicleId]);
 
   const isDateAvailable = (date: Date): boolean => {
-    return !availability.some(item => {
+    const hasConflict = availability.some(item => {
       const itemDate = new Date(item.date);
       return (
         itemDate.toDateString() === date.toDateString() &&
         (item.status === 'booked-ical' || item.status === 'blocked-manual')
       );
     });
+    
+    console.log(`Date ${date.toDateString()} available:`, !hasConflict);
+    return !hasConflict;
   };
 
   const getDateStatus = (date: Date): AvailabilityData | null => {
-    return availability.find(item => {
+    const status = availability.find(item => {
       const itemDate = new Date(item.date);
       return itemDate.toDateString() === date.toDateString();
     }) || null;
+    
+    console.log(`Date ${date.toDateString()} status:`, status);
+    return status;
   };
 
   const isDateRangeAvailable = (startDate: Date, endDate: Date): boolean => {
