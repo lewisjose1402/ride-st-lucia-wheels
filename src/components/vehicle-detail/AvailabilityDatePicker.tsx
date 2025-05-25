@@ -119,22 +119,6 @@ const AvailabilityDatePicker: React.FC<AvailabilityDatePickerProps> = ({
               booked: 'bg-red-100 text-red-800 line-through cursor-not-allowed',
               blocked: 'bg-yellow-100 text-yellow-800 cursor-not-allowed',
             }}
-            components={{
-              Day: ({ date, ...props }) => {
-                const isDisabled = isDateDisabled(date);
-                
-                return (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div {...props} />
-                    </TooltipTrigger>
-                    <TooltipContent side="top">
-                      <p className="text-sm">{getTooltipContent(date)}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                );
-              },
-            }}
             initialFocus
             className="pointer-events-auto"
           />
