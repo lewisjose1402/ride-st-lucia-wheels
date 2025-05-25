@@ -17,6 +17,9 @@ export const BookingRequirementsSchema = z.object({
   require_driving_experience: z.boolean().default(true),
   minimum_driver_age: z.number().min(18).max(100).default(25),
   minimum_driving_experience: z.number().min(0).max(50).default(3),
+  require_damage_deposit: z.boolean().default(false),
+  damage_deposit_type: z.enum(['Cash', 'Card']).default('Cash'),
+  damage_deposit_amount: z.number().min(1).max(10000).default(250),
 });
 
 export const SecuritySettingsSchema = z.object({

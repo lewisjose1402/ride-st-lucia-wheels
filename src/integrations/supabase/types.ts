@@ -85,12 +85,15 @@ export type Database = {
           accept_bookings: boolean
           company_id: string
           created_at: string | null
+          damage_deposit_amount: number
+          damage_deposit_type: string
           id: string
           minimum_driver_age: number
           minimum_driving_experience: number
           notification_booking_cancellation: boolean
           notification_booking_fee_collected: boolean
           notification_new_booking: boolean
+          require_damage_deposit: boolean
           require_driver_license: boolean
           require_driving_experience: boolean
           require_minimum_age: boolean
@@ -100,12 +103,15 @@ export type Database = {
           accept_bookings?: boolean
           company_id: string
           created_at?: string | null
+          damage_deposit_amount?: number
+          damage_deposit_type?: string
           id?: string
           minimum_driver_age?: number
           minimum_driving_experience?: number
           notification_booking_cancellation?: boolean
           notification_booking_fee_collected?: boolean
           notification_new_booking?: boolean
+          require_damage_deposit?: boolean
           require_driver_license?: boolean
           require_driving_experience?: boolean
           require_minimum_age?: boolean
@@ -115,12 +121,15 @@ export type Database = {
           accept_bookings?: boolean
           company_id?: string
           created_at?: string | null
+          damage_deposit_amount?: number
+          damage_deposit_type?: string
           id?: string
           minimum_driver_age?: number
           minimum_driving_experience?: number
           notification_booking_cancellation?: boolean
           notification_booking_fee_collected?: boolean
           notification_new_booking?: boolean
+          require_damage_deposit?: boolean
           require_driver_license?: boolean
           require_driving_experience?: boolean
           require_minimum_age?: boolean
