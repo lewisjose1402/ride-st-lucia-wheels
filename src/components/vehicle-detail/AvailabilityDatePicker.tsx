@@ -33,7 +33,9 @@ const AvailabilityDatePicker: React.FC<AvailabilityDatePickerProps> = ({
     value ? new Date(value) : undefined
   );
 
-  const { availability, isLoading, getDateStatus } = useAvailabilityCheck({ vehicleId });
+  const { availability, isLoading, getDateStatus, isDateAvailable } = useAvailabilityCheck({ vehicleId });
+
+  console.log('AvailabilityDatePicker: Rendered with vehicleId:', vehicleId, 'availability count:', availability.length);
 
   useEffect(() => {
     if (value) {
@@ -44,10 +46,11 @@ const AvailabilityDatePicker: React.FC<AvailabilityDatePickerProps> = ({
   const handleDateSelect = (date: Date | undefined) => {
     if (!date) return;
 
-    const dateStatus = getDateStatus(date);
+    console.log('AvailabilityDatePicker: Attempting to select date:', date);
     
-    // Prevent selection of unavailable dates
-    if (dateStatus && (dateStatus.status === 'booked-ical' || dateStatus.status === 'blocked-manual')) {
+    // Check if date is available using the hook
+    if (!isDateAvailable(date)) {
+      console.log('AvailabilityDatePicker: Date not available, preventing selection');
       return;
     }
 
@@ -58,14 +61,23 @@ const AvailabilityDatePicker: React.FC<AvailabilityDatePickerProps> = ({
 
   const isDateDisabled = (date: Date): boolean => {
     // Check if date is before minimum date
-    if (date < minDate) return true;
+    if (date < minDate) {
+      console.log('AvailabilityDatePicker: Date disabled - before min date:', date);
+      return true;
+    }
     
     // Check if date is in disabled dates array
-    if (disabledDates.some(disabledDate => isSameDay(disabledDate, date))) return true;
+    if (disabledDates.some(disabledDate => isSameDay(disabledDate, date))) {
+      console.log('AvailabilityDatePicker: Date disabled - in disabled dates array:', date);
+      return true;
+    }
     
-    // Check availability status
-    const dateStatus = getDateStatus(date);
-    return dateStatus?.status === 'booked-ical' || dateStatus?.status === 'blocked-manual';
+    // Check availability status using the hook
+    const available = isDateAvailable(date);
+    if (!available) {
+      console.log('AvailabilityDatePicker: Date disabled - not available:', date);
+    }
+    return !available;
   };
 
   const getTooltipContent = (date: Date): string => {
@@ -125,7 +137,9 @@ const AvailabilityDatePicker: React.FC<AvailabilityDatePickerProps> = ({
           
           {/* Legend */}
           <div className="p-3 border-t">
-            <div className="text-xs font-medium mb-2">Availability Legend:</div>
+            <div className="text-xs font-medium mb-2">
+              Availability Legend: ({availability.length} blocked dates)
+            </div>
             <div className="flex flex-col gap-1 text-xs">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-green-100 border border-green-300 rounded"></div>

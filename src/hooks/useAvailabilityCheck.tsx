@@ -27,6 +27,7 @@ export const useAvailabilityCheck = ({ vehicleId }: UseAvailabilityCheckProps) =
       // Log a sample of the data for debugging
       if (data.length > 0) {
         console.log('useAvailabilityCheck: Sample availability item:', data[0]);
+        console.log('useAvailabilityCheck: Sample date type:', typeof data[0].date, data[0].date);
       }
     } catch (error) {
       console.error('useAvailabilityCheck: Error loading availability:', error);
@@ -42,34 +43,44 @@ export const useAvailabilityCheck = ({ vehicleId }: UseAvailabilityCheckProps) =
     loadAvailability();
   }, [vehicleId]);
 
+  const formatDateToISO = (date: Date): string => {
+    return date.toISOString().split('T')[0];
+  };
+
   const isDateAvailable = (date: Date): boolean => {
-    const dateString = date.toDateString();
+    const dateISO = formatDateToISO(date);
+    console.log(`useAvailabilityCheck: Checking availability for date ISO: ${dateISO}`);
+    
     const hasConflict = availability.some(item => {
-      const itemDate = new Date(item.date);
-      const itemDateString = itemDate.toDateString();
-      const isConflict = itemDateString === dateString &&
+      // Ensure item.date is a Date object
+      const itemDate = item.date instanceof Date ? item.date : new Date(item.date);
+      const itemDateISO = formatDateToISO(itemDate);
+      const isConflict = itemDateISO === dateISO &&
         (item.status === 'booked-ical' || item.status === 'blocked-manual');
       
       if (isConflict) {
-        console.log(`useAvailabilityCheck: Date ${dateString} has conflict:`, item);
+        console.log(`useAvailabilityCheck: Date ${dateISO} has conflict:`, item);
       }
       
       return isConflict;
     });
     
-    console.log(`useAvailabilityCheck: Date ${dateString} available:`, !hasConflict, 'total availability items:', availability.length);
+    console.log(`useAvailabilityCheck: Date ${dateISO} available:`, !hasConflict, 'total availability items:', availability.length);
     return !hasConflict;
   };
 
   const getDateStatus = (date: Date): AvailabilityData | null => {
-    const dateString = date.toDateString();
+    const dateISO = formatDateToISO(date);
+    console.log(`useAvailabilityCheck: Getting status for date ISO: ${dateISO}`);
+    
     const status = availability.find(item => {
-      const itemDate = new Date(item.date);
-      const itemDateString = itemDate.toDateString();
-      return itemDateString === dateString;
+      // Ensure item.date is a Date object
+      const itemDate = item.date instanceof Date ? item.date : new Date(item.date);
+      const itemDateISO = formatDateToISO(itemDate);
+      return itemDateISO === dateISO;
     }) || null;
     
-    console.log(`useAvailabilityCheck: getDateStatus for ${dateString}:`, status, 'from', availability.length, 'total items');
+    console.log(`useAvailabilityCheck: getDateStatus for ${dateISO}:`, status, 'from', availability.length, 'total items');
     return status;
   };
 
@@ -77,11 +88,11 @@ export const useAvailabilityCheck = ({ vehicleId }: UseAvailabilityCheckProps) =
     const start = new Date(startDate);
     const end = new Date(endDate);
     
-    console.log('useAvailabilityCheck: Checking date range availability from', start.toDateString(), 'to', end.toDateString());
+    console.log('useAvailabilityCheck: Checking date range availability from', formatDateToISO(start), 'to', formatDateToISO(end));
     
     for (let date = new Date(start); date <= end; date.setDate(date.getDate() + 1)) {
       if (!isDateAvailable(date)) {
-        console.log('useAvailabilityCheck: Date range not available due to:', date.toDateString());
+        console.log('useAvailabilityCheck: Date range not available due to:', formatDateToISO(date));
         return false;
       }
     }
