@@ -96,6 +96,60 @@ export const removeManualBlock = async (blockId: string): Promise<void> => {
   }
 };
 
+// Clear all manual blocks for a vehicle
+export const clearAllManualBlocks = async (vehicleId: string): Promise<void> => {
+  const { error } = await supabase
+    .from('vehicle_calendar_blocks')
+    .delete()
+    .eq('vehicle_id', vehicleId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+};
+
+// Clear all manual blocks for all vehicles of a company
+export const clearAllCompanyManualBlocks = async (): Promise<void> => {
+  // Get current user
+  const { data: user } = await supabase.auth.getUser();
+  if (!user.user) {
+    throw new Error('User not authenticated');
+  }
+
+  // Get company ID for the current user
+  const { data: company } = await supabase
+    .from('rental_companies')
+    .select('id')
+    .eq('user_id', user.user.id)
+    .single();
+
+  if (!company) {
+    throw new Error('Company not found');
+  }
+
+  // Get all vehicles for this company
+  const { data: vehicles } = await supabase
+    .from('vehicles')
+    .select('id')
+    .eq('company_id', company.id);
+
+  if (!vehicles) return;
+
+  // Delete all manual blocks for all company vehicles
+  const vehicleIds = vehicles.map(v => v.id);
+  
+  if (vehicleIds.length > 0) {
+    const { error } = await supabase
+      .from('vehicle_calendar_blocks')
+      .delete()
+      .in('vehicle_id', vehicleIds);
+
+    if (error) {
+      throw new Error(error.message);
+    }
+  }
+};
+
 // Get combined availability data (iCal + manual blocks)
 export const getVehicleAvailability = async (vehicleId: string): Promise<AvailabilityData[]> => {
   const manualBlocks = await getVehicleManualBlocks(vehicleId);
@@ -117,22 +171,7 @@ export const getVehicleAvailability = async (vehicleId: string): Promise<Availab
   });
 
   // TODO: Add iCal feed data processing here when iCal parsing is implemented
-  // For now, we'll simulate some booked dates
-  const today = new Date();
-  const mockBookedDates = [
-    new Date(today.getFullYear(), today.getMonth(), today.getDate() + 2),
-    new Date(today.getFullYear(), today.getMonth(), today.getDate() + 3),
-    new Date(today.getFullYear(), today.getMonth(), today.getDate() + 10),
-  ];
-  
-  mockBookedDates.forEach(date => {
-    availabilityData.push({
-      date: new Date(date),
-      status: 'booked-ical',
-      reason: 'Booked via external calendar',
-      source: 'ical'
-    });
-  });
+  // For now, no mock dates are added - only real data from external feeds will be shown
 
   return availabilityData;
 };

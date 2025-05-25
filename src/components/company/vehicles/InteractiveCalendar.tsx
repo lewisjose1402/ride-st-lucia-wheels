@@ -15,13 +15,25 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { getVehicleAvailability, addManualBlock, removeManualBlock, AvailabilityData } from '@/services/calendarService';
+import { getVehicleAvailability, addManualBlock, removeManualBlock, clearAllManualBlocks, clearAllCompanyManualBlocks, AvailabilityData } from '@/services/calendarService';
 import { format, isSameDay } from 'date-fns';
+import { Trash2 } from 'lucide-react';
 
 interface InteractiveCalendarProps {
   vehicleId: string;
@@ -168,9 +180,101 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({ vehicleId }) 
     }
   };
 
+  const handleClearVehicleBlocks = async () => {
+    try {
+      setIsLoading(true);
+      await clearAllManualBlocks(vehicleId);
+      await loadAvailability();
+      
+      toast({
+        title: 'Blocks Cleared',
+        description: 'All manual blocks for this vehicle have been removed',
+      });
+    } catch (error) {
+      console.error('Error clearing blocks:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to clear blocks',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleClearAllCompanyBlocks = async () => {
+    try {
+      setIsLoading(true);
+      await clearAllCompanyManualBlocks();
+      await loadAvailability();
+      
+      toast({
+        title: 'All Blocks Cleared',
+        description: 'All manual blocks for all vehicles have been removed',
+      });
+    } catch (error) {
+      console.error('Error clearing all blocks:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to clear all blocks',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <TooltipProvider>
       <div className="space-y-4">
+        <div className="flex gap-2 mb-4">
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="outline" size="sm" disabled={isLoading}>
+                <Trash2 className="w-4 h-4 mr-2" />
+                Clear Vehicle Blocks
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Clear All Blocks for This Vehicle</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will remove all manual blocks for this vehicle. This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleClearVehicleBlocks}>
+                  Clear Blocks
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="outline" size="sm" disabled={isLoading}>
+                <Trash2 className="w-4 h-4 mr-2" />
+                Clear All Company Blocks
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Clear All Blocks for All Vehicles</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will remove all manual blocks for ALL your vehicles. This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleClearAllCompanyBlocks}>
+                  Clear All Blocks
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+
         <Calendar
           mode="single"
           className="rounded-md border bg-white"
