@@ -1,15 +1,14 @@
 
 import { useState, useEffect } from 'react';
-import { MapPin, Star, Car, Check, Calendar } from 'lucide-react';
+import { MapPin, Star, Check } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getAddressFromLocationData } from '@/utils/locationHelpers';
 import CompanyInfoCard from './CompanyInfoCard';
 import BookingCard from './BookingCard';
+import VehicleSpecifications from './VehicleSpecifications';
+import VehicleImageGallery from './VehicleImageGallery';
 import { Vehicle, RentalCompany } from '@/types/vehicle';
 
 interface VehicleDetailContentProps {
@@ -18,8 +17,6 @@ interface VehicleDetailContentProps {
 }
 
 const VehicleDetailContent = ({ vehicle, companyData }: VehicleDetailContentProps) => {
-  const [selectedImage, setSelectedImage] = useState('');
-
   console.log('VehicleDetailContent received:', {
     vehicle: vehicle?.id,
     vehicleName: vehicle?.name,
@@ -27,16 +24,6 @@ const VehicleDetailContent = ({ vehicle, companyData }: VehicleDetailContentProp
     companyName: companyData?.company_name,
     hasVehicleImages: vehicle?.vehicle_images?.length || 0
   });
-
-  const images = vehicle.vehicle_images || [];
-
-  // Set primary image on component mount
-  useEffect(() => {
-    if (images.length > 0) {
-      const primaryImage = images.find((img: any) => img.is_primary);
-      setSelectedImage(primaryImage?.image_url || images[0]?.image_url || '/placeholder.svg');
-    }
-  }, [images]);
 
   // Get vehicle type from the joined vehicle_types table or fallback to name analysis
   const getVehicleType = () => {
@@ -126,66 +113,10 @@ const VehicleDetailContent = ({ vehicle, companyData }: VehicleDetailContentProp
           </div>
 
           {/* Vehicle Images */}
-          <div className="mb-8">
-            {selectedImage && (
-              <div className="w-full h-[300px] md:h-[400px] bg-white rounded-lg overflow-hidden mb-2">
-                <img 
-                  src={selectedImage} 
-                  alt={vehicle.name} 
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            )}
-            {images.length > 1 && (
-              <div className="grid grid-cols-4 gap-2">
-                {images.map((image: any, index: number) => (
-                  <div 
-                    key={image.id} 
-                    className={`h-16 md:h-24 bg-white rounded overflow-hidden cursor-pointer
-                      ${selectedImage === image.image_url ? 'ring-2 ring-brand-purple' : ''}`}
-                    onClick={() => setSelectedImage(image.image_url)}
-                  >
-                    <img 
-                      src={image.image_url} 
-                      alt={`${vehicle.name} view ${index + 1}`} 
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          <VehicleImageGallery vehicle={vehicle} />
 
           {/* Vehicle Specifications */}
-          <Card className="mb-8">
-            <CardHeader>
-              <CardTitle>Vehicle Specifications</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="text-center p-3 bg-gray-50 rounded">
-                  <Car size={20} className="mx-auto text-brand-purple mb-1" />
-                  <p className="text-xs text-gray-500">Type</p>
-                  <p className="font-medium">{vehicleType}</p>
-                </div>
-                <div className="text-center p-3 bg-gray-50 rounded">
-                  <span className="block text-xl text-brand-purple mb-1">A</span>
-                  <p className="text-xs text-gray-500">Transmission</p>
-                  <p className="font-medium">{vehicle.transmission || 'Manual'}</p>
-                </div>
-                <div className="text-center p-3 bg-gray-50 rounded">
-                  <span className="block text-xl text-brand-purple mb-1">👤</span>
-                  <p className="text-xs text-gray-500">Seats</p>
-                  <p className="font-medium">{vehicle.seats}</p>
-                </div>
-                <div className="text-center p-3 bg-gray-50 rounded">
-                  <span className="block text-xl text-brand-purple mb-1">💰</span>
-                  <p className="text-xs text-gray-500">Price per day</p>
-                  <p className="font-medium">${vehicle.price_per_day}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <VehicleSpecifications vehicle={vehicle} vehicleType={vehicleType} />
 
           {/* Vehicle Info Tabs */}
           <Tabs defaultValue="description" className="mb-8">
