@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 export interface CalendarFeed {
@@ -23,12 +24,25 @@ export interface CalendarBlock {
   updated_at: string;
 }
 
+export interface ICalBooking {
+  id: string;
+  vehicle_id: string;
+  external_event_id: string;
+  start_date: string;
+  end_date: string;
+  summary: string | null;
+  source_feed_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface AvailabilityData {
   date: Date;
   status: 'available' | 'booked-ical' | 'blocked-manual';
   reason?: string;
   source?: string;
   blockId?: string;
+  feedName?: string;
 }
 
 // Get calendar feeds for a vehicle
@@ -51,6 +65,24 @@ export const getVehicleManualBlocks = async (vehicleId: string): Promise<Calenda
   const { data, error } = await supabase
     .from('vehicle_calendar_blocks')
     .select('*')
+    .eq('vehicle_id', vehicleId)
+    .order('start_date', { ascending: true });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data || [];
+};
+
+// Get iCal bookings for a vehicle
+export const getVehicleICalBookings = async (vehicleId: string): Promise<ICalBooking[]> => {
+  const { data, error } = await supabase
+    .from('ical_bookings')
+    .select(`
+      *,
+      vehicle_calendar_feeds(feed_name)
+    `)
     .eq('vehicle_id', vehicleId)
     .order('start_date', { ascending: true });
 
@@ -174,7 +206,11 @@ export const clearAllCompanyManualBlocks = async (): Promise<void> => {
 
 // Get combined availability data (iCal + manual blocks)
 export const getVehicleAvailability = async (vehicleId: string): Promise<AvailabilityData[]> => {
-  const manualBlocks = await getVehicleManualBlocks(vehicleId);
+  const [manualBlocks, icalBookings] = await Promise.all([
+    getVehicleManualBlocks(vehicleId),
+    getVehicleICalBookings(vehicleId)
+  ]);
+  
   const availabilityData: AvailabilityData[] = [];
   
   // Add manual blocks to availability data
@@ -193,7 +229,35 @@ export const getVehicleAvailability = async (vehicleId: string): Promise<Availab
     }
   });
 
+  // Add iCal bookings to availability data
+  icalBookings.forEach(booking => {
+    const startDate = new Date(booking.start_date);
+    const endDate = new Date(booking.end_date);
+    const feedName = (booking as any).vehicle_calendar_feeds?.feed_name || 'External Calendar';
+    
+    for (let date = new Date(startDate); date <= endDate; date.setDate(date.getDate() + 1)) {
+      availabilityData.push({
+        date: new Date(date),
+        status: 'booked-ical',
+        reason: booking.summary || 'External booking',
+        source: 'ical',
+        feedName: feedName
+      });
+    }
+  });
+
   return availabilityData;
+};
+
+// Sync external calendar feed
+export const syncExternalCalendarFeed = async (feedId: string, vehicleId: string): Promise<void> => {
+  const { error } = await supabase.functions.invoke('parse-ical-feeds', {
+    body: { feedId, vehicleId }
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
 };
 
 // Check if a date range conflicts with existing bookings
@@ -237,18 +301,6 @@ export const deleteCalendarFeed = async (id: string): Promise<void> => {
     .from('vehicle_calendar_feeds')
     .delete()
     .eq('id', id);
-
-  if (error) {
-    throw new Error(error.message);
-  }
-};
-
-// Sync external calendar feed (would typically be handled by a server cron job)
-export const syncExternalCalendarFeed = async (feedId: string): Promise<void> => {
-  const { error } = await supabase
-    .from('vehicle_calendar_feeds')
-    .update({ last_synced_at: new Date().toISOString() })
-    .eq('id', feedId);
 
   if (error) {
     throw new Error(error.message);

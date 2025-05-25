@@ -179,7 +179,7 @@ const VehicleCalendar: React.FC<VehicleCalendarProps> = ({ vehicleId }) => {
   const handleSyncFeed = async (feedId: string) => {
     try {
       setIsLoading(true);
-      await syncExternalCalendarFeed(feedId);
+      await syncExternalCalendarFeed(feedId, vehicleId);
       
       // Update the last_synced_at date in the UI
       setExternalFeeds(externalFeeds.map(feed => 
@@ -190,7 +190,7 @@ const VehicleCalendar: React.FC<VehicleCalendarProps> = ({ vehicleId }) => {
       
       toast({
         title: 'Feed Synced',
-        description: 'External calendar feed synced successfully',
+        description: 'External calendar feed synced successfully. iCal bookings have been updated.',
       });
     } catch (error) {
       console.error('Error syncing feed:', error);

@@ -170,6 +170,7 @@ const BookingCard = ({ vehicle }: BookingCardProps) => {
 
           {/* Date Selection */}
           <DateFields 
+            vehicleId={vehicle.id}
             pickupDate={pickupDate}
             setPickupDate={setPickupDate}
             dropoffDate={dropoffDate}
@@ -219,6 +220,9 @@ const BookingCard = ({ vehicle }: BookingCardProps) => {
           <BookingActions 
             onBooking={handleBooking}
             isValid={validation.isValid}
+            vehicleId={vehicle.id}
+            pickupDate={pickupDate}
+            dropoffDate={dropoffDate}
           />
         </div>
       </CardContent>

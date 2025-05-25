@@ -145,6 +145,57 @@ export type Database = {
           },
         ]
       }
+      ical_bookings: {
+        Row: {
+          created_at: string
+          end_date: string
+          external_event_id: string
+          id: string
+          source_feed_id: string | null
+          start_date: string
+          summary: string | null
+          updated_at: string
+          vehicle_id: string
+        }
+        Insert: {
+          created_at?: string
+          end_date: string
+          external_event_id: string
+          id?: string
+          source_feed_id?: string | null
+          start_date: string
+          summary?: string | null
+          updated_at?: string
+          vehicle_id: string
+        }
+        Update: {
+          created_at?: string
+          end_date?: string
+          external_event_id?: string
+          id?: string
+          source_feed_id?: string | null
+          start_date?: string
+          summary?: string | null
+          updated_at?: string
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ical_bookings_source_feed_id_fkey"
+            columns: ["source_feed_id"]
+            isOneToOne: false
+            referencedRelation: "vehicle_calendar_feeds"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ical_bookings_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string | null
