@@ -38,7 +38,7 @@ const PriceBreakdown = ({
       </div>
       
       <div className="flex justify-between text-green-700">
-        <span>Booking Confirmation Fee (12%) ✅ Paid Now</span>
+        <span>Booking Confirmation Fee (12%) - Paid Now</span>
         <span className="font-medium">{formatCurrency(confirmationFee)}</span>
       </div>
       
@@ -81,7 +81,7 @@ const PriceBreakdown = ({
       </div>
       
       <div className="text-xs text-gray-600 mt-2 space-y-1">
-        <div>✅ Confirmation fee ({formatCurrency(confirmationFee)}) paid now</div>
+        <div>Confirmation fee ({formatCurrency(confirmationFee)}) paid now</div>
         {(underageDeposit > 0 || damageDeposit > 0) && (
           <div>* Deposits are refundable upon vehicle return in good condition</div>
         )}
