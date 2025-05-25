@@ -27,6 +27,7 @@ const BookingCard = ({ vehicle }: BookingCardProps) => {
   const [driverAge, setDriverAge] = useState('');
   const [drivingExperience, setDrivingExperience] = useState('');
   const [deliveryLocation, setDeliveryLocation] = useState('');
+  const [isInternationalLicense, setIsInternationalLicense] = useState(false);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -56,7 +57,8 @@ const BookingCard = ({ vehicle }: BookingCardProps) => {
       driverLicense,
       driverAge: parseInt(driverAge),
       drivingExperience: parseInt(drivingExperience),
-      deliveryLocation: deliveryLocation.trim()
+      deliveryLocation: deliveryLocation.trim(),
+      isInternationalLicense
     };
     
     navigate('/booking', { state: bookingData });
@@ -99,6 +101,8 @@ const BookingCard = ({ vehicle }: BookingCardProps) => {
             setDrivingExperience={setDrivingExperience}
             deliveryLocation={deliveryLocation}
             setDeliveryLocation={setDeliveryLocation}
+            isInternationalLicense={isInternationalLicense}
+            setIsInternationalLicense={setIsInternationalLicense}
           />
 
           <Button 

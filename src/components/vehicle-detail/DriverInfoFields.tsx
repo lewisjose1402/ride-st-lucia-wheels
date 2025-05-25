@@ -2,6 +2,7 @@
 import { Upload, MapPin } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
 
 interface DriverInfoFieldsProps {
   driverLicense: File | null;
@@ -12,6 +13,8 @@ interface DriverInfoFieldsProps {
   setDrivingExperience: (value: string) => void;
   deliveryLocation: string;
   setDeliveryLocation: (value: string) => void;
+  isInternationalLicense: boolean;
+  setIsInternationalLicense: (value: boolean) => void;
 }
 
 const DriverInfoFields = ({
@@ -22,7 +25,9 @@ const DriverInfoFields = ({
   drivingExperience,
   setDrivingExperience,
   deliveryLocation,
-  setDeliveryLocation
+  setDeliveryLocation,
+  isInternationalLicense,
+  setIsInternationalLicense
 }: DriverInfoFieldsProps) => {
   return (
     <>
@@ -44,6 +49,31 @@ const DriverInfoFields = ({
             ✓ {driverLicense.name}
           </p>
         )}
+      </div>
+
+      {/* International License Question */}
+      <div>
+        <Label className="text-sm font-medium">Is this an international driver's license?</Label>
+        <div className="flex gap-2 mt-2">
+          <Button
+            type="button"
+            variant={isInternationalLicense ? "default" : "outline"}
+            size="sm"
+            onClick={() => setIsInternationalLicense(true)}
+            className={isInternationalLicense ? "bg-brand-purple hover:bg-brand-purple/90" : ""}
+          >
+            Yes
+          </Button>
+          <Button
+            type="button"
+            variant={!isInternationalLicense ? "default" : "outline"}
+            size="sm"
+            onClick={() => setIsInternationalLicense(false)}
+            className={!isInternationalLicense ? "bg-brand-purple hover:bg-brand-purple/90" : ""}
+          >
+            No
+          </Button>
+        </div>
       </div>
 
       {/* Driver Information */}
