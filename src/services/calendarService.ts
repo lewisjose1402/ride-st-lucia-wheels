@@ -47,68 +47,82 @@ export interface AvailabilityData {
 
 // Get calendar feeds for a vehicle (public access)
 export const getVehicleCalendarFeeds = async (vehicleId: string): Promise<CalendarFeed[]> => {
-  console.log('Fetching calendar feeds for vehicle:', vehicleId);
+  console.log('calendarService: Fetching calendar feeds for vehicle:', vehicleId);
   
-  // Create a new supabase client without auth for public access
-  const { data, error } = await supabase
-    .from('vehicle_calendar_feeds')
-    .select('*')
-    .eq('vehicle_id', vehicleId)
-    .order('created_at', { ascending: false });
+  try {
+    const { data, error } = await supabase
+      .from('vehicle_calendar_feeds')
+      .select('*')
+      .eq('vehicle_id', vehicleId)
+      .order('created_at', { ascending: false });
 
-  if (error) {
-    console.error('Error fetching calendar feeds:', error);
-    return []; // Return empty array instead of throwing for public access
+    if (error) {
+      console.error('calendarService: Error fetching calendar feeds:', error);
+      return []; // Return empty array instead of throwing for public access
+    }
+
+    console.log('calendarService: Calendar feeds fetched successfully:', data?.length || 0);
+    return data || [];
+  } catch (error) {
+    console.error('calendarService: Exception while fetching calendar feeds:', error);
+    return [];
   }
-
-  console.log('Calendar feeds fetched:', data?.length || 0);
-  return data || [];
 };
 
 // Get manual blocks for a vehicle (public access)
 export const getVehicleManualBlocks = async (vehicleId: string): Promise<CalendarBlock[]> => {
-  console.log('Fetching manual blocks for vehicle:', vehicleId);
+  console.log('calendarService: Fetching manual blocks for vehicle:', vehicleId);
   
-  const { data, error } = await supabase
-    .from('vehicle_calendar_blocks')
-    .select('*')
-    .eq('vehicle_id', vehicleId)
-    .order('start_date', { ascending: true });
+  try {
+    const { data, error } = await supabase
+      .from('vehicle_calendar_blocks')
+      .select('*')
+      .eq('vehicle_id', vehicleId)
+      .order('start_date', { ascending: true });
 
-  if (error) {
-    console.error('Error fetching manual blocks:', error);
-    return []; // Return empty array instead of throwing for public access
+    if (error) {
+      console.error('calendarService: Error fetching manual blocks:', error);
+      return []; // Return empty array instead of throwing for public access
+    }
+
+    console.log('calendarService: Manual blocks fetched successfully:', data?.length || 0);
+    return data || [];
+  } catch (error) {
+    console.error('calendarService: Exception while fetching manual blocks:', error);
+    return [];
   }
-
-  console.log('Manual blocks fetched:', data?.length || 0);
-  return data || [];
 };
 
 // Get iCal bookings for a vehicle (public access)
 export const getVehicleICalBookings = async (vehicleId: string): Promise<ICalBooking[]> => {
-  console.log('Fetching iCal bookings for vehicle:', vehicleId);
+  console.log('calendarService: Fetching iCal bookings for vehicle:', vehicleId);
   
-  const { data, error } = await supabase
-    .from('ical_bookings')
-    .select(`
-      *,
-      vehicle_calendar_feeds(feed_name)
-    `)
-    .eq('vehicle_id', vehicleId)
-    .order('start_date', { ascending: true });
+  try {
+    const { data, error } = await supabase
+      .from('ical_bookings')
+      .select(`
+        *,
+        vehicle_calendar_feeds(feed_name)
+      `)
+      .eq('vehicle_id', vehicleId)
+      .order('start_date', { ascending: true });
 
-  if (error) {
-    console.error('Error fetching iCal bookings:', error);
-    return []; // Return empty array instead of throwing for public access
+    if (error) {
+      console.error('calendarService: Error fetching iCal bookings:', error);
+      return []; // Return empty array instead of throwing for public access
+    }
+
+    console.log('calendarService: iCal bookings fetched successfully:', data?.length || 0);
+    return data || [];
+  } catch (error) {
+    console.error('calendarService: Exception while fetching iCal bookings:', error);
+    return [];
   }
-
-  console.log('iCal bookings fetched:', data?.length || 0);
-  return data || [];
 };
 
 // Get combined availability data (iCal + manual blocks) - public access
 export const getVehicleAvailability = async (vehicleId: string): Promise<AvailabilityData[]> => {
-  console.log('Getting vehicle availability for:', vehicleId);
+  console.log('calendarService: Getting vehicle availability for:', vehicleId);
   
   try {
     const [manualBlocks, icalBookings] = await Promise.all([
@@ -116,7 +130,7 @@ export const getVehicleAvailability = async (vehicleId: string): Promise<Availab
       getVehicleICalBookings(vehicleId)
     ]);
     
-    console.log('Raw data - Manual blocks:', manualBlocks.length, 'iCal bookings:', icalBookings.length);
+    console.log('calendarService: Data fetched - Manual blocks:', manualBlocks.length, 'iCal bookings:', icalBookings.length);
     
     const availabilityData: AvailabilityData[] = [];
     
@@ -125,16 +139,18 @@ export const getVehicleAvailability = async (vehicleId: string): Promise<Availab
       const startDate = new Date(block.start_date);
       const endDate = new Date(block.end_date);
       
-      console.log('Processing manual block:', block.start_date, 'to', block.end_date);
+      console.log('calendarService: Processing manual block from', block.start_date, 'to', block.end_date);
       
       for (let date = new Date(startDate); date <= endDate; date.setDate(date.getDate() + 1)) {
+        const blockDate = new Date(date);
         availabilityData.push({
-          date: new Date(date),
+          date: blockDate,
           status: 'blocked-manual',
           reason: block.reason || 'Manually blocked',
           source: 'manual',
           blockId: block.id
         });
+        console.log('calendarService: Added manual block for date:', blockDate.toDateString());
       }
     });
 
@@ -144,23 +160,31 @@ export const getVehicleAvailability = async (vehicleId: string): Promise<Availab
       const endDate = new Date(booking.end_date);
       const feedName = (booking as any).vehicle_calendar_feeds?.feed_name || 'External Calendar';
       
-      console.log('Processing iCal booking:', booking.start_date, 'to', booking.end_date);
+      console.log('calendarService: Processing iCal booking from', booking.start_date, 'to', booking.end_date);
       
       for (let date = new Date(startDate); date <= endDate; date.setDate(date.getDate() + 1)) {
+        const bookingDate = new Date(date);
         availabilityData.push({
-          date: new Date(date),
+          date: bookingDate,
           status: 'booked-ical',
           reason: booking.summary || 'External booking',
           source: 'ical',
           feedName: feedName
         });
+        console.log('calendarService: Added iCal booking for date:', bookingDate.toDateString());
       }
     });
 
-    console.log('Final availability data:', availabilityData.length, 'blocked dates');
+    console.log('calendarService: Final availability data created with', availabilityData.length, 'blocked dates');
+    
+    // Log some sample data for debugging
+    if (availabilityData.length > 0) {
+      console.log('calendarService: Sample availability data:', availabilityData.slice(0, 3));
+    }
+    
     return availabilityData;
   } catch (error) {
-    console.error('Error fetching vehicle availability:', error);
+    console.error('calendarService: Error fetching vehicle availability:', error);
     return []; // Return empty array for public access on error
   }
 };
