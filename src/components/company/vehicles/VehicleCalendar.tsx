@@ -1,10 +1,8 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
@@ -32,6 +30,7 @@ import {
 import { getVehicleCalendarFeedUrl, generateCalendarFeedToken } from '@/services/vehicleService';
 import { getVehicleCalendarFeeds, addExternalCalendarFeed, deleteCalendarFeed, syncExternalCalendarFeed, CalendarFeed } from '@/services/calendarService';
 import { format } from 'date-fns';
+import InteractiveCalendar from './InteractiveCalendar';
 
 interface VehicleCalendarProps {
   vehicleId: string;
@@ -64,15 +63,6 @@ const VehicleCalendar: React.FC<VehicleCalendarProps> = ({ vehicleId }) => {
       // Load external feeds
       const feeds = await getVehicleCalendarFeeds(vehicleId);
       setExternalFeeds(feeds.filter(feed => feed.is_external));
-      
-      // Mock some disabled dates for demonstration
-      const today = new Date();
-      const disabledDays = [
-        new Date(today.getFullYear(), today.getMonth(), today.getDate() + 2),
-        new Date(today.getFullYear(), today.getMonth(), today.getDate() + 3),
-        new Date(today.getFullYear(), today.getMonth(), today.getDate() + 10),
-      ];
-      setDisabledDates(disabledDays);
     } catch (error) {
       console.error('Error loading calendar data:', error);
       toast({
@@ -227,37 +217,20 @@ const VehicleCalendar: React.FC<VehicleCalendarProps> = ({ vehicleId }) => {
             <CardHeader>
               <CardTitle>Vehicle Availability</CardTitle>
               <CardDescription>
-                View and manage the availability of your vehicle
+                View and manage the availability of your vehicle. Click dates to manually block or unblock them.
               </CardDescription>
             </CardHeader>
-            <CardContent className="flex flex-col items-center">
-              <Calendar
-                mode="single"
-                selected={selectedDate}
-                onSelect={setSelectedDate}
-                disabled={[
-                  { before: new Date() },
-                  ...disabledDates
-                ]}
-                className="rounded-md border"
-              />
-              <div className="mt-4 self-start flex gap-4 items-center">
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 bg-gray-200 rounded-full"></div>
-                  <span className="text-sm text-gray-600">Available</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 bg-red-200 rounded-full"></div>
-                  <span className="text-sm text-gray-600">Booked</span>
-                </div>
-              </div>
-              <div className="w-full mt-4 p-4 bg-amber-50 border border-amber-200 rounded-md flex items-start gap-2">
-                <AlertTriangle className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-sm text-amber-800">
-                    This calendar view is a preview. Bookings from your system and external calendar feeds will appear here.
-                  </p>
-                </div>
+            <CardContent>
+              <InteractiveCalendar vehicleId={vehicleId} />
+              
+              <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-md">
+                <h4 className="font-medium text-blue-900 mb-2">How to use:</h4>
+                <ul className="text-sm text-blue-800 space-y-1">
+                  <li>• Click on available dates to start blocking them</li>
+                  <li>• Click on manually blocked dates to unblock them</li>
+                  <li>• Red dates are booked via external calendars and cannot be modified</li>
+                  <li>• Select date ranges by clicking start and end dates</li>
+                </ul>
               </div>
             </CardContent>
           </Card>

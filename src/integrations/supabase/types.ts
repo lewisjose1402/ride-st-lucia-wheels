@@ -278,6 +278,47 @@ export type Database = {
           },
         ]
       }
+      vehicle_calendar_blocks: {
+        Row: {
+          created_at: string
+          created_by_user_id: string | null
+          end_date: string
+          id: string
+          reason: string | null
+          start_date: string
+          updated_at: string
+          vehicle_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by_user_id?: string | null
+          end_date: string
+          id?: string
+          reason?: string | null
+          start_date: string
+          updated_at?: string
+          vehicle_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by_user_id?: string | null
+          end_date?: string
+          id?: string
+          reason?: string | null
+          start_date?: string
+          updated_at?: string
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_vehicle_calendar_blocks_vehicle_id"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vehicle_calendar_feeds: {
         Row: {
           created_at: string | null

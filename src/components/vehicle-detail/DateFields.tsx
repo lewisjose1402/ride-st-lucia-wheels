@@ -2,20 +2,56 @@
 import { Calendar } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useAvailabilityCheck } from '@/hooks/useAvailabilityCheck';
+import { useToast } from '@/components/ui/use-toast';
+import { useEffect } from 'react';
 
 interface DateFieldsProps {
   pickupDate: string;
   setPickupDate: (value: string) => void;
   dropoffDate: string;
   setDropoffDate: (value: string) => void;
+  vehicleId?: string;
 }
 
 const DateFields = ({ 
   pickupDate, 
   setPickupDate, 
   dropoffDate, 
-  setDropoffDate 
+  setDropoffDate,
+  vehicleId 
 }: DateFieldsProps) => {
+  const { toast } = useToast();
+  const { isDateRangeAvailable, getDateStatus } = useAvailabilityCheck({ 
+    vehicleId: vehicleId || '' 
+  });
+
+  // Check availability when dates change
+  useEffect(() => {
+    if (pickupDate && dropoffDate && vehicleId) {
+      const start = new Date(pickupDate);
+      const end = new Date(dropoffDate);
+      
+      if (start <= end) {
+        const isAvailable = isDateRangeAvailable(start, end);
+        if (!isAvailable) {
+          // Find the first blocked date in the range
+          for (let date = new Date(start); date <= end; date.setDate(date.getDate() + 1)) {
+            const status = getDateStatus(date);
+            if (status && status.status !== 'available') {
+              toast({
+                title: 'Date Unavailable',
+                description: `${date.toLocaleDateString()} is ${status.status === 'booked-ical' ? 'booked via external calendar' : 'manually blocked'}${status.reason ? ': ' + status.reason : ''}`,
+                variant: 'destructive',
+              });
+              break;
+            }
+          }
+        }
+      }
+    }
+  }, [pickupDate, dropoffDate, vehicleId, isDateRangeAvailable, getDateStatus, toast]);
+
   return (
     <>
       <div>
