@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { MapPin, Phone, Mail } from 'lucide-react';
+import { getStreetAddressFromCompanyData, getConstituencyFromCompanyData } from '@/components/company/profile/helpers';
 
 interface CompanyInfoCardProps {
   companyData: any;
@@ -22,6 +23,19 @@ const CompanyInfoCard = ({ companyData, vehicle }: CompanyInfoCardProps) => {
     companyDataKeys: companyData ? Object.keys(companyData) : null,
     vehicle: vehicle?.id
   });
+
+  const formatCompanyAddress = (companyData: any): string => {
+    if (!companyData || !companyData.address) return '';
+    
+    const streetAddress = getStreetAddressFromCompanyData(companyData);
+    const constituency = getConstituencyFromCompanyData(companyData);
+    
+    const parts = [];
+    if (streetAddress) parts.push(streetAddress);
+    if (constituency) parts.push(constituency);
+    
+    return parts.join(', ') || companyData.address;
+  };
 
   // If no company data is available, show vehicle-based fallback info
   if (!companyData) {
@@ -75,6 +89,8 @@ const CompanyInfoCard = ({ companyData, vehicle }: CompanyInfoCardProps) => {
     isApproved: companyData.is_approved
   });
 
+  const formattedAddress = formatCompanyAddress(companyData);
+
   return (
     <Card>
       <CardHeader>
@@ -100,10 +116,10 @@ const CompanyInfoCard = ({ companyData, vehicle }: CompanyInfoCardProps) => {
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
-          {companyData.address && (
+          {formattedAddress && (
             <div className="flex items-center text-sm text-gray-600">
               <MapPin className="h-4 w-4 mr-2" />
-              <span>{companyData.address}</span>
+              <span>{formattedAddress}</span>
             </div>
           )}
           {companyData.phone && (
