@@ -20,8 +20,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { getVehicleAvailability, addManualBlock, removeManualBlock, AvailabilityData, CalendarBlock } from '@/services/calendarService';
-import { format, isSameDay, startOfDay } from 'date-fns';
+import { getVehicleAvailability, addManualBlock, removeManualBlock, AvailabilityData } from '@/services/calendarService';
+import { format, isSameDay } from 'date-fns';
 
 interface InteractiveCalendarProps {
   vehicleId: string;
@@ -34,7 +34,6 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({ vehicleId }) 
   const [isBlockDialogOpen, setIsBlockDialogOpen] = useState(false);
   const [blockReason, setBlockReason] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [hoveredDate, setHoveredDate] = useState<Date | null>(null);
 
   const loadAvailability = async () => {
     try {
@@ -106,7 +105,6 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({ vehicleId }) 
   const handleRemoveBlock = async (date: Date) => {
     try {
       setIsLoading(true);
-      const dateStatus = getDateStatus(date);
       
       // Find the manual block that contains this date
       const blockToRemove = availability.find(item => 
@@ -170,47 +168,12 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({ vehicleId }) 
     }
   };
 
-  const getDayClassName = (date: Date) => {
-    const dateStatus = getDateStatus(date);
-    const isSelected = selectedDates.some(selected => isSameDay(selected, date));
-    
-    let className = '';
-    
-    if (dateStatus.status === 'booked-ical') {
-      className = 'bg-red-200 text-red-800 hover:bg-red-300';
-    } else if (dateStatus.status === 'blocked-manual') {
-      className = 'bg-yellow-200 text-yellow-800 hover:bg-yellow-300';
-    } else {
-      className = 'bg-green-50 text-green-800 hover:bg-green-100';
-    }
-    
-    if (isSelected) {
-      className += ' ring-2 ring-blue-500';
-    }
-    
-    return className;
-  };
-
-  const getTooltipContent = (date: Date) => {
-    const dateStatus = getDateStatus(date);
-    
-    if (dateStatus.status === 'available') {
-      return 'Available - Click to block';
-    } else if (dateStatus.status === 'booked-ical') {
-      return `Booked via external calendar${dateStatus.reason ? ': ' + dateStatus.reason : ''}`;
-    } else if (dateStatus.status === 'blocked-manual') {
-      return `Manually blocked${dateStatus.reason ? ': ' + dateStatus.reason : ''} - Click to unblock`;
-    }
-    
-    return '';
-  };
-
   return (
     <TooltipProvider>
       <div className="space-y-4">
         <Calendar
           mode="single"
-          className="rounded-md border"
+          className="rounded-md border bg-white"
           disabled={[{ before: new Date() }]}
           modifiers={{
             booked: (date) => getDateStatus(date).status === 'booked-ical',
@@ -223,22 +186,8 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({ vehicleId }) 
             selected: 'ring-2 ring-blue-500',
           }}
           onDayClick={handleDateClick}
-          components={{
-            Day: ({ date, ...props }) => (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div
-                    {...props}
-                    onMouseEnter={() => setHoveredDate(date)}
-                    onMouseLeave={() => setHoveredDate(null)}
-                  />
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>{getTooltipContent(date)}</p>
-                </TooltipContent>
-              </Tooltip>
-            ),
-          }}
+          showOutsideDays={true}
+          fixedWeeks={true}
         />
 
         {/* Calendar Legend */}
