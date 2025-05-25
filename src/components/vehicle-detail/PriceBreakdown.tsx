@@ -37,8 +37,8 @@ const PriceBreakdown = ({
         <span className="font-medium">{formatCurrency(baseCost)}</span>
       </div>
       
-      <div className="flex justify-between text-green-700">
-        <span>Booking Confirmation Fee (12%) - Paid Now</span>
+      <div className="flex justify-between text-yellow-700">
+        <span>Booking Confirmation Fee (12%)</span>
         <span className="font-medium">{formatCurrency(confirmationFee)}</span>
       </div>
       
