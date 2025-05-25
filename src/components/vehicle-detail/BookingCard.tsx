@@ -215,6 +215,8 @@ const BookingCard = ({ vehicle }: BookingCardProps) => {
               rentalDays={pricing.rentalDays}
               baseCost={pricing.baseCost}
               confirmationFee={pricing.confirmationFee}
+              taxableAmount={pricing.taxableAmount}
+              governmentTax={pricing.governmentTax}
               permitFee={pricing.permitFee}
               underageDeposit={pricing.underageDeposit}
               damageDeposit={pricing.damageDeposit}

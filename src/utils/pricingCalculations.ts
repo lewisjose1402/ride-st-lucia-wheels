@@ -14,6 +14,8 @@ interface PricingBreakdown {
   rentalDays: number;
   baseCost: number;
   confirmationFee: number;
+  taxableAmount: number;
+  governmentTax: number;
   permitFee: number;
   underageDeposit: number;
   damageDeposit: number;
@@ -45,7 +47,15 @@ export const calculatePricing = (inputs: PricingInputs): PricingBreakdown => {
 
   const rentalDays = calculateDaysBetween(pickupDate, dropoffDate);
   const baseCost = rentalDays * pricePerDay;
+  
+  // Booking Confirmation Fee (12%) - paid now
   const confirmationFee = baseCost * 0.12;
+  
+  // Taxable Amount = Base Cost - Booking Confirmation Fee
+  const taxableAmount = baseCost - confirmationFee;
+  
+  // Government Tax (25%) applied to taxable amount
+  const governmentTax = taxableAmount * 0.25;
   
   // Permit fee applies if NOT international license
   const permitFee = !isInternationalLicense ? 23 : 0;
@@ -57,12 +67,14 @@ export const calculatePricing = (inputs: PricingInputs): PricingBreakdown => {
   // Damage deposit from company settings
   const damageDeposit = requireDamageDeposit ? damageDepositAmount : 0;
   
-  const totalCost = baseCost + confirmationFee + permitFee + underageDeposit + damageDeposit;
+  const totalCost = baseCost + governmentTax + permitFee + underageDeposit + damageDeposit;
 
   return {
     rentalDays,
     baseCost,
     confirmationFee,
+    taxableAmount,
+    governmentTax,
     permitFee,
     underageDeposit,
     damageDeposit,
