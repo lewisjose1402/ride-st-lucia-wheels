@@ -47,6 +47,9 @@ export interface AvailabilityData {
 
 // Get calendar feeds for a vehicle (public access)
 export const getVehicleCalendarFeeds = async (vehicleId: string): Promise<CalendarFeed[]> => {
+  console.log('Fetching calendar feeds for vehicle:', vehicleId);
+  
+  // Create a new supabase client without auth for public access
   const { data, error } = await supabase
     .from('vehicle_calendar_feeds')
     .select('*')
@@ -58,11 +61,14 @@ export const getVehicleCalendarFeeds = async (vehicleId: string): Promise<Calend
     return []; // Return empty array instead of throwing for public access
   }
 
+  console.log('Calendar feeds fetched:', data?.length || 0);
   return data || [];
 };
 
 // Get manual blocks for a vehicle (public access)
 export const getVehicleManualBlocks = async (vehicleId: string): Promise<CalendarBlock[]> => {
+  console.log('Fetching manual blocks for vehicle:', vehicleId);
+  
   const { data, error } = await supabase
     .from('vehicle_calendar_blocks')
     .select('*')
@@ -74,11 +80,14 @@ export const getVehicleManualBlocks = async (vehicleId: string): Promise<Calenda
     return []; // Return empty array instead of throwing for public access
   }
 
+  console.log('Manual blocks fetched:', data?.length || 0);
   return data || [];
 };
 
 // Get iCal bookings for a vehicle (public access)
 export const getVehicleICalBookings = async (vehicleId: string): Promise<ICalBooking[]> => {
+  console.log('Fetching iCal bookings for vehicle:', vehicleId);
+  
   const { data, error } = await supabase
     .from('ical_bookings')
     .select(`
@@ -93,16 +102,21 @@ export const getVehicleICalBookings = async (vehicleId: string): Promise<ICalBoo
     return []; // Return empty array instead of throwing for public access
   }
 
+  console.log('iCal bookings fetched:', data?.length || 0);
   return data || [];
 };
 
 // Get combined availability data (iCal + manual blocks) - public access
 export const getVehicleAvailability = async (vehicleId: string): Promise<AvailabilityData[]> => {
+  console.log('Getting vehicle availability for:', vehicleId);
+  
   try {
     const [manualBlocks, icalBookings] = await Promise.all([
       getVehicleManualBlocks(vehicleId),
       getVehicleICalBookings(vehicleId)
     ]);
+    
+    console.log('Raw data - Manual blocks:', manualBlocks.length, 'iCal bookings:', icalBookings.length);
     
     const availabilityData: AvailabilityData[] = [];
     
@@ -110,6 +124,8 @@ export const getVehicleAvailability = async (vehicleId: string): Promise<Availab
     manualBlocks.forEach(block => {
       const startDate = new Date(block.start_date);
       const endDate = new Date(block.end_date);
+      
+      console.log('Processing manual block:', block.start_date, 'to', block.end_date);
       
       for (let date = new Date(startDate); date <= endDate; date.setDate(date.getDate() + 1)) {
         availabilityData.push({
@@ -128,6 +144,8 @@ export const getVehicleAvailability = async (vehicleId: string): Promise<Availab
       const endDate = new Date(booking.end_date);
       const feedName = (booking as any).vehicle_calendar_feeds?.feed_name || 'External Calendar';
       
+      console.log('Processing iCal booking:', booking.start_date, 'to', booking.end_date);
+      
       for (let date = new Date(startDate); date <= endDate; date.setDate(date.getDate() + 1)) {
         availabilityData.push({
           date: new Date(date),
@@ -139,6 +157,7 @@ export const getVehicleAvailability = async (vehicleId: string): Promise<Availab
       }
     });
 
+    console.log('Final availability data:', availabilityData.length, 'blocked dates');
     return availabilityData;
   } catch (error) {
     console.error('Error fetching vehicle availability:', error);

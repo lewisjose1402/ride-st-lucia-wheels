@@ -17,6 +17,8 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
+    console.log('Updating RLS policies for public calendar access...')
+
     // Update RLS policies to allow public read access to calendar data
     const { error: policyError } = await supabaseClient.rpc('exec', {
       query: `
@@ -47,11 +49,14 @@ Deno.serve(async (req) => {
     })
 
     if (policyError) {
+      console.error('Policy update error:', policyError)
       throw new Error(`Failed to update policies: ${policyError.message}`)
     }
 
+    console.log('RLS policies updated successfully')
+
     return new Response(
-      JSON.stringify({ success: true }),
+      JSON.stringify({ success: true, message: 'Calendar policies updated for public access' }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
 

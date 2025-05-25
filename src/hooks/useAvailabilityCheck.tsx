@@ -11,13 +11,18 @@ export const useAvailabilityCheck = ({ vehicleId }: UseAvailabilityCheckProps) =
   const [isLoading, setIsLoading] = useState(false);
 
   const loadAvailability = async () => {
-    if (!vehicleId) return;
+    if (!vehicleId) {
+      console.log('No vehicle ID provided');
+      return;
+    }
     
     try {
       setIsLoading(true);
+      console.log('Starting to load availability for vehicle:', vehicleId);
       const data = await getVehicleAvailability(vehicleId);
       setAvailability(data);
-      console.log('Loaded availability data:', data);
+      console.log('Loaded availability data:', data.length, 'blocked dates');
+      console.log('Availability details:', data);
     } catch (error) {
       console.error('Error loading availability:', error);
       // Set empty availability on error to allow public access
@@ -34,13 +39,12 @@ export const useAvailabilityCheck = ({ vehicleId }: UseAvailabilityCheckProps) =
   const isDateAvailable = (date: Date): boolean => {
     const hasConflict = availability.some(item => {
       const itemDate = new Date(item.date);
-      return (
-        itemDate.toDateString() === date.toDateString() &&
-        (item.status === 'booked-ical' || item.status === 'blocked-manual')
-      );
+      const isConflict = itemDate.toDateString() === date.toDateString() &&
+        (item.status === 'booked-ical' || item.status === 'blocked-manual');
+      return isConflict;
     });
     
-    console.log(`Date ${date.toDateString()} available:`, !hasConflict);
+    console.log(`Date ${date.toDateString()} available:`, !hasConflict, 'conflicts found:', hasConflict);
     return !hasConflict;
   };
 
