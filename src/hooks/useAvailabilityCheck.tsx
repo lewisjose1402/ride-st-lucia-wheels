@@ -22,16 +22,20 @@ export const useAvailabilityCheck = ({ vehicleId }: UseAvailabilityCheckProps) =
       const data = await getVehicleAvailability(vehicleId);
       console.log('useAvailabilityCheck: Raw availability data received:', data);
       setAvailability(data);
-      console.log('useAvailabilityCheck: Availability state updated with', data.length, 'items');
+      console.log('useAvailabilityCheck: Availability state updated with', data.length, 'blocked dates');
       
-      // Log a sample of the data for debugging
+      // Log detailed information about blocked dates
       if (data.length > 0) {
-        console.log('useAvailabilityCheck: Sample availability item:', data[0]);
-        console.log('useAvailabilityCheck: Sample date type:', typeof data[0].date, data[0].date);
+        console.log('useAvailabilityCheck: Sample availability items:', data.slice(0, 5));
+        const manualBlocks = data.filter(item => item.status === 'blocked-manual');
+        const icalBlocks = data.filter(item => item.status === 'booked-ical');
+        console.log(`useAvailabilityCheck: Found ${manualBlocks.length} manual blocks and ${icalBlocks.length} iCal blocks`);
+      } else {
+        console.log('useAvailabilityCheck: No blocked dates found - vehicle is fully available');
       }
     } catch (error) {
       console.error('useAvailabilityCheck: Error loading availability:', error);
-      // Set empty availability on error to allow public access
+      // Set empty availability on error to allow public access fallback
       setAvailability([]);
     } finally {
       setIsLoading(false);
@@ -44,43 +48,50 @@ export const useAvailabilityCheck = ({ vehicleId }: UseAvailabilityCheckProps) =
   }, [vehicleId]);
 
   const formatDateToISO = (date: Date): string => {
+    // Use toISOString and split to get YYYY-MM-DD format consistently
     return date.toISOString().split('T')[0];
   };
 
   const isDateAvailable = (date: Date): boolean => {
     const dateISO = formatDateToISO(date);
-    console.log(`useAvailabilityCheck: Checking availability for date ISO: ${dateISO}`);
+    console.log(`useAvailabilityCheck: Checking availability for date: ${dateISO}`);
     
     const hasConflict = availability.some(item => {
-      // Ensure item.date is a Date object
+      // Ensure consistent date comparison using ISO format
       const itemDate = item.date instanceof Date ? item.date : new Date(item.date);
       const itemDateISO = formatDateToISO(itemDate);
       const isConflict = itemDateISO === dateISO &&
         (item.status === 'booked-ical' || item.status === 'blocked-manual');
       
       if (isConflict) {
-        console.log(`useAvailabilityCheck: Date ${dateISO} has conflict:`, item);
+        console.log(`useAvailabilityCheck: Date ${dateISO} has conflict:`, {
+          status: item.status,
+          reason: item.reason,
+          source: item.source
+        });
       }
       
       return isConflict;
     });
     
-    console.log(`useAvailabilityCheck: Date ${dateISO} available:`, !hasConflict, 'total availability items:', availability.length);
-    return !hasConflict;
+    const isAvailable = !hasConflict;
+    console.log(`useAvailabilityCheck: Date ${dateISO} available: ${isAvailable} (total blocked dates: ${availability.length})`);
+    return isAvailable;
   };
 
   const getDateStatus = (date: Date): AvailabilityData | null => {
     const dateISO = formatDateToISO(date);
-    console.log(`useAvailabilityCheck: Getting status for date ISO: ${dateISO}`);
     
     const status = availability.find(item => {
-      // Ensure item.date is a Date object
+      // Ensure consistent date comparison using ISO format
       const itemDate = item.date instanceof Date ? item.date : new Date(item.date);
       const itemDateISO = formatDateToISO(itemDate);
       return itemDateISO === dateISO;
     }) || null;
     
-    console.log(`useAvailabilityCheck: getDateStatus for ${dateISO}:`, status, 'from', availability.length, 'total items');
+    if (status) {
+      console.log(`useAvailabilityCheck: getDateStatus for ${dateISO}:`, status);
+    }
     return status;
   };
 
@@ -92,15 +103,15 @@ export const useAvailabilityCheck = ({ vehicleId }: UseAvailabilityCheckProps) =
     
     for (let date = new Date(start); date <= end; date.setDate(date.getDate() + 1)) {
       if (!isDateAvailable(date)) {
-        console.log('useAvailabilityCheck: Date range not available due to:', formatDateToISO(date));
+        console.log('useAvailabilityCheck: Date range not available due to conflict on:', formatDateToISO(date));
         return false;
       }
     }
-    console.log('useAvailabilityCheck: Date range is available');
+    console.log('useAvailabilityCheck: Date range is fully available');
     return true;
   };
 
-  console.log('useAvailabilityCheck: Returning hook values with availability length:', availability.length);
+  console.log('useAvailabilityCheck: Hook returning values - availability length:', availability.length, 'isLoading:', isLoading);
 
   return {
     availability,
