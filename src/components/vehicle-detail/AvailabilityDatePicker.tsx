@@ -140,16 +140,12 @@ const AvailabilityDatePicker: React.FC<AvailabilityDatePickerProps> = ({
             </div>
             <div className="flex flex-col gap-1 text-xs">
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-green-100 border border-green-300 rounded"></div>
-                <span>Available</span>
-              </div>
-              <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-red-100 border border-red-300 rounded"></div>
                 <span>External Booking</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-yellow-100 border border-yellow-300 rounded"></div>
-                <span>Manually Blocked</span>
+                <span>Unavailable</span>
               </div>
             </div>
             {isLoading && (
