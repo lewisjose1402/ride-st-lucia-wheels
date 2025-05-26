@@ -9,6 +9,7 @@ interface ValidationInputs {
   firstName: string;
   lastName: string;
   email: string;
+  phoneNumber: string;
   pickupDate: string;
   dropoffDate: string;
   requireDriverLicense: boolean;
@@ -31,6 +32,7 @@ export const validateBookingForm = (inputs: ValidationInputs): ValidationResult 
     firstName,
     lastName,
     email,
+    phoneNumber,
     pickupDate,
     dropoffDate,
     requireDriverLicense,
@@ -53,6 +55,18 @@ export const validateBookingForm = (inputs: ValidationInputs): ValidationResult 
       errors.push('Please enter a valid email address');
     }
   }
+  
+  // Phone number validation
+  if (!phoneNumber.trim() || phoneNumber.trim() === '+1') {
+    errors.push('Phone number is required');
+  } else {
+    // Validate phone number format (+1 followed by 10 digits)
+    const phoneRegex = /^\+1\d{10}$/;
+    if (!phoneRegex.test(phoneNumber.trim())) {
+      errors.push('Please enter a valid phone number (+1 followed by 10 digits)');
+    }
+  }
+  
   if (!pickupDate) errors.push('Pickup date is required');
   if (!dropoffDate) errors.push('Dropoff date is required');
 

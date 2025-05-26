@@ -9,6 +9,8 @@ interface PersonalInfoFieldsProps {
   setLastName: (value: string) => void;
   email: string;
   setEmail: (value: string) => void;
+  phoneNumber: string;
+  setPhoneNumber: (value: string) => void;
 }
 
 const PersonalInfoFields = ({
@@ -17,8 +19,35 @@ const PersonalInfoFields = ({
   lastName,
   setLastName,
   email,
-  setEmail
+  setEmail,
+  phoneNumber,
+  setPhoneNumber
 }: PersonalInfoFieldsProps) => {
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value;
+    
+    // Remove all non-numeric characters except +
+    value = value.replace(/[^\d+]/g, '');
+    
+    // Ensure it starts with +1
+    if (!value.startsWith('+1')) {
+      if (value.startsWith('1')) {
+        value = '+' + value;
+      } else if (value.startsWith('+')) {
+        value = '+1' + value.substring(1);
+      } else {
+        value = '+1' + value;
+      }
+    }
+    
+    // Limit to +1 + 10 digits
+    if (value.length > 12) {
+      value = value.substring(0, 12);
+    }
+    
+    setPhoneNumber(value);
+  };
+
   return (
     <div className="space-y-3">
       <h3 className="font-medium text-gray-900">Personal Information</h3>
@@ -57,6 +86,18 @@ const PersonalInfoFields = ({
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="Enter email address"
+          className="mt-1"
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="phoneNumber">Phone Number</Label>
+        <Input
+          id="phoneNumber"
+          type="tel"
+          value={phoneNumber}
+          onChange={handlePhoneChange}
+          placeholder="+1234567890"
           className="mt-1"
         />
       </div>

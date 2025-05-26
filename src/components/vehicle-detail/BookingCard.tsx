@@ -33,6 +33,7 @@ const BookingCard = ({ vehicle }: BookingCardProps) => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('+1');
   const [driverLicense, setDriverLicense] = useState<File | null>(null);
   const [driverAge, setDriverAge] = useState('');
   const [drivingExperience, setDrivingExperience] = useState('');
@@ -75,6 +76,7 @@ const BookingCard = ({ vehicle }: BookingCardProps) => {
       firstName,
       lastName,
       email,
+      phoneNumber,
       pickupDate,
       dropoffDate,
       requireDriverLicense: requirements.requireDriverLicense,
@@ -89,6 +91,7 @@ const BookingCard = ({ vehicle }: BookingCardProps) => {
     firstName,
     lastName,
     email,
+    phoneNumber,
     pickupDate,
     dropoffDate,
     requirements.requireDriverLicense,
@@ -135,6 +138,7 @@ const BookingCard = ({ vehicle }: BookingCardProps) => {
       firstName: firstName.trim(),
       lastName: lastName.trim(),
       email: email.trim(),
+      phoneNumber: phoneNumber.trim(),
       driverLicense,
       driverAge: parseInt(driverAge),
       drivingExperience: parseInt(drivingExperience),
@@ -189,6 +193,8 @@ const BookingCard = ({ vehicle }: BookingCardProps) => {
             setLastName={setLastName}
             email={email}
             setEmail={setEmail}
+            phoneNumber={phoneNumber}
+            setPhoneNumber={setPhoneNumber}
           />
 
           {/* Driver Information */}
