@@ -8,6 +8,7 @@ interface ValidationInputs {
   deliveryLocation: string;
   firstName: string;
   lastName: string;
+  email: string;
   pickupDate: string;
   dropoffDate: string;
   requireDriverLicense: boolean;
@@ -29,6 +30,7 @@ export const validateBookingForm = (inputs: ValidationInputs): ValidationResult 
     deliveryLocation,
     firstName,
     lastName,
+    email,
     pickupDate,
     dropoffDate,
     requireDriverLicense,
@@ -42,6 +44,15 @@ export const validateBookingForm = (inputs: ValidationInputs): ValidationResult 
   // Basic required fields
   if (!firstName.trim()) errors.push('First name is required');
   if (!lastName.trim()) errors.push('Last name is required');
+  if (!email.trim()) {
+    errors.push('Email address is required');
+  } else {
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      errors.push('Please enter a valid email address');
+    }
+  }
   if (!pickupDate) errors.push('Pickup date is required');
   if (!dropoffDate) errors.push('Dropoff date is required');
 
