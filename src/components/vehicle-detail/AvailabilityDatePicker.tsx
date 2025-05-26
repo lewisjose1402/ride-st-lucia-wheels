@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { CalendarIcon } from 'lucide-react';
 import { format, isSameDay } from 'date-fns';
@@ -116,18 +115,13 @@ const AvailabilityDatePicker: React.FC<AvailabilityDatePickerProps> = ({
             onSelect={handleDateSelect}
             disabled={isDateDisabled}
             modifiers={{
-              booked: (date) => {
+              unavailable: (date) => {
                 const status = getDateStatus(date);
-                return status?.status === 'booked-ical';
-              },
-              blocked: (date) => {
-                const status = getDateStatus(date);
-                return status?.status === 'blocked-manual';
+                return status?.status === 'booked-ical' || status?.status === 'blocked-manual';
               },
             }}
             modifiersClassNames={{
-              booked: 'bg-red-100 text-red-800 line-through cursor-not-allowed',
-              blocked: 'bg-yellow-100 text-yellow-800 cursor-not-allowed',
+              unavailable: 'bg-gray-100 text-gray-500 cursor-not-allowed',
             }}
             initialFocus
             className="pointer-events-auto"
@@ -140,11 +134,7 @@ const AvailabilityDatePicker: React.FC<AvailabilityDatePickerProps> = ({
             </div>
             <div className="flex flex-col gap-1 text-xs">
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-red-100 border border-red-300 rounded"></div>
-                <span>External Booking</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-yellow-100 border border-yellow-300 rounded"></div>
+                <div className="w-3 h-3 bg-gray-100 border border-gray-300 rounded"></div>
                 <span>Unavailable</span>
               </div>
             </div>
