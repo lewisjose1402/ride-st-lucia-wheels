@@ -137,6 +137,21 @@ const BookingCard = ({ vehicle }: BookingCardProps) => {
             setIsInternationalLicense={formState.setIsInternationalLicense}
           />
 
+          {/* Validation Errors Display */}
+          {(!validation.isValid && (validation.errors.length > 0 || validation.blockingErrors.length > 0)) && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <h4 className="text-sm font-medium text-red-800 mb-2">Please complete the following:</h4>
+              <ul className="list-disc list-inside text-sm text-red-700 space-y-1">
+                {validation.errors.map((error, index) => (
+                  <li key={`error-${index}`}>{error}</li>
+                ))}
+                {validation.blockingErrors.map((error, index) => (
+                  <li key={`blocking-${index}`} className="font-medium">{error}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           {/* Price Breakdown */}
           {(formState.pickupDate && formState.dropoffDate) && (
             <PriceBreakdown
