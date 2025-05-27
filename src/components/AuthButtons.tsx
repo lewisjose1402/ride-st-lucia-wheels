@@ -1,3 +1,4 @@
+
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -44,7 +45,7 @@ const AuthButtons = () => {
             
             {isRentalCompany && (
               <DropdownMenuItem asChild>
-                <Link to="/company" className="w-full flex items-center cursor-pointer">
+                <Link to="/company/dashboard" className="w-full flex items-center cursor-pointer">
                   <Building className="mr-2 h-4 w-4" />
                   <span>Company Dashboard</span>
                 </Link>
@@ -53,7 +54,7 @@ const AuthButtons = () => {
             
             {isAdmin && (
               <DropdownMenuItem asChild>
-                <Link to="/admin" className="w-full flex items-center cursor-pointer">
+                <Link to="/admin/dashboard" className="w-full flex items-center cursor-pointer">
                   <Settings className="mr-2 h-4 w-4" />
                   <span>Admin Panel</span>
                 </Link>

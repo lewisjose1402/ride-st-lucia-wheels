@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Index from "./pages/Index";
@@ -48,6 +48,7 @@ const App = () => (
             <Route path="/booking-confirmation" element={<BookingConfirmation />} />
 
             {/* Company routes */}
+            <Route path="/company" element={<Navigate to="/company/dashboard" replace />} />
             <Route path="/company/dashboard" element={
               <ProtectedRoute requiredRole="rental_company">
                 <CompanyDashboard />
@@ -85,6 +86,7 @@ const App = () => (
             } />
 
             {/* Admin routes */}
+            <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
             <Route path="/admin/dashboard" element={
               <ProtectedRoute requiredRole="admin">
                 <AdminDashboard />
