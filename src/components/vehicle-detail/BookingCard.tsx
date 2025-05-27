@@ -1,6 +1,5 @@
 
-import { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useMemo } from 'react';
 import { 
   Card, 
   CardContent, 
@@ -8,7 +7,6 @@ import {
   CardHeader, 
   CardTitle 
 } from '@/components/ui/card';
-import { useToast } from '@/components/ui/use-toast';
 import DateFields from './DateFields';
 import PersonalInfoFields from './PersonalInfoFields';
 import DriverInfoFields from './DriverInfoFields';
@@ -17,138 +15,66 @@ import BookingRequirementsDisplay from './BookingRequirementsDisplay';
 import BookingActions from './BookingActions';
 import { useBookingRequirements } from '@/hooks/useBookingRequirements';
 import { calculatePricing } from '@/utils/pricingCalculations';
-import { validateBookingForm } from '@/utils/bookingValidation';
+import { useBookingFormState } from './hooks/useBookingFormState';
+import { useBookingFormValidation } from './hooks/useBookingFormValidation';
+import { useBookingFormActions } from './hooks/useBookingFormActions';
 
 interface BookingCardProps {
   vehicle: any;
 }
 
 const BookingCard = ({ vehicle }: BookingCardProps) => {
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  
-  // Form state
-  const [pickupDate, setPickupDate] = useState('');
-  const [dropoffDate, setDropoffDate] = useState('');
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('+1');
-  const [driverLicense, setDriverLicense] = useState<File | null>(null);
-  const [driverAge, setDriverAge] = useState('');
-  const [drivingExperience, setDrivingExperience] = useState('');
-  const [deliveryLocation, setDeliveryLocation] = useState('');
-  const [isInternationalLicense, setIsInternationalLicense] = useState(false);
-
-  // Fetch company requirements
+  // Custom hooks for form management
+  const formState = useBookingFormState();
   const { requirements, isLoading: requirementsLoading } = useBookingRequirements(vehicle.company_id);
 
   // Calculate pricing in real-time
   const pricing = useMemo(() => {
     return calculatePricing({
-      pickupDate,
-      dropoffDate,
+      pickupDate: formState.pickupDate,
+      dropoffDate: formState.dropoffDate,
       pricePerDay: vehicle.price_per_day,
-      driverAge,
-      isInternationalLicense,
+      driverAge: formState.driverAge,
+      isInternationalLicense: formState.isInternationalLicense,
       minimumDriverAge: requirements.minimumDriverAge,
       requireDamageDeposit: requirements.requireDamageDeposit,
       damageDepositAmount: requirements.damageDepositAmount
     });
   }, [
-    pickupDate, 
-    dropoffDate, 
+    formState.pickupDate, 
+    formState.dropoffDate, 
     vehicle.price_per_day, 
-    driverAge, 
-    isInternationalLicense,
+    formState.driverAge, 
+    formState.isInternationalLicense,
     requirements.minimumDriverAge,
     requirements.requireDamageDeposit,
     requirements.damageDepositAmount
   ]);
 
   // Validate form
-  const validation = useMemo(() => {
-    return validateBookingForm({
-      driverLicense,
-      driverAge,
-      drivingExperience,
-      deliveryLocation,
-      firstName,
-      lastName,
-      email,
-      phoneNumber,
-      pickupDate,
-      dropoffDate,
-      requireDriverLicense: requirements.requireDriverLicense,
-      minimumDriverAge: requirements.minimumDriverAge,
-      minimumDrivingExperience: requirements.minimumDrivingExperience
-    });
-  }, [
-    driverLicense,
-    driverAge,
-    drivingExperience,
-    deliveryLocation,
-    firstName,
-    lastName,
-    email,
-    phoneNumber,
-    pickupDate,
-    dropoffDate,
-    requirements.requireDriverLicense,
-    requirements.minimumDriverAge,
-    requirements.minimumDrivingExperience
-  ]);
+  const validation = useBookingFormValidation({
+    driverLicense: formState.driverLicense,
+    driverAge: formState.driverAge,
+    drivingExperience: formState.drivingExperience,
+    deliveryLocation: formState.deliveryLocation,
+    firstName: formState.firstName,
+    lastName: formState.lastName,
+    email: formState.email,
+    phoneNumber: formState.phoneNumber,
+    pickupDate: formState.pickupDate,
+    dropoffDate: formState.dropoffDate,
+    requireDriverLicense: requirements.requireDriverLicense,
+    minimumDriverAge: requirements.minimumDriverAge,
+    minimumDrivingExperience: requirements.minimumDrivingExperience
+  });
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setDriverLicense(file);
-    }
-  };
-
-  const handleBooking = () => {
-    // Show blocking errors as toast notifications
-    if (validation.blockingErrors.length > 0) {
-      validation.blockingErrors.forEach(error => {
-        toast({
-          title: "Booking Requirements Not Met",
-          description: error,
-          variant: "destructive",
-        });
-      });
-      return;
-    }
-
-    // Show non-blocking errors as warnings
-    if (validation.errors.length > 0) {
-      validation.errors.forEach(error => {
-        toast({
-          title: "Please Complete",
-          description: error,
-          variant: "destructive",
-        });
-      });
-      return;
-    }
-
-    const bookingData = {
-      vehicleId: vehicle.id,
-      pickupDate,
-      dropoffDate,
-      firstName: firstName.trim(),
-      lastName: lastName.trim(),
-      email: email.trim(),
-      phoneNumber: phoneNumber.trim(),
-      driverLicense,
-      driverAge: parseInt(driverAge),
-      drivingExperience: parseInt(drivingExperience),
-      deliveryLocation: deliveryLocation.trim(),
-      isInternationalLicense,
-      pricing
-    };
-    
-    navigate('/booking', { state: bookingData });
-  };
+  // Form actions
+  const { handleBooking } = useBookingFormActions({
+    vehicle,
+    formState,
+    validation,
+    pricing
+  });
 
   if (requirementsLoading) {
     return (
@@ -179,40 +105,40 @@ const BookingCard = ({ vehicle }: BookingCardProps) => {
           {/* Date Selection */}
           <DateFields 
             vehicleId={vehicle.id}
-            pickupDate={pickupDate}
-            setPickupDate={setPickupDate}
-            dropoffDate={dropoffDate}
-            setDropoffDate={setDropoffDate}
+            pickupDate={formState.pickupDate}
+            setPickupDate={formState.setPickupDate}
+            dropoffDate={formState.dropoffDate}
+            setDropoffDate={formState.setDropoffDate}
           />
 
           {/* Personal Information */}
           <PersonalInfoFields 
-            firstName={firstName}
-            setFirstName={setFirstName}
-            lastName={lastName}
-            setLastName={setLastName}
-            email={email}
-            setEmail={setEmail}
-            phoneNumber={phoneNumber}
-            setPhoneNumber={setPhoneNumber}
+            firstName={formState.firstName}
+            setFirstName={formState.setFirstName}
+            lastName={formState.lastName}
+            setLastName={formState.setLastName}
+            email={formState.email}
+            setEmail={formState.setEmail}
+            phoneNumber={formState.phoneNumber}
+            setPhoneNumber={formState.setPhoneNumber}
           />
 
           {/* Driver Information */}
           <DriverInfoFields 
-            driverLicense={driverLicense}
-            handleFileUpload={handleFileUpload}
-            driverAge={driverAge}
-            setDriverAge={setDriverAge}
-            drivingExperience={drivingExperience}
-            setDrivingExperience={setDrivingExperience}
-            deliveryLocation={deliveryLocation}
-            setDeliveryLocation={setDeliveryLocation}
-            isInternationalLicense={isInternationalLicense}
-            setIsInternationalLicense={setIsInternationalLicense}
+            driverLicense={formState.driverLicense}
+            handleFileUpload={formState.handleFileUpload}
+            driverAge={formState.driverAge}
+            setDriverAge={formState.setDriverAge}
+            drivingExperience={formState.drivingExperience}
+            setDrivingExperience={formState.setDrivingExperience}
+            deliveryLocation={formState.deliveryLocation}
+            setDeliveryLocation={formState.setDeliveryLocation}
+            isInternationalLicense={formState.isInternationalLicense}
+            setIsInternationalLicense={formState.setIsInternationalLicense}
           />
 
           {/* Price Breakdown */}
-          {(pickupDate && dropoffDate) && (
+          {(formState.pickupDate && formState.dropoffDate) && (
             <PriceBreakdown
               rentalDays={pricing.rentalDays}
               baseCost={pricing.baseCost}
@@ -233,8 +159,8 @@ const BookingCard = ({ vehicle }: BookingCardProps) => {
             onBooking={handleBooking}
             isValid={validation.isValid}
             vehicleId={vehicle.id}
-            pickupDate={pickupDate}
-            dropoffDate={dropoffDate}
+            pickupDate={formState.pickupDate}
+            dropoffDate={formState.dropoffDate}
           />
         </div>
       </CardContent>
