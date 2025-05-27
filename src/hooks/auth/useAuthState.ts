@@ -49,6 +49,7 @@ export function useAuthState() {
   const fetchProfile = async (userId: string) => {
     try {
       console.log("Fetching profile for user:", userId);
+      setIsLoading(true);
       
       // First check if user has company role from metadata
       const { data: userData } = await supabase.auth.getUser();
@@ -62,39 +63,37 @@ export function useAuthState() {
         setIsRentalCompany(true);
       }
       
-      // Check profiles table for admin role
+      // Check profiles table for role with improved error handling
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .single();
+        .maybeSingle(); // Use maybeSingle instead of single to avoid errors when no profile exists
 
       if (profileError) {
         console.error('Error fetching user profile:', profileError);
         // If profile doesn't exist, create one with guest role
-        if (profileError.code === 'PGRST116') {
-          console.log("Profile not found, creating guest profile");
-          const { data: newProfile, error: createError } = await supabase
-            .from('profiles')
-            .insert([
-              {
-                id: userId,
-                email: userData?.user?.email || '',
-                role: 'guest'
-              }
-            ])
-            .select()
-            .single();
-            
-          if (createError) {
-            console.error('Error creating profile:', createError);
-          } else {
-            console.log("Created new profile:", newProfile);
-            setProfile(newProfile);
-            setIsAdmin(newProfile.role === 'admin');
-          }
+        console.log("Profile not found, creating guest profile");
+        const { data: newProfile, error: createError } = await supabase
+          .from('profiles')
+          .insert([
+            {
+              id: userId,
+              email: userData?.user?.email || '',
+              role: 'guest'
+            }
+          ])
+          .select()
+          .single();
+          
+        if (createError) {
+          console.error('Error creating profile:', createError);
+        } else {
+          console.log("Created new profile:", newProfile);
+          setProfile(newProfile);
+          setIsAdmin(newProfile.role === 'admin');
         }
-      } else {
+      } else if (profileData) {
         console.log("Profile data from profiles table:", profileData);
         setProfile(profileData);
         setIsAdmin(profileData.role === 'admin');
@@ -106,7 +105,7 @@ export function useAuthState() {
         .from('rental_companies')
         .select('*')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle(); // Use maybeSingle here too
         
       if (companyError) {
         console.log('No company profile found:', companyError.message);

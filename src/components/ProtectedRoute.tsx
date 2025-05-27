@@ -13,16 +13,19 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
 
   console.log("ProtectedRoute - user:", !!user, "isLoading:", isLoading, "isAdmin:", isAdmin, "isRentalCompany:", isRentalCompany, "requiredRole:", requiredRole);
 
+  // Show loading while authentication state is being determined
   if (isLoading) {
     console.log("Still loading, showing loading state");
     return <LoadingState />;
   }
 
+  // Redirect to signin if no user is authenticated
   if (!user) {
     console.log("No user found, redirecting to signin");
     return <Navigate to="/signin" replace />;
   }
 
+  // Check role-specific access
   if (requiredRole === 'admin' && !isAdmin) {
     console.log("Admin required but user is not admin, redirecting to home");
     return <Navigate to="/" replace />;
