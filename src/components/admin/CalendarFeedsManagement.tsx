@@ -22,15 +22,18 @@ export const CalendarFeedsManagement = () => {
         .from('vehicle_calendar_feeds')
         .select(`
           *,
-          vehicles(name, company_id),
-          rental_companies(company_name)
+          vehicles!inner(
+            name, 
+            company_id,
+            rental_companies(company_name)
+          )
         `);
       
       if (searchTerm) {
         query = query.or(`feed_url.ilike.%${searchTerm}%,vehicles.name.ilike.%${searchTerm}%`);
       }
       
-      const { data, error } = await query.order('last_synced', { ascending: false, nullsFirst: false });
+      const { data, error } = await query.order('last_synced_at', { ascending: false, nullsFirst: false });
       
       if (error) throw error;
       return data;
@@ -82,11 +85,10 @@ export const CalendarFeedsManagement = () => {
     }
   };
 
-  const getFeedHealthStatus = (lastSynced: string | null, isActive: boolean) => {
-    if (!isActive) return { status: 'inactive', color: 'secondary' };
-    if (!lastSynced) return { status: 'never synced', color: 'destructive' };
+  const getFeedHealthStatus = (lastSyncedAt: string | null) => {
+    if (!lastSyncedAt) return { status: 'never synced', color: 'destructive' };
     
-    const daysSinceSync = Math.floor((Date.now() - new Date(lastSynced).getTime()) / (1000 * 60 * 60 * 24));
+    const daysSinceSync = Math.floor((Date.now() - new Date(lastSyncedAt).getTime()) / (1000 * 60 * 60 * 24));
     
     if (daysSinceSync > 7) return { status: 'stale', color: 'destructive' };
     if (daysSinceSync > 3) return { status: 'warning', color: 'secondary' };
@@ -137,19 +139,20 @@ export const CalendarFeedsManagement = () => {
               </TableHeader>
               <TableBody>
                 {feeds?.map((feed) => {
-                  const health = getFeedHealthStatus(feed.last_synced, feed.is_active);
+                  const health = getFeedHealthStatus(feed.last_synced_at);
+                  const companyName = feed.vehicles?.rental_companies?.company_name || 'Unknown';
                   return (
                     <TableRow key={feed.id}>
                       <TableCell className="font-medium">{feed.vehicles?.name}</TableCell>
-                      <TableCell>{feed.rental_companies?.company_name}</TableCell>
+                      <TableCell>{companyName}</TableCell>
                       <TableCell>
                         <Badge variant="outline">
-                          {feed.feed_type || 'External'}
+                          {feed.is_external ? 'External' : 'Internal'}
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        {feed.last_synced 
-                          ? new Date(feed.last_synced).toLocaleString()
+                        {feed.last_synced_at 
+                          ? new Date(feed.last_synced_at).toLocaleString()
                           : 'Never'
                         }
                       </TableCell>
@@ -166,7 +169,6 @@ export const CalendarFeedsManagement = () => {
                         <Button
                           size="sm"
                           onClick={() => syncFeedMutation.mutate(feed.id)}
-                          disabled={!feed.is_active}
                         >
                           <RefreshCw className="w-4 h-4 mr-1" />
                           Sync
