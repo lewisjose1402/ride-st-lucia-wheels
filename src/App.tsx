@@ -5,52 +5,57 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
 import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
-import VehiclesPage from "./pages/Vehicles";
-import VehicleDetailPage from "./pages/VehicleDetail";
-import AboutPage from "./pages/About";
-import ContactPage from "./pages/Contact";
+import About from "./pages/About";
+import Contact from "./pages/Contact";
+import Vehicles from "./pages/Vehicles";
+import VehicleDetail from "./pages/VehicleDetail";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
+import NotFound from "./pages/NotFound";
+import BookingConfirmation from "./pages/BookingConfirmation";
+
+// Company pages
 import CompanyDashboard from "./pages/company/Dashboard";
-import CompanyVehicles from "./pages/company/Vehicles";
-import AddEditVehicle from "./pages/company/AddEditVehicle";
 import CompanyProfile from "./pages/company/Profile";
+import CompanyVehicles from "./pages/company/Vehicles";
 import CompanyBookings from "./pages/company/Bookings";
-import Settings from "./pages/company/Settings";
+import CompanySettings from "./pages/company/Settings";
+import AddEditVehicle from "./pages/company/AddEditVehicle";
+
+// Admin pages
 import AdminDashboard from "./pages/admin/Dashboard";
-import ProtectedRoute from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <AuthProvider>
           <Routes>
+            {/* Public routes */}
             <Route path="/" element={<Index />} />
-            <Route path="/vehicles" element={<VehiclesPage />} />
-            <Route path="/vehicles/:id" element={<VehicleDetailPage />} />
-            <Route path="/about" element={<AboutPage />} />
-            <Route path="/contact" element={<ContactPage />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/vehicles" element={<Vehicles />} />
+            <Route path="/vehicles/:id" element={<VehicleDetail />} />
             <Route path="/signin" element={<SignIn />} />
             <Route path="/signup" element={<SignUp />} />
-            
-            {/* Admin Routes */}
-            <Route path="/admin" element={
-              <ProtectedRoute requiredRole="admin">
-                <AdminDashboard />
-              </ProtectedRoute>
-            } />
-            
-            {/* Company Routes */}
-            <Route path="/company" element={
+            <Route path="/booking-confirmation" element={<BookingConfirmation />} />
+
+            {/* Company routes */}
+            <Route path="/company/dashboard" element={
               <ProtectedRoute requiredRole="rental_company">
                 <CompanyDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/company/profile" element={
+              <ProtectedRoute requiredRole="rental_company">
+                <CompanyProfile />
               </ProtectedRoute>
             } />
             <Route path="/company/vehicles" element={
@@ -63,14 +68,9 @@ const App = () => (
                 <AddEditVehicle />
               </ProtectedRoute>
             } />
-            <Route path="/company/vehicles/edit/:id" element={
+            <Route path="/company/vehicles/:id/edit" element={
               <ProtectedRoute requiredRole="rental_company">
                 <AddEditVehicle />
-              </ProtectedRoute>
-            } />
-            <Route path="/company/profile" element={
-              <ProtectedRoute requiredRole="rental_company">
-                <CompanyProfile />
               </ProtectedRoute>
             } />
             <Route path="/company/bookings" element={
@@ -80,16 +80,22 @@ const App = () => (
             } />
             <Route path="/company/settings" element={
               <ProtectedRoute requiredRole="rental_company">
-                <Settings />
+                <CompanySettings />
               </ProtectedRoute>
             } />
-            
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+
+            {/* Admin routes */}
+            <Route path="/admin/dashboard" element={
+              <ProtectedRoute requiredRole="admin">
+                <AdminDashboard />
+              </ProtectedRoute>
+            } />
+
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </AuthProvider>
+        </AuthProvider>
+      </BrowserRouter>
+    </TooltipProvider>
   </QueryClientProvider>
 );
 
