@@ -9,7 +9,8 @@ interface BookingActionsProps {
   onManualVerification?: () => void;
   isVerifying?: boolean;
   showManualVerification?: boolean;
-  verificationError?: string | null;
+  verificationError?: boolean;
+  verificationErrorMessage?: string | null;
 }
 
 const BookingActions = ({ 
@@ -17,7 +18,8 @@ const BookingActions = ({
   onManualVerification,
   isVerifying = false,
   showManualVerification = false,
-  verificationError
+  verificationError = false,
+  verificationErrorMessage
 }: BookingActionsProps) => {
   return (
     <div className="space-y-4">
@@ -33,8 +35,8 @@ const BookingActions = ({
                   : "Your payment status is still pending. Click to refresh and verify your payment."
                 }
               </p>
-              {verificationError && (
-                <p className="text-xs text-red-600 mt-1">{verificationError}</p>
+              {verificationError && verificationErrorMessage && (
+                <p className="text-xs text-red-600 mt-1">{verificationErrorMessage}</p>
               )}
             </div>
             <Button

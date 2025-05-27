@@ -216,6 +216,7 @@ const BookingConfirmation = () => {
           isVerifying={isVerifying}
           showManualVerification={booking.payment_status === 'pending' && (sessionId || booking.stripe_session_id)}
           verificationError={!!verificationError}
+          verificationErrorMessage={verificationError}
         />
         
         <NextStepsCard paymentStatus={booking.payment_status} />
