@@ -19,6 +19,7 @@ import AddEditVehicle from "./pages/company/AddEditVehicle";
 import CompanyProfile from "./pages/company/Profile";
 import CompanyBookings from "./pages/company/Bookings";
 import Settings from "./pages/company/Settings";
+import AdminDashboard from "./pages/admin/Dashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
@@ -38,6 +39,13 @@ const App = () => (
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/signin" element={<SignIn />} />
             <Route path="/signup" element={<SignUp />} />
+            
+            {/* Admin Routes */}
+            <Route path="/admin" element={
+              <ProtectedRoute requiredRole="admin">
+                <AdminDashboard />
+              </ProtectedRoute>
+            } />
             
             {/* Company Routes */}
             <Route path="/company" element={

@@ -75,6 +75,20 @@ export type Database = {
             foreignKeyName: "bookings_vehicle_id_fkey"
             columns: ["vehicle_id"]
             isOneToOne: false
+            referencedRelation: "admin_bookings_view"
+            referencedColumns: ["vehicle_id"]
+          },
+          {
+            foreignKeyName: "bookings_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "admin_vehicle_stats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
             referencedRelation: "vehicles"
             referencedColumns: ["id"]
           },
@@ -140,6 +154,20 @@ export type Database = {
             foreignKeyName: "company_settings_company_id_fkey"
             columns: ["company_id"]
             isOneToOne: true
+            referencedRelation: "admin_bookings_view"
+            referencedColumns: ["company_id"]
+          },
+          {
+            foreignKeyName: "company_settings_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "admin_company_stats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_settings_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
             referencedRelation: "rental_companies"
             referencedColumns: ["id"]
           },
@@ -185,6 +213,20 @@ export type Database = {
             columns: ["source_feed_id"]
             isOneToOne: false
             referencedRelation: "vehicle_calendar_feeds"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ical_bookings_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "admin_bookings_view"
+            referencedColumns: ["vehicle_id"]
+          },
+          {
+            foreignKeyName: "ical_bookings_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "admin_vehicle_stats"
             referencedColumns: ["id"]
           },
           {
@@ -310,6 +352,13 @@ export type Database = {
             foreignKeyName: "reviews_booking_id_fkey"
             columns: ["booking_id"]
             isOneToOne: false
+            referencedRelation: "admin_bookings_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
             referencedRelation: "bookings"
             referencedColumns: ["id"]
           },
@@ -317,7 +366,35 @@ export type Database = {
             foreignKeyName: "reviews_company_id_fkey"
             columns: ["company_id"]
             isOneToOne: false
+            referencedRelation: "admin_bookings_view"
+            referencedColumns: ["company_id"]
+          },
+          {
+            foreignKeyName: "reviews_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "admin_company_stats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
             referencedRelation: "rental_companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "admin_bookings_view"
+            referencedColumns: ["vehicle_id"]
+          },
+          {
+            foreignKeyName: "reviews_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "admin_vehicle_stats"
             referencedColumns: ["id"]
           },
           {
@@ -361,6 +438,20 @@ export type Database = {
           vehicle_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_vehicle_calendar_blocks_vehicle_id"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "admin_bookings_view"
+            referencedColumns: ["vehicle_id"]
+          },
+          {
+            foreignKeyName: "fk_vehicle_calendar_blocks_vehicle_id"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "admin_vehicle_stats"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "fk_vehicle_calendar_blocks_vehicle_id"
             columns: ["vehicle_id"]
@@ -409,6 +500,20 @@ export type Database = {
             foreignKeyName: "vehicle_calendar_feeds_vehicle_id_fkey"
             columns: ["vehicle_id"]
             isOneToOne: false
+            referencedRelation: "admin_bookings_view"
+            referencedColumns: ["vehicle_id"]
+          },
+          {
+            foreignKeyName: "vehicle_calendar_feeds_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "admin_vehicle_stats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_calendar_feeds_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
             referencedRelation: "vehicles"
             referencedColumns: ["id"]
           },
@@ -437,6 +542,20 @@ export type Database = {
           vehicle_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "vehicle_images_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "admin_bookings_view"
+            referencedColumns: ["vehicle_id"]
+          },
+          {
+            foreignKeyName: "vehicle_images_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "admin_vehicle_stats"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "vehicle_images_vehicle_id_fkey"
             columns: ["vehicle_id"]
@@ -530,6 +649,20 @@ export type Database = {
             foreignKeyName: "vehicles_company_id_fkey"
             columns: ["company_id"]
             isOneToOne: false
+            referencedRelation: "admin_bookings_view"
+            referencedColumns: ["company_id"]
+          },
+          {
+            foreignKeyName: "vehicles_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "admin_company_stats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicles_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
             referencedRelation: "rental_companies"
             referencedColumns: ["id"]
           },
@@ -544,7 +677,101 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      admin_bookings_view: {
+        Row: {
+          company_email: string | null
+          company_id: string | null
+          company_name: string | null
+          company_phone: string | null
+          created_at: string | null
+          deposit_amount: number | null
+          driver_name: string | null
+          dropoff_date: string | null
+          id: string | null
+          pickup_date: string | null
+          status: Database["public"]["Enums"]["booking_status"] | null
+          total_price: number | null
+          vehicle_id: string | null
+          vehicle_name: string | null
+        }
+        Relationships: []
+      }
+      admin_company_stats: {
+        Row: {
+          address: string | null
+          company_name: string | null
+          contact_person: string | null
+          created_at: string | null
+          description: string | null
+          email: string | null
+          id: string | null
+          is_approved: boolean | null
+          logo_url: string | null
+          phone: string | null
+          total_bookings: number | null
+          total_revenue: number | null
+          updated_at: string | null
+          user_id: string | null
+          vehicle_count: number | null
+        }
+        Relationships: []
+      }
+      admin_vehicle_stats: {
+        Row: {
+          avg_booking_price: number | null
+          booking_count: number | null
+          company_id: string | null
+          company_name: string | null
+          confirmed_bookings: number | null
+          created_at: string | null
+          description: string | null
+          features: Json | null
+          feed_token: string | null
+          id: string | null
+          is_available: boolean | null
+          is_featured: boolean | null
+          latitude: number | null
+          location: Json | null
+          longitude: number | null
+          name: string | null
+          price_per_day: number | null
+          rating: number | null
+          seats: number | null
+          transmission: string | null
+          type_id: number | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicles_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "admin_bookings_view"
+            referencedColumns: ["company_id"]
+          },
+          {
+            foreignKeyName: "vehicles_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "admin_company_stats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicles_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "rental_companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicles_type_id_fkey"
+            columns: ["type_id"]
+            isOneToOne: false
+            referencedRelation: "vehicle_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       generate_uuid_v4: {
