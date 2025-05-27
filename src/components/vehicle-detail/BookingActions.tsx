@@ -8,6 +8,7 @@ interface BookingActionsProps {
   vehicleId?: string;
   pickupDate?: string;
   dropoffDate?: string;
+  isProcessing?: boolean;
 }
 
 const BookingActions = ({
@@ -15,7 +16,8 @@ const BookingActions = ({
   isValid,
   vehicleId,
   pickupDate,
-  dropoffDate
+  dropoffDate,
+  isProcessing = false
 }: BookingActionsProps) => {
   const { isDateRangeAvailable } = useAvailabilityCheck({ 
     vehicleId: vehicleId || '' 
@@ -33,14 +35,23 @@ const BookingActions = ({
   const isAvailable = checkAvailability();
   const isBookingValid = isValid && isAvailable;
 
+  console.log('BookingActions state:', {
+    isValid,
+    isAvailable,
+    isBookingValid,
+    isProcessing,
+    pickupDate: pickupDate ? 'set' : 'not set',
+    dropoffDate: dropoffDate ? 'set' : 'not set'
+  });
+
   return (
     <>
       <Button 
         className="w-full bg-brand-orange hover:bg-brand-orange/90 text-white" 
         onClick={onBooking} 
-        disabled={!isBookingValid}
+        disabled={!isBookingValid || isProcessing}
       >
-        {!isAvailable ? 'Dates Unavailable' : 'Book Now'}
+        {isProcessing ? 'Processing...' : !isAvailable ? 'Dates Unavailable' : 'Book Now'}
       </Button>
       
       <div className="text-center text-sm text-gray-500 mt-2">

@@ -51,10 +51,30 @@ export const useBookingFormActions = ({
   };
 
   const handleBooking = async () => {
-    if (!validation.isValid || !user) {
+    console.log('handleBooking called with validation state:', {
+      isValid: validation.isValid,
+      errorsCount: validation.errors.length,
+      blockingErrorsCount: validation.blockingErrors.length,
+      userAuthenticated: !!user
+    });
+
+    // Check validation first
+    if (!validation.isValid) {
+      console.log('Validation failed, showing validation error');
       toast({
         title: "Validation Error",
-        description: "Please fill in all required fields correctly",
+        description: "Please complete all required fields before proceeding",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check user authentication
+    if (!user) {
+      console.log('User not authenticated');
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to continue with your booking",
         variant: "destructive",
       });
       return;
@@ -62,10 +82,12 @@ export const useBookingFormActions = ({
 
     try {
       setIsProcessing(true);
+      console.log('Starting booking process...');
 
       // Upload driver license if provided
       let driverLicenseUrl = null;
       if (formState.driverLicense) {
+        console.log('Uploading driver license...');
         driverLicenseUrl = await uploadDriverLicense(formState.driverLicense);
         if (!driverLicenseUrl) {
           toast({
@@ -75,6 +97,7 @@ export const useBookingFormActions = ({
           });
           return;
         }
+        console.log('Driver license uploaded successfully');
       }
 
       // Create booking record with all form data
@@ -110,12 +133,18 @@ export const useBookingFormActions = ({
 
       if (bookingError) {
         console.error("Booking creation error:", bookingError);
-        throw new Error(bookingError.message);
+        toast({
+          title: "Booking Creation Failed",
+          description: `Failed to create booking: ${bookingError.message}`,
+          variant: "destructive",
+        });
+        return;
       }
 
       console.log("Booking created successfully:", booking);
 
       // Create checkout session for the confirmation fee
+      console.log('Creating checkout session...');
       const checkoutUrl = await createCheckoutSession(
         booking.id,
         pricing.confirmationFee,
@@ -123,16 +152,17 @@ export const useBookingFormActions = ({
       );
 
       if (checkoutUrl) {
+        console.log('Redirecting to checkout:', checkoutUrl);
         window.location.href = checkoutUrl;
       } else {
         throw new Error("Failed to create checkout session");
       }
 
     } catch (error) {
-      console.error("Booking creation error:", error);
+      console.error("Booking process error:", error);
       toast({
-        title: "Booking Error",
-        description: error instanceof Error ? error.message : "Failed to create booking",
+        title: "Booking Failed",
+        description: error instanceof Error ? error.message : "An unexpected error occurred during booking",
         variant: "destructive",
       });
     } finally {

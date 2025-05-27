@@ -156,8 +156,8 @@ const BookingCard = ({ vehicle }: BookingCardProps) => {
             setIsInternationalLicense={formState.setIsInternationalLicense}
           />
 
-          {/* Enhanced Validation Errors Display */}
-          {(!validation.isValid && (validation.errors.length > 0 || validation.blockingErrors.length > 0)) && (
+          {/* Enhanced Validation Errors Display - Only show when validation actually fails */}
+          {!validation.isValid && (validation.errors.length > 0 || validation.blockingErrors.length > 0) && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-4">
               <h4 className="text-sm font-medium text-red-800 mb-3 flex items-center">
                 <span className="w-4 h-4 bg-red-600 rounded-full flex items-center justify-center text-white text-xs mr-2">!</span>
@@ -212,6 +212,7 @@ const BookingCard = ({ vehicle }: BookingCardProps) => {
             vehicleId={vehicle.id}
             pickupDate={formState.pickupDate}
             dropoffDate={formState.dropoffDate}
+            isProcessing={isProcessing}
           />
         </div>
       </CardContent>
