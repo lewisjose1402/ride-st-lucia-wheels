@@ -8,8 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Search, RefreshCw, Sync, AlertTriangle } from 'lucide-react';
-import { format } from 'date-fns';
+import { Search, RefreshCw, AlertCircle, CheckCircle } from 'lucide-react';
 
 export const CalendarFeedsManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -23,14 +22,15 @@ export const CalendarFeedsManagement = () => {
         .from('vehicle_calendar_feeds')
         .select(`
           *,
-          vehicles(name, rental_companies(company_name))
+          vehicles(name, company_id),
+          rental_companies(company_name)
         `);
       
       if (searchTerm) {
-        query = query.or(`feed_name.ilike.%${searchTerm}%,vehicles.name.ilike.%${searchTerm}%`);
+        query = query.or(`feed_url.ilike.%${searchTerm}%,vehicles.name.ilike.%${searchTerm}%`);
       }
       
-      const { data, error } = await query.order('created_at', { ascending: false });
+      const { data, error } = await query.order('last_synced', { ascending: false, nullsFirst: false });
       
       if (error) throw error;
       return data;
@@ -39,25 +39,24 @@ export const CalendarFeedsManagement = () => {
 
   const syncFeedMutation = useMutation({
     mutationFn: async (feedId: string) => {
-      // Call the parse-ical-feeds edge function
-      const { data, error } = await supabase.functions.invoke('parse-ical-feeds', {
+      // Trigger the sync by calling the edge function
+      const { error } = await supabase.functions.invoke('parse-ical-feeds', {
         body: { feedId }
       });
       
       if (error) throw error;
-      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-calendar-feeds'] });
       toast({
         title: 'Success',
-        description: 'Calendar feed synced successfully'
+        description: 'Feed sync triggered successfully'
       });
     },
     onError: () => {
       toast({
         title: 'Error',
-        description: 'Failed to sync calendar feed',
+        description: 'Failed to sync feed',
         variant: 'destructive'
       });
     }
@@ -65,38 +64,33 @@ export const CalendarFeedsManagement = () => {
 
   const syncAllFeeds = async () => {
     try {
-      const { data, error } = await supabase.functions.invoke('parse-ical-feeds');
+      const { error } = await supabase.functions.invoke('parse-ical-feeds');
       
       if (error) throw error;
       
       queryClient.invalidateQueries({ queryKey: ['admin-calendar-feeds'] });
       toast({
         title: 'Success',
-        description: 'All calendar feeds synced successfully'
+        description: 'All feeds sync triggered successfully'
       });
     } catch (error) {
       toast({
         title: 'Error',
-        description: 'Failed to sync calendar feeds',
+        description: 'Failed to sync all feeds',
         variant: 'destructive'
       });
     }
   };
 
-  const getSyncStatus = (lastSynced: string | null) => {
-    if (!lastSynced) return { status: 'Never', variant: 'secondary' };
+  const getFeedHealthStatus = (lastSynced: string | null, isActive: boolean) => {
+    if (!isActive) return { status: 'inactive', color: 'secondary' };
+    if (!lastSynced) return { status: 'never synced', color: 'destructive' };
     
-    const lastSyncDate = new Date(lastSynced);
-    const now = new Date();
-    const hoursDiff = (now.getTime() - lastSyncDate.getTime()) / (1000 * 60 * 60);
+    const daysSinceSync = Math.floor((Date.now() - new Date(lastSynced).getTime()) / (1000 * 60 * 60 * 24));
     
-    if (hoursDiff < 24) {
-      return { status: 'Recent', variant: 'default' };
-    } else if (hoursDiff < 48) {
-      return { status: 'Stale', variant: 'secondary' };
-    } else {
-      return { status: 'Very Stale', variant: 'destructive' };
-    }
+    if (daysSinceSync > 7) return { status: 'stale', color: 'destructive' };
+    if (daysSinceSync > 3) return { status: 'warning', color: 'secondary' };
+    return { status: 'healthy', color: 'default' };
   };
 
   return (
@@ -112,14 +106,14 @@ export const CalendarFeedsManagement = () => {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
             <Input
-              placeholder="Search by feed name or vehicle..."
+              placeholder="Search by feed URL or vehicle name..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
             />
           </div>
-          <Button onClick={syncAllFeeds}>
-            <Sync className="w-4 h-4 mr-2" />
+          <Button onClick={syncAllFeeds} variant="outline">
+            <RefreshCw className="w-4 h-4 mr-2" />
             Sync All Feeds
           </Button>
         </div>
@@ -133,10 +127,9 @@ export const CalendarFeedsManagement = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Feed Name</TableHead>
                   <TableHead>Vehicle</TableHead>
                   <TableHead>Company</TableHead>
-                  <TableHead>Type</TableHead>
+                  <TableHead>Feed Type</TableHead>
                   <TableHead>Last Synced</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Actions</TableHead>
@@ -144,42 +137,40 @@ export const CalendarFeedsManagement = () => {
               </TableHeader>
               <TableBody>
                 {feeds?.map((feed) => {
-                  const syncStatus = getSyncStatus(feed.last_synced_at);
+                  const health = getFeedHealthStatus(feed.last_synced, feed.is_active);
                   return (
                     <TableRow key={feed.id}>
-                      <TableCell className="font-medium">{feed.feed_name}</TableCell>
-                      <TableCell>{feed.vehicles?.name}</TableCell>
-                      <TableCell>{feed.vehicles?.rental_companies?.company_name}</TableCell>
+                      <TableCell className="font-medium">{feed.vehicles?.name}</TableCell>
+                      <TableCell>{feed.rental_companies?.company_name}</TableCell>
                       <TableCell>
-                        <Badge variant={feed.is_external ? 'default' : 'secondary'}>
-                          {feed.is_external ? 'External' : 'Internal'}
+                        <Badge variant="outline">
+                          {feed.feed_type || 'External'}
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        {feed.last_synced_at 
-                          ? format(new Date(feed.last_synced_at), 'MMM dd, yyyy HH:mm')
+                        {feed.last_synced 
+                          ? new Date(feed.last_synced).toLocaleString()
                           : 'Never'
                         }
                       </TableCell>
                       <TableCell>
-                        <Badge variant={syncStatus.variant as any}>
-                          {syncStatus.status}
-                        </Badge>
+                        <div className="flex items-center gap-2">
+                          {health.status === 'healthy' && <CheckCircle className="w-4 h-4 text-green-500" />}
+                          {health.status !== 'healthy' && <AlertCircle className="w-4 h-4 text-orange-500" />}
+                          <Badge variant={health.color as any}>
+                            {health.status}
+                          </Badge>
+                        </div>
                       </TableCell>
                       <TableCell>
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            onClick={() => syncFeedMutation.mutate(feed.id)}
-                            disabled={syncFeedMutation.isPending}
-                          >
-                            <Sync className="w-4 h-4 mr-1" />
-                            Sync
-                          </Button>
-                          {syncStatus.variant === 'destructive' && (
-                            <AlertTriangle className="w-4 h-4 text-destructive" />
-                          )}
-                        </div>
+                        <Button
+                          size="sm"
+                          onClick={() => syncFeedMutation.mutate(feed.id)}
+                          disabled={!feed.is_active}
+                        >
+                          <RefreshCw className="w-4 h-4 mr-1" />
+                          Sync
+                        </Button>
                       </TableCell>
                     </TableRow>
                   );
