@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,11 +18,11 @@ interface BookingDetails {
   confirmation_fee_paid: number;
   vehicle: {
     name: string;
-  };
-  rental_company: {
-    company_name: string;
-    email: string;
-    phone: string;
+    rental_companies: {
+      company_name: string;
+      email: string;
+      phone: string;
+    };
   };
 }
 
@@ -65,12 +64,12 @@ const BookingConfirmation = () => {
             payment_status,
             confirmation_fee_paid,
             vehicle:vehicles (
-              name
-            ),
-            rental_company:rental_companies!vehicles_company_id_fkey (
-              company_name,
-              email,
-              phone
+              name,
+              rental_companies!vehicles_company_id_fkey (
+                company_name,
+                email,
+                phone
+              )
             )
           `)
           .eq('id', bookingId)
@@ -219,9 +218,9 @@ const BookingConfirmation = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              <p className="font-medium">{booking.rental_company.company_name}</p>
-              <p className="text-gray-600">{booking.rental_company.email}</p>
-              <p className="text-gray-600">{booking.rental_company.phone}</p>
+              <p className="font-medium">{booking.vehicle.rental_companies.company_name}</p>
+              <p className="text-gray-600">{booking.vehicle.rental_companies.email}</p>
+              <p className="text-gray-600">{booking.vehicle.rental_companies.phone}</p>
             </div>
           </CardContent>
         </Card>
