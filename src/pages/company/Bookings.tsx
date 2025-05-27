@@ -12,21 +12,33 @@ import {
   TableBody, 
   TableCell 
 } from '@/components/ui/table';
-import { Calendar, User, MapPin } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Calendar, User, MapPin, Eye } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import BookingDetailModal from '@/components/bookings/BookingDetailModal';
 
 interface Booking {
   id: string;
-  driver_name: string;
+  created_at: string;
   pickup_date: string;
   dropoff_date: string;
+  driver_name: string;
+  first_name?: string;
+  last_name?: string;
+  email?: string;
+  phone_number?: string;
+  driver_age: number;
+  driving_experience?: number;
+  has_international_license: boolean;
+  delivery_location?: string;
+  driver_license_url?: string;
   pickup_location: string;
   dropoff_location: string;
-  status: string;
   total_price: number;
-  vehicle: {
-    name: string;
-  };
+  deposit_amount: number;
+  status: string;
+  vehicle_name: string;
+  company_name?: string;
 }
 
 const CompanyBookings = () => {
@@ -60,14 +72,36 @@ const CompanyBookings = () => {
           return;
         }
           
-        // Then get bookings for vehicles owned by this company
+        // Then get bookings for vehicles owned by this company with all details
         const { data, error } = await supabase
           .from('bookings')
           .select(`
-            *,
-            vehicle:vehicles(name)
+            id,
+            created_at,
+            pickup_date,
+            dropoff_date,
+            driver_name,
+            first_name,
+            last_name,
+            email,
+            phone_number,
+            driver_age,
+            driving_experience,
+            has_international_license,
+            delivery_location,
+            driver_license_url,
+            pickup_location,
+            dropoff_location,
+            total_price,
+            deposit_amount,
+            status,
+            vehicle:vehicles!inner(
+              name,
+              company_id,
+              rental_companies!vehicles_company_id_fkey(company_name)
+            )
           `)
-          .eq('vehicles.company_id', companyData.id);
+          .eq('vehicle.company_id', companyData.id);
         
         if (error) {
           console.error("Error fetching bookings:", error);
@@ -77,7 +111,13 @@ const CompanyBookings = () => {
             variant: "destructive",
           });
         } else {
-          setBookings(data || []);
+          // Transform the data to match our interface
+          const transformedBookings = (data || []).map(booking => ({
+            ...booking,
+            vehicle_name: booking.vehicle.name,
+            company_name: booking.vehicle.rental_companies?.company_name
+          }));
+          setBookings(transformedBookings);
         }
       } catch (error) {
         console.error("Unexpected error:", error);
@@ -123,6 +163,7 @@ const CompanyBookings = () => {
                     <TableHead>Location</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Amount</TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -131,10 +172,12 @@ const CompanyBookings = () => {
                       <TableCell>
                         <div className="flex items-center">
                           <User className="h-5 w-5 text-gray-500 mr-2" />
-                          {booking.driver_name}
+                          {booking.first_name && booking.last_name 
+                            ? `${booking.first_name} ${booking.last_name}` 
+                            : booking.driver_name}
                         </div>
                       </TableCell>
-                      <TableCell>{booking.vehicle?.name || "Unknown Vehicle"}</TableCell>
+                      <TableCell>{booking.vehicle_name}</TableCell>
                       <TableCell>
                         <div className="text-sm">
                           <p>From: {new Date(booking.pickup_date).toLocaleDateString()}</p>
@@ -159,6 +202,14 @@ const CompanyBookings = () => {
                         </span>
                       </TableCell>
                       <TableCell>${booking.total_price}</TableCell>
+                      <TableCell>
+                        <BookingDetailModal booking={booking}>
+                          <Button variant="outline" size="sm">
+                            <Eye className="h-4 w-4 mr-2" />
+                            View Details
+                          </Button>
+                        </BookingDetailModal>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

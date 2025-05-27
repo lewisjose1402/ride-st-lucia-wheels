@@ -13,16 +13,23 @@ export type Database = {
         Row: {
           confirmation_fee_paid: number | null
           created_at: string | null
+          delivery_location: string | null
           deposit_amount: number
           driver_age: number
+          driver_license_url: string | null
           driver_name: string
+          driving_experience: number | null
           dropoff_date: string
           dropoff_location: string
+          email: string | null
+          first_name: string | null
           has_international_license: boolean
           id: string
+          last_name: string | null
           payment_id: string | null
           payment_status: string | null
           permit_fee: number | null
+          phone_number: string | null
           pickup_date: string
           pickup_location: string
           status: Database["public"]["Enums"]["booking_status"] | null
@@ -36,16 +43,23 @@ export type Database = {
         Insert: {
           confirmation_fee_paid?: number | null
           created_at?: string | null
+          delivery_location?: string | null
           deposit_amount: number
           driver_age: number
+          driver_license_url?: string | null
           driver_name: string
+          driving_experience?: number | null
           dropoff_date: string
           dropoff_location: string
+          email?: string | null
+          first_name?: string | null
           has_international_license?: boolean
           id?: string
+          last_name?: string | null
           payment_id?: string | null
           payment_status?: string | null
           permit_fee?: number | null
+          phone_number?: string | null
           pickup_date: string
           pickup_location: string
           status?: Database["public"]["Enums"]["booking_status"] | null
@@ -59,16 +73,23 @@ export type Database = {
         Update: {
           confirmation_fee_paid?: number | null
           created_at?: string | null
+          delivery_location?: string | null
           deposit_amount?: number
           driver_age?: number
+          driver_license_url?: string | null
           driver_name?: string
+          driving_experience?: number | null
           dropoff_date?: string
           dropoff_location?: string
+          email?: string | null
+          first_name?: string | null
           has_international_license?: boolean
           id?: string
+          last_name?: string | null
           payment_id?: string | null
           payment_status?: string | null
           permit_fee?: number | null
+          phone_number?: string | null
           pickup_date?: string
           pickup_location?: string
           status?: Database["public"]["Enums"]["booking_status"] | null
@@ -80,6 +101,13 @@ export type Database = {
           young_driver_fee?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "bookings_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "admin_bookings_view"
+            referencedColumns: ["vehicle_id"]
+          },
           {
             foreignKeyName: "bookings_vehicle_id_fkey"
             columns: ["vehicle_id"]
@@ -156,6 +184,13 @@ export type Database = {
             foreignKeyName: "company_settings_company_id_fkey"
             columns: ["company_id"]
             isOneToOne: true
+            referencedRelation: "admin_bookings_view"
+            referencedColumns: ["company_id"]
+          },
+          {
+            foreignKeyName: "company_settings_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
             referencedRelation: "admin_company_stats"
             referencedColumns: ["id"]
           },
@@ -209,6 +244,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "vehicle_calendar_feeds"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ical_bookings_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "admin_bookings_view"
+            referencedColumns: ["vehicle_id"]
           },
           {
             foreignKeyName: "ical_bookings_vehicle_id_fkey"
@@ -354,6 +396,13 @@ export type Database = {
             foreignKeyName: "reviews_company_id_fkey"
             columns: ["company_id"]
             isOneToOne: false
+            referencedRelation: "admin_bookings_view"
+            referencedColumns: ["company_id"]
+          },
+          {
+            foreignKeyName: "reviews_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
             referencedRelation: "admin_company_stats"
             referencedColumns: ["id"]
           },
@@ -363,6 +412,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "rental_companies"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "admin_bookings_view"
+            referencedColumns: ["vehicle_id"]
           },
           {
             foreignKeyName: "reviews_vehicle_id_fkey"
@@ -412,6 +468,13 @@ export type Database = {
           vehicle_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_vehicle_calendar_blocks_vehicle_id"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "admin_bookings_view"
+            referencedColumns: ["vehicle_id"]
+          },
           {
             foreignKeyName: "fk_vehicle_calendar_blocks_vehicle_id"
             columns: ["vehicle_id"]
@@ -467,6 +530,13 @@ export type Database = {
             foreignKeyName: "vehicle_calendar_feeds_vehicle_id_fkey"
             columns: ["vehicle_id"]
             isOneToOne: false
+            referencedRelation: "admin_bookings_view"
+            referencedColumns: ["vehicle_id"]
+          },
+          {
+            foreignKeyName: "vehicle_calendar_feeds_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
             referencedRelation: "admin_vehicle_stats"
             referencedColumns: ["id"]
           },
@@ -502,6 +572,13 @@ export type Database = {
           vehicle_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "vehicle_images_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "admin_bookings_view"
+            referencedColumns: ["vehicle_id"]
+          },
           {
             foreignKeyName: "vehicle_images_vehicle_id_fkey"
             columns: ["vehicle_id"]
@@ -602,6 +679,13 @@ export type Database = {
             foreignKeyName: "vehicles_company_id_fkey"
             columns: ["company_id"]
             isOneToOne: false
+            referencedRelation: "admin_bookings_view"
+            referencedColumns: ["company_id"]
+          },
+          {
+            foreignKeyName: "vehicles_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
             referencedRelation: "admin_company_stats"
             referencedColumns: ["id"]
           },
@@ -630,46 +714,28 @@ export type Database = {
           company_name: string | null
           company_phone: string | null
           created_at: string | null
+          delivery_location: string | null
           deposit_amount: number | null
+          driver_age: number | null
+          driver_license_url: string | null
           driver_name: string | null
+          driving_experience: number | null
           dropoff_date: string | null
+          dropoff_location: string | null
+          email: string | null
+          first_name: string | null
+          has_international_license: boolean | null
           id: string | null
+          last_name: string | null
+          phone_number: string | null
           pickup_date: string | null
+          pickup_location: string | null
           status: Database["public"]["Enums"]["booking_status"] | null
           total_price: number | null
           vehicle_id: string | null
           vehicle_name: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "bookings_vehicle_id_fkey"
-            columns: ["vehicle_id"]
-            isOneToOne: false
-            referencedRelation: "admin_vehicle_stats"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "bookings_vehicle_id_fkey"
-            columns: ["vehicle_id"]
-            isOneToOne: false
-            referencedRelation: "vehicles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "vehicles_company_id_fkey"
-            columns: ["company_id"]
-            isOneToOne: false
-            referencedRelation: "admin_company_stats"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "vehicles_company_id_fkey"
-            columns: ["company_id"]
-            isOneToOne: false
-            referencedRelation: "rental_companies"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       admin_company_stats: {
         Row: {
@@ -717,6 +783,13 @@ export type Database = {
           updated_at: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "vehicles_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "admin_bookings_view"
+            referencedColumns: ["company_id"]
+          },
           {
             foreignKeyName: "vehicles_company_id_fkey"
             columns: ["company_id"]

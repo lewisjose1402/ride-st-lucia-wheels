@@ -9,9 +9,34 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Search, Download, RefreshCw } from 'lucide-react';
+import { Search, Download, RefreshCw, Eye } from 'lucide-react';
+import BookingDetailModal from '@/components/bookings/BookingDetailModal';
 
 type BookingStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed';
+
+interface BookingDetail {
+  id: string;
+  created_at: string;
+  pickup_date: string;
+  dropoff_date: string;
+  driver_name: string;
+  first_name?: string;
+  last_name?: string;
+  email?: string;
+  phone_number?: string;
+  driver_age: number;
+  driving_experience?: number;
+  has_international_license: boolean;
+  delivery_location?: string;
+  driver_license_url?: string;
+  pickup_location: string;
+  dropoff_location: string;
+  total_price: number;
+  deposit_amount: number;
+  status: string;
+  vehicle_name: string;
+  company_name?: string;
+}
 
 export const BookingsManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -35,7 +60,7 @@ export const BookingsManagement = () => {
       const { data, error } = await query.order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data;
+      return data as BookingDetail[];
     }
   });
 
@@ -70,12 +95,15 @@ export const BookingsManagement = () => {
     const csvData = bookings.map(booking => ({
       'Booking ID': booking.id,
       'Vehicle': booking.vehicle_name,
-      'Renter': booking.driver_name,
-      'Company': booking.company_name,
+      'Renter': booking.first_name && booking.last_name ? `${booking.first_name} ${booking.last_name}` : booking.driver_name,
+      'Email': booking.email || '',
+      'Phone': booking.phone_number || '',
+      'Company': booking.company_name || '',
       'Pickup Date': booking.pickup_date,
       'Dropoff Date': booking.dropoff_date,
       'Status': booking.status,
       'Total Price': booking.total_price,
+      'Deposit': booking.deposit_amount,
       'Created': new Date(booking.created_at).toLocaleDateString()
     }));
 
@@ -163,7 +191,11 @@ export const BookingsManagement = () => {
                 {bookings?.map((booking) => (
                   <TableRow key={booking.id}>
                     <TableCell className="font-medium">{booking.vehicle_name}</TableCell>
-                    <TableCell>{booking.driver_name}</TableCell>
+                    <TableCell>
+                      {booking.first_name && booking.last_name 
+                        ? `${booking.first_name} ${booking.last_name}` 
+                        : booking.driver_name}
+                    </TableCell>
                     <TableCell>{booking.company_name}</TableCell>
                     <TableCell>{new Date(booking.pickup_date).toLocaleDateString()}</TableCell>
                     <TableCell>{new Date(booking.dropoff_date).toLocaleDateString()}</TableCell>
@@ -175,6 +207,12 @@ export const BookingsManagement = () => {
                     <TableCell>${booking.total_price}</TableCell>
                     <TableCell>
                       <div className="flex gap-2">
+                        <BookingDetailModal booking={booking}>
+                          <Button size="sm" variant="outline">
+                            <Eye className="h-4 w-4 mr-1" />
+                            View
+                          </Button>
+                        </BookingDetailModal>
                         {booking.status === 'pending' && (
                           <Button
                             size="sm"
