@@ -12,15 +12,13 @@ import LoadingState from '@/components/company/dashboard/LoadingState';
 
 interface BookingDetails {
   id: string;
-  start_date: string;
-  end_date: string;
+  pickup_date: string;
+  dropoff_date: string;
   total_price: number;
   payment_status: string;
   confirmation_fee_paid: number;
   vehicle: {
-    make: string;
-    model: string;
-    year: number;
+    name: string;
   };
   rental_company: {
     company_name: string;
@@ -61,17 +59,15 @@ const BookingConfirmation = () => {
           .from('bookings')
           .select(`
             id,
-            start_date,
-            end_date,
+            pickup_date,
+            dropoff_date,
             total_price,
             payment_status,
             confirmation_fee_paid,
             vehicle:vehicles (
-              make,
-              model,
-              year
+              name
             ),
-            rental_company:rental_companies (
+            rental_company:rental_companies!vehicles_company_id_fkey (
               company_name,
               email,
               phone
@@ -186,20 +182,18 @@ const BookingConfirmation = () => {
               </div>
               <div>
                 <p className="text-sm text-gray-600">Vehicle</p>
+                <p className="font-medium">{booking.vehicle.name}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Pickup Date</p>
                 <p className="font-medium">
-                  {booking.vehicle.year} {booking.vehicle.make} {booking.vehicle.model}
+                  {new Date(booking.pickup_date).toLocaleDateString()}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-gray-600">Start Date</p>
+                <p className="text-sm text-gray-600">Dropoff Date</p>
                 <p className="font-medium">
-                  {new Date(booking.start_date).toLocaleDateString()}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">End Date</p>
-                <p className="font-medium">
-                  {new Date(booking.end_date).toLocaleDateString()}
+                  {new Date(booking.dropoff_date).toLocaleDateString()}
                 </p>
               </div>
               <div>

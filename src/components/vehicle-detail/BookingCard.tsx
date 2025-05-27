@@ -69,7 +69,7 @@ const BookingCard = ({ vehicle }: BookingCardProps) => {
   });
 
   // Form actions
-  const { handleBooking } = useBookingFormActions({
+  const { handleBooking, isProcessing } = useBookingFormActions({
     vehicle,
     formState,
     validation,

@@ -4,12 +4,27 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { useCheckoutFlow } from '@/hooks/useCheckoutFlow';
 
-export const useBookingFormActions = () => {
+export const useBookingFormActions = (params: {
+  vehicle: any;
+  formState: any;
+  validation: any;
+  pricing: any;
+}) => {
   const { toast } = useToast();
   const { user } = useAuth();
   const { createCheckoutSession, isProcessing } = useCheckoutFlow();
+  const { vehicle, formState, validation, pricing } = params;
 
-  const submitBooking = async (bookingData: any, totalPrice: number) => {
+  const handleBooking = async () => {
+    if (!validation.isValid) {
+      toast({
+        title: "Form Validation Error",
+        description: "Please fill in all required fields correctly",
+        variant: "destructive",
+      });
+      return false;
+    }
+
     if (!user) {
       toast({
         title: "Authentication required",
@@ -20,16 +35,40 @@ export const useBookingFormActions = () => {
     }
 
     try {
-      console.log("Submitting booking with data:", bookingData);
+      console.log("Creating booking with data:", {
+        vehicle_id: vehicle.id,
+        pickup_date: formState.pickupDate,
+        dropoff_date: formState.dropoffDate,
+        total_price: pricing.totalCost,
+        deposit_amount: pricing.damageDeposit,
+        driver_name: `${formState.firstName} ${formState.lastName}`,
+        driver_age: parseInt(formState.driverAge),
+        pickup_location: formState.deliveryLocation,
+        dropoff_location: formState.deliveryLocation,
+        has_international_license: formState.isInternationalLicense,
+        permit_fee: pricing.permitFee,
+        young_driver_fee: pricing.underageDeposit
+      });
 
       // Create the booking
       const { data: booking, error: bookingError } = await supabase
         .from('bookings')
         .insert({
-          ...bookingData,
+          vehicle_id: vehicle.id,
           user_id: user.id,
-          total_price: totalPrice,
-          payment_status: 'pending'
+          pickup_date: formState.pickupDate,
+          dropoff_date: formState.dropoffDate,
+          total_price: pricing.totalCost,
+          deposit_amount: pricing.damageDeposit,
+          driver_name: `${formState.firstName} ${formState.lastName}`,
+          driver_age: parseInt(formState.driverAge),
+          pickup_location: formState.deliveryLocation,
+          dropoff_location: formState.deliveryLocation,
+          has_international_license: formState.isInternationalLicense,
+          permit_fee: pricing.permitFee,
+          young_driver_fee: pricing.underageDeposit,
+          payment_status: 'pending',
+          status: 'pending'
         })
         .select()
         .single();
@@ -41,14 +80,11 @@ export const useBookingFormActions = () => {
 
       console.log("Booking created successfully:", booking);
 
-      // Calculate confirmation fee (10% of total price, minimum $10)
-      const confirmationFee = Math.max(totalPrice * 0.1, 10);
-      
       // Create Stripe checkout session
       const checkoutUrl = await createCheckoutSession(
         booking.id,
-        confirmationFee,
-        `Booking Confirmation Fee - ${bookingData.vehicle_make} ${bookingData.vehicle_model}`
+        pricing.confirmationFee,
+        `Booking Confirmation Fee - ${vehicle.name}`
       );
 
       if (!checkoutUrl) {
@@ -65,7 +101,7 @@ export const useBookingFormActions = () => {
 
       return true;
     } catch (error) {
-      console.error("Error submitting booking:", error);
+      console.error("Error creating booking:", error);
       toast({
         title: "Booking Error",
         description: error instanceof Error ? error.message : "Failed to create booking",
@@ -76,7 +112,7 @@ export const useBookingFormActions = () => {
   };
 
   return {
-    submitBooking,
+    handleBooking,
     isProcessing
   };
 };
