@@ -2,10 +2,11 @@
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 export const useCheckoutFlow = () => {
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -55,35 +56,58 @@ export const useCheckoutFlow = () => {
     }
   };
 
-  const verifyPayment = async (sessionId: string) => {
+  const verifyPayment = async (sessionId: string, showToast: boolean = true) => {
     try {
-      console.log("Verifying payment for session:", sessionId);
+      setIsVerifying(true);
+      console.log("Starting payment verification for session:", sessionId);
+
+      if (!sessionId) {
+        throw new Error("No session ID provided for verification");
+      }
 
       const { data, error } = await supabase.functions.invoke('verify-payment', {
         body: { sessionId }
       });
+
+      console.log("Payment verification response:", { data, error });
 
       if (error) {
         console.error("Error verifying payment:", error);
         throw new Error(error.message || "Failed to verify payment");
       }
 
-      console.log("Payment verification result:", data);
-      return data;
+      if (data?.success) {
+        console.log("Payment verification successful:", data);
+        if (showToast) {
+          toast({
+            title: "Payment Verified",
+            description: "Your payment has been successfully verified",
+          });
+        }
+        return data;
+      } else {
+        console.log("Payment verification returned non-success result:", data);
+        throw new Error("Payment verification failed");
+      }
     } catch (error) {
       console.error("Payment verification error:", error);
-      toast({
-        title: "Verification Error",
-        description: error instanceof Error ? error.message : "Failed to verify payment",
-        variant: "destructive",
-      });
-      return null;
+      if (showToast) {
+        toast({
+          title: "Verification Error",
+          description: error instanceof Error ? error.message : "Failed to verify payment",
+          variant: "destructive",
+        });
+      }
+      throw error;
+    } finally {
+      setIsVerifying(false);
     }
   };
 
   return {
     createCheckoutSession,
     verifyPayment,
-    isProcessing
+    isProcessing,
+    isVerifying
   };
 };
