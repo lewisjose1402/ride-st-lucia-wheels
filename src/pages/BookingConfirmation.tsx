@@ -35,64 +35,109 @@ const BookingConfirmation = () => {
   const { user } = useAuth();
   const [booking, setBooking] = useState<BookingDetails | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [paymentVerified, setPaymentVerified] = useState(false);
 
   const sessionId = searchParams.get('session_id');
   const bookingId = searchParams.get('booking_id');
 
   useEffect(() => {
-    const handlePaymentVerification = async () => {
-      if (!sessionId || !bookingId || !user) {
+    const handlePaymentVerificationAndBookingFetch = async () => {
+      console.log("Starting booking confirmation process", { sessionId, bookingId, user: !!user });
+      
+      if (!user) {
+        console.log("No user found, stopping process");
         setIsLoading(false);
         return;
       }
 
       try {
-        console.log("Verifying payment for session:", sessionId);
-        const result = await verifyPayment(sessionId);
-        
-        if (result) {
-          setPaymentVerified(true);
-          console.log("Payment verified successfully");
+        // If we have a session_id, verify the payment first
+        if (sessionId) {
+          console.log("Verifying payment for session:", sessionId);
+          const result = await verifyPayment(sessionId);
+          console.log("Payment verification result:", result);
         }
 
-        // Fetch booking details
-        const { data: bookingData, error } = await supabase
-          .from('bookings')
-          .select(`
-            id,
-            pickup_date,
-            dropoff_date,
-            total_price,
-            payment_status,
-            confirmation_fee_paid,
-            vehicle:vehicles (
-              name,
-              rental_companies!vehicles_company_id_fkey (
-                company_name,
-                email,
-                phone
+        // Fetch booking details - either by bookingId or find the most recent booking
+        let bookingData;
+        
+        if (bookingId) {
+          console.log("Fetching booking by ID:", bookingId);
+          const { data, error } = await supabase
+            .from('bookings')
+            .select(`
+              id,
+              pickup_date,
+              dropoff_date,
+              total_price,
+              payment_status,
+              confirmation_fee_paid,
+              vehicle:vehicles (
+                name,
+                rental_companies!vehicles_company_id_fkey (
+                  company_name,
+                  email,
+                  phone
+                )
               )
-            )
-          `)
-          .eq('id', bookingId)
-          .eq('user_id', user.id)
-          .single();
+            `)
+            .eq('id', bookingId)
+            .eq('user_id', user.id)
+            .single();
 
-        if (error) {
-          console.error("Error fetching booking:", error);
-        } else {
-          setBooking(bookingData as BookingDetails);
+          if (error) {
+            console.error("Error fetching booking by ID:", error);
+          } else {
+            bookingData = data;
+          }
+        }
+
+        // If no booking found by ID or no ID provided, get the most recent booking
+        if (!bookingData) {
+          console.log("Fetching most recent booking for user");
+          const { data, error } = await supabase
+            .from('bookings')
+            .select(`
+              id,
+              pickup_date,
+              dropoff_date,
+              total_price,
+              payment_status,
+              confirmation_fee_paid,
+              vehicle:vehicles (
+                name,
+                rental_companies!vehicles_company_id_fkey (
+                  company_name,
+                  email,
+                  phone
+                )
+              )
+            `)
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (error) {
+            console.error("Error fetching recent booking:", error);
+          } else {
+            bookingData = data;
+          }
+        }
+
+        if (bookingData) {
           console.log("Booking details loaded:", bookingData);
+          setBooking(bookingData as BookingDetails);
+        } else {
+          console.log("No booking found");
         }
       } catch (error) {
-        console.error("Error in payment verification:", error);
+        console.error("Error in booking confirmation process:", error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    handlePaymentVerification();
+    handlePaymentVerificationAndBookingFetch();
   }, [sessionId, bookingId, user, verifyPayment]);
 
   if (isLoading) {

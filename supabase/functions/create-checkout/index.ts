@@ -25,15 +25,14 @@ serve(async (req) => {
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
     logStep("Stripe key verified");
 
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-      { auth: { persistSession: false } }
-    );
-
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) throw new Error("No authorization header provided");
     logStep("Authorization header found");
+
+    const supabaseClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? ""
+    );
 
     const token = authHeader.replace("Bearer ", "");
     const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
@@ -42,10 +41,9 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    // Parse the request body
     const { bookingId, amount, description } = await req.json();
     if (!bookingId || !amount) {
-      throw new Error("Missing required fields: bookingId and amount");
+      throw new Error("Missing required fields: bookingId, amount");
     }
     logStep("Request data parsed", { bookingId, amount, description });
 
@@ -54,25 +52,34 @@ serve(async (req) => {
     // Check if customer exists
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
     let customerId;
+    
     if (customers.data.length > 0) {
       customerId = customers.data[0].id;
-      logStep("Existing customer found", { customerId });
+      logStep("Found existing customer", { customerId });
     } else {
       logStep("Creating new customer");
+      const customer = await stripe.customers.create({
+        email: user.email,
+        metadata: {
+          user_id: user.id,
+        }
+      });
+      customerId = customer.id;
+      logStep("Created new customer", { customerId });
     }
 
+    // Get the origin for success/cancel URLs
     const origin = req.headers.get("origin") || "http://localhost:3000";
     
     // Create checkout session
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
-      customer_email: customerId ? undefined : user.email,
       line_items: [
         {
           price_data: {
             currency: "usd",
-            product_data: { 
-              name: description || "Booking Confirmation Fee"
+            product_data: {
+              name: description || "Booking Confirmation Fee",
             },
             unit_amount: Math.round(amount * 100), // Convert to cents
           },
@@ -81,24 +88,21 @@ serve(async (req) => {
       ],
       mode: "payment",
       success_url: `${origin}/booking-confirmation?session_id={CHECKOUT_SESSION_ID}&booking_id=${bookingId}`,
-      cancel_url: `${origin}/vehicles/${bookingId}`,
+      cancel_url: `${origin}/vehicles`,
       metadata: {
         booking_id: bookingId,
         user_id: user.id,
       },
     });
 
-    logStep("Checkout session created", { sessionId: session.id, url: session.url });
-
-    // Update booking with Stripe session ID
+    // Update booking with session ID
     const { error: updateError } = await supabaseClient
       .from('bookings')
       .update({ 
         stripe_session_id: session.id,
-        payment_status: 'pending'
+        updated_at: new Date().toISOString()
       })
-      .eq('id', bookingId)
-      .eq('user_id', user.id);
+      .eq('id', bookingId);
 
     if (updateError) {
       logStep("Error updating booking", { error: updateError });
@@ -106,7 +110,12 @@ serve(async (req) => {
     }
     logStep("Booking updated with session ID");
 
-    return new Response(JSON.stringify({ url: session.url }), {
+    logStep("Checkout session created", { sessionId: session.id, url: session.url });
+
+    return new Response(JSON.stringify({ 
+      sessionId: session.id,
+      url: session.url 
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
