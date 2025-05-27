@@ -10,25 +10,17 @@ export const useCheckoutFlow = () => {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  const createCheckoutSession = async (bookingId: string, amount: number, description?: string) => {
-    if (!user) {
-      toast({
-        title: "Authentication required",
-        description: "Please sign in to continue with payment",
-        variant: "destructive",
-      });
-      return null;
-    }
-
+  const createCheckoutSession = async (bookingId: string, amount: number, description?: string, customerEmail?: string) => {
     try {
       setIsProcessing(true);
-      console.log("Creating checkout session for booking:", bookingId, "amount:", amount);
+      console.log("Creating checkout session for booking:", bookingId, "amount:", amount, "user:", user ? 'authenticated' : 'anonymous');
 
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: {
           bookingId,
           amount,
-          description
+          description,
+          customerEmail: customerEmail || user?.email // Use provided email or user email
         }
       });
 

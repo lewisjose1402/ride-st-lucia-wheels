@@ -25,10 +25,12 @@ export const useBookingFormActions = ({
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const uploadDriverLicense = async (file: File): Promise<string | null> => {
+  const uploadDriverLicense = async (file: File, bookingId: string): Promise<string | null> => {
     try {
       const fileExt = file.name.split('.').pop();
-      const fileName = `${user?.id}/${vehicle.id}/${Date.now()}.${fileExt}`;
+      // Use booking ID for anonymous users, user ID for authenticated users
+      const userId = user?.id || 'anonymous';
+      const fileName = `${userId}/${vehicle.id}/${bookingId}/${Date.now()}.${fileExt}`;
       
       const { error: uploadError } = await supabase.storage
         .from('driver-licenses')
@@ -55,7 +57,8 @@ export const useBookingFormActions = ({
       isValid: validation.isValid,
       errorsCount: validation.errors.length,
       blockingErrorsCount: validation.blockingErrors.length,
-      userAuthenticated: !!user
+      userAuthenticated: !!user,
+      isAnonymousBooking: !user
     });
 
     // Check validation first
@@ -69,41 +72,14 @@ export const useBookingFormActions = ({
       return;
     }
 
-    // Check user authentication
-    if (!user) {
-      console.log('User not authenticated');
-      toast({
-        title: "Authentication Required",
-        description: "Please sign in to continue with your booking",
-        variant: "destructive",
-      });
-      return;
-    }
-
     try {
       setIsProcessing(true);
-      console.log('Starting booking process...');
-
-      // Upload driver license if provided
-      let driverLicenseUrl = null;
-      if (formState.driverLicense) {
-        console.log('Uploading driver license...');
-        driverLicenseUrl = await uploadDriverLicense(formState.driverLicense);
-        if (!driverLicenseUrl) {
-          toast({
-            title: "Upload Error",
-            description: "Failed to upload driver's license. Please try again.",
-            variant: "destructive",
-          });
-          return;
-        }
-        console.log('Driver license uploaded successfully');
-      }
+      console.log('Starting booking process...', user ? 'Authenticated user' : 'Anonymous user');
 
       // Create booking record with all form data
       const bookingData = {
         vehicle_id: vehicle.id,
-        user_id: user.id,
+        user_id: user?.id || null, // Allow null for anonymous users
         pickup_date: formState.pickupDate,
         dropoff_date: formState.dropoffDate,
         pickup_location: "TBD", // This should come from form in the future
@@ -117,7 +93,7 @@ export const useBookingFormActions = ({
         driving_experience: formState.drivingExperience ? parseInt(formState.drivingExperience) : null,
         has_international_license: formState.isInternationalLicense,
         delivery_location: formState.deliveryLocation,
-        driver_license_url: driverLicenseUrl,
+        driver_license_url: null, // Will be updated after upload
         total_price: pricing.totalCost,
         deposit_amount: pricing.confirmationFee,
         status: 'pending' as const
@@ -143,12 +119,38 @@ export const useBookingFormActions = ({
 
       console.log("Booking created successfully:", booking);
 
+      // Upload driver license if provided, now that we have the booking ID
+      if (formState.driverLicense) {
+        console.log('Uploading driver license...');
+        const driverLicenseUrl = await uploadDriverLicense(formState.driverLicense, booking.id);
+        if (driverLicenseUrl) {
+          // Update booking with driver license URL
+          const { error: updateError } = await supabase
+            .from('bookings')
+            .update({ driver_license_url: driverLicenseUrl })
+            .eq('id', booking.id);
+          
+          if (updateError) {
+            console.error('Error updating booking with driver license URL:', updateError);
+          } else {
+            console.log('Driver license uploaded and booking updated successfully');
+          }
+        } else {
+          toast({
+            title: "Upload Warning",
+            description: "Driver's license upload failed, but booking will continue. You can upload it later.",
+            variant: "destructive",
+          });
+        }
+      }
+
       // Create checkout session for the confirmation fee
       console.log('Creating checkout session...');
       const checkoutUrl = await createCheckoutSession(
         booking.id,
         pricing.confirmationFee,
-        `Confirmation fee for ${vehicle.name} rental`
+        `Confirmation fee for ${vehicle.name} rental`,
+        formState.email // Pass email for anonymous users
       );
 
       if (checkoutUrl) {

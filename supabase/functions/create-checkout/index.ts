@@ -25,32 +25,50 @@ serve(async (req) => {
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
     logStep("Stripe key verified");
 
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header provided");
-    logStep("Authorization header found");
-
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? ""
     );
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-    if (userError) throw new Error(`Authentication error: ${userError.message}`);
-    const user = userData.user;
-    if (!user?.email) throw new Error("User not authenticated or email not available");
-    logStep("User authenticated", { userId: user.id, email: user.email });
-
-    const { bookingId, amount, description } = await req.json();
+    const { bookingId, amount, description, customerEmail } = await req.json();
     if (!bookingId || !amount) {
       throw new Error("Missing required fields: bookingId, amount");
     }
-    logStep("Request data parsed", { bookingId, amount, description });
+    logStep("Request data parsed", { bookingId, amount, description, customerEmail });
+
+    // Try to get authenticated user, but don't require it
+    let user = null;
+    let userEmail = customerEmail;
+    
+    const authHeader = req.headers.get("Authorization");
+    if (authHeader) {
+      try {
+        const token = authHeader.replace("Bearer ", "");
+        const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
+        if (!userError && userData.user?.email) {
+          user = userData.user;
+          userEmail = userData.user.email;
+          logStep("User authenticated", { userId: user.id, email: user.email });
+        }
+      } catch (authError) {
+        logStep("Authentication failed, proceeding as anonymous", { error: authError });
+      }
+    }
+
+    if (!userEmail) {
+      throw new Error("No customer email provided for checkout");
+    }
+
+    logStep("Processing checkout", { 
+      isAuthenticated: !!user, 
+      customerEmail: userEmail,
+      bookingId 
+    });
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
     
     // Check if customer exists
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+    const customers = await stripe.customers.list({ email: userEmail, limit: 1 });
     let customerId;
     
     if (customers.data.length > 0) {
@@ -59,9 +77,10 @@ serve(async (req) => {
     } else {
       logStep("Creating new customer");
       const customer = await stripe.customers.create({
-        email: user.email,
+        email: userEmail,
         metadata: {
-          user_id: user.id,
+          user_id: user?.id || 'anonymous',
+          booking_id: bookingId
         }
       });
       customerId = customer.id;
@@ -91,7 +110,7 @@ serve(async (req) => {
       cancel_url: `${origin}/vehicles`,
       metadata: {
         booking_id: bookingId,
-        user_id: user.id,
+        user_id: user?.id || 'anonymous',
       },
     });
 
