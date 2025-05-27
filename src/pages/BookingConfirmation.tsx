@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useCheckoutFlow } from '@/hooks/useCheckoutFlow';
@@ -214,8 +215,8 @@ const BookingConfirmation = () => {
           paymentStatus={booking.payment_status}
           onManualVerification={handleManualVerification}
           isVerifying={isVerifying}
-          showManualVerification={booking.payment_status === 'pending' && (sessionId || booking.stripe_session_id)}
-          verificationError={!!verificationError}
+          showManualVerification={booking.payment_status === 'pending' && Boolean(sessionId || booking.stripe_session_id)}
+          verificationError={Boolean(verificationError)}
           verificationErrorMessage={verificationError}
         />
         

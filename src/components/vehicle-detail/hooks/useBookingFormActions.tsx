@@ -97,14 +97,14 @@ export const useBookingFormActions = ({
         driver_license_url: driverLicenseUrl,
         total_price: pricing.totalCost,
         deposit_amount: pricing.confirmationFee,
-        status: 'pending'
+        status: 'pending' as const
       };
 
       console.log("Creating booking with data:", bookingData);
 
       const { data: booking, error: bookingError } = await supabase
         .from('bookings')
-        .insert([bookingData])
+        .insert(bookingData)
         .select()
         .single();
 
