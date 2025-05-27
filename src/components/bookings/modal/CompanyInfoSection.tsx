@@ -5,11 +5,15 @@ import { Building2 } from 'lucide-react';
 
 interface CompanyInfoSectionProps {
   booking: {
-    company_name: string;
+    company_name?: string;
   };
 }
 
 export const CompanyInfoSection = ({ booking }: CompanyInfoSectionProps) => {
+  if (!booking.company_name) {
+    return null;
+  }
+
   return (
     <Card className="h-fit lg:col-span-2">
       <CardHeader className="pb-4">

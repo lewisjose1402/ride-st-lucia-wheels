@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -209,7 +208,7 @@ const BookingDetailModal = ({ booking, children }: BookingDetailModalProps) => {
           <BookingInfoSection booking={booking} />
           <RenterInfoSection booking={booking} />
           <PaymentInfoSection booking={booking} />
-          {booking.company_name && <CompanyInfoSection booking={booking} />}
+          <CompanyInfoSection booking={booking} />
         </div>
       </DialogContent>
     </Dialog>
