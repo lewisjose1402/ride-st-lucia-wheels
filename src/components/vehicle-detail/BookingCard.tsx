@@ -68,6 +68,25 @@ const BookingCard = ({ vehicle }: BookingCardProps) => {
     minimumDrivingExperience: requirements.minimumDrivingExperience
   });
 
+  // Log validation state for debugging
+  console.log('BookingCard validation state:', {
+    isValid: validation.isValid,
+    errorsCount: validation.errors.length,
+    blockingErrorsCount: validation.blockingErrors.length,
+    formState: {
+      firstName: formState.firstName ? 'filled' : 'empty',
+      lastName: formState.lastName ? 'filled' : 'empty',
+      email: formState.email ? 'filled' : 'empty',
+      phoneNumber: formState.phoneNumber ? 'filled' : 'empty',
+      pickupDate: formState.pickupDate ? 'filled' : 'empty',
+      dropoffDate: formState.dropoffDate ? 'filled' : 'empty',
+      driverAge: formState.driverAge ? 'filled' : 'empty',
+      drivingExperience: formState.drivingExperience ? 'filled' : 'empty',
+      deliveryLocation: formState.deliveryLocation ? 'filled' : 'empty',
+      driverLicense: formState.driverLicense ? 'uploaded' : 'not uploaded'
+    }
+  });
+
   // Form actions
   const { handleBooking, isProcessing } = useBookingFormActions({
     vehicle,
@@ -137,18 +156,35 @@ const BookingCard = ({ vehicle }: BookingCardProps) => {
             setIsInternationalLicense={formState.setIsInternationalLicense}
           />
 
-          {/* Validation Errors Display */}
+          {/* Enhanced Validation Errors Display */}
           {(!validation.isValid && (validation.errors.length > 0 || validation.blockingErrors.length > 0)) && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <h4 className="text-sm font-medium text-red-800 mb-2">Please complete the following:</h4>
-              <ul className="list-disc list-inside text-sm text-red-700 space-y-1">
-                {validation.errors.map((error, index) => (
-                  <li key={`error-${index}`}>{error}</li>
-                ))}
-                {validation.blockingErrors.map((error, index) => (
-                  <li key={`blocking-${index}`} className="font-medium">{error}</li>
-                ))}
-              </ul>
+              <h4 className="text-sm font-medium text-red-800 mb-3 flex items-center">
+                <span className="w-4 h-4 bg-red-600 rounded-full flex items-center justify-center text-white text-xs mr-2">!</span>
+                Please complete the following to proceed:
+              </h4>
+              
+              {validation.blockingErrors.length > 0 && (
+                <div className="mb-3">
+                  <p className="text-xs font-semibold text-red-700 mb-1">Critical Requirements:</p>
+                  <ul className="list-disc list-inside text-sm text-red-700 space-y-1">
+                    {validation.blockingErrors.map((error, index) => (
+                      <li key={`blocking-${index}`} className="font-medium">{error}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
+              {validation.errors.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-red-700 mb-1">Required Fields:</p>
+                  <ul className="list-disc list-inside text-sm text-red-700 space-y-1">
+                    {validation.errors.map((error, index) => (
+                      <li key={`error-${index}`}>{error}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           )}
 
