@@ -14,6 +14,7 @@ export function useAuthState() {
   useEffect(() => {
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log("Initial session:", session);
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
@@ -26,6 +27,7 @@ export function useAuthState() {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
+        console.log("Auth state changed:", _event, session);
         setSession(session);
         setUser(session?.user ?? null);
         if (session?.user) {
@@ -46,6 +48,8 @@ export function useAuthState() {
 
   const fetchProfile = async (userId: string) => {
     try {
+      console.log("Fetching profile for user:", userId);
+      
       // First check if user has company role from metadata
       const { data: userData } = await supabase.auth.getUser();
       const userMetadata = userData?.user?.user_metadata;
@@ -58,6 +62,45 @@ export function useAuthState() {
         setIsRentalCompany(true);
       }
       
+      // Check profiles table for admin role
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (profileError) {
+        console.error('Error fetching user profile:', profileError);
+        // If profile doesn't exist, create one with guest role
+        if (profileError.code === 'PGRST116') {
+          console.log("Profile not found, creating guest profile");
+          const { data: newProfile, error: createError } = await supabase
+            .from('profiles')
+            .insert([
+              {
+                id: userId,
+                email: userData?.user?.email || '',
+                role: 'guest'
+              }
+            ])
+            .select()
+            .single();
+            
+          if (createError) {
+            console.error('Error creating profile:', createError);
+          } else {
+            console.log("Created new profile:", newProfile);
+            setProfile(newProfile);
+            setIsAdmin(newProfile.role === 'admin');
+          }
+        }
+      } else {
+        console.log("Profile data from profiles table:", profileData);
+        setProfile(profileData);
+        setIsAdmin(profileData.role === 'admin');
+        setIsRentalCompany(profileData.role === 'rental_company' || isRentalCompany);
+      }
+      
       // Also check company profile directly from rental_companies table
       const { data: companyData, error: companyError } = await supabase
         .from('rental_companies')
@@ -66,7 +109,7 @@ export function useAuthState() {
         .single();
         
       if (companyError) {
-        console.error('Error fetching company profile:', companyError);
+        console.log('No company profile found:', companyError.message);
       } else if (companyData) {
         console.log("Company profile data loaded:", companyData);
         setProfile(companyData);
@@ -74,23 +117,9 @@ export function useAuthState() {
         
         // Debug log to verify logo URL is being loaded correctly
         console.log("Company logo URL from fetch:", companyData.logo_url);
-      } else {
-        // Fallback to checking profiles table
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', userId)
-          .single();
-
-        if (profileError) {
-          console.error('Error fetching user profile:', profileError);
-        } else if (profileData) {
-          console.log("Profile data:", profileData);
-          setProfile(profileData);
-          setIsAdmin(profileData.role === 'admin');
-          setIsRentalCompany(profileData.role === 'rental_company' || isRentalCompany);
-        }
       }
+      
+      console.log("Final auth state - isAdmin:", profileData?.role === 'admin', "isRentalCompany:", isRentalCompany || profileData?.role === 'rental_company');
     } catch (error) {
       console.error('Unexpected error fetching profile:', error);
     } finally {
