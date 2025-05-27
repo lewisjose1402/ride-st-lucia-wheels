@@ -29,7 +29,7 @@ export const useBookingFormActions = ({
     try {
       const fileExt = file.name.split('.').pop();
       // Use booking ID for anonymous users, user ID for authenticated users
-      const userId = user?.id || 'anonymous';
+      const userId = user?.id || bookingId;
       const fileName = `${userId}/${vehicle.id}/${bookingId}/${Date.now()}.${fileExt}`;
       
       const { error: uploadError } = await supabase.storage
@@ -53,12 +53,13 @@ export const useBookingFormActions = ({
   };
 
   const handleBooking = async () => {
+    const isAnonymousBooking = !user;
     console.log('handleBooking called with validation state:', {
       isValid: validation.isValid,
       errorsCount: validation.errors.length,
       blockingErrorsCount: validation.blockingErrors.length,
       userAuthenticated: !!user,
-      isAnonymousBooking: !user
+      isAnonymousBooking
     });
 
     // Check validation first
@@ -74,7 +75,7 @@ export const useBookingFormActions = ({
 
     try {
       setIsProcessing(true);
-      console.log('Starting booking process...', user ? 'Authenticated user' : 'Anonymous user');
+      console.log('Starting booking process...', isAnonymousBooking ? 'Anonymous user' : 'Authenticated user');
 
       // Create booking record with all form data
       const bookingData = {
@@ -150,7 +151,7 @@ export const useBookingFormActions = ({
         booking.id,
         pricing.confirmationFee,
         `Confirmation fee for ${vehicle.name} rental`,
-        formState.email // Pass email for anonymous users
+        formState.email // Pass email for both anonymous and authenticated users
       );
 
       if (checkoutUrl) {
