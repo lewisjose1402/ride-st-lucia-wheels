@@ -71,7 +71,7 @@ const App = () => (
                 <AddEditVehicle />
               </ProtectedRoute>
             } />
-            <Route path="/company/vehicles/:id/edit" element={
+            <Route path="/company/vehicles/edit/:id" element={
               <ProtectedRoute requiredRole="rental_company">
                 <AddEditVehicle />
               </ProtectedRoute>
