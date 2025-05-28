@@ -5,6 +5,37 @@ import { useToast } from '@/components/ui/use-toast';
 export function useAuthActions() {
   const { toast } = useToast();
 
+  const createUserProfile = async (userId: string, userData: {
+    email: string;
+    first_name?: string;
+    last_name?: string;
+    role: string;
+  }) => {
+    try {
+      console.log("Creating user profile:", userData);
+      
+      const { error } = await supabase
+        .from('profiles')
+        .insert({
+          id: userId,
+          email: userData.email,
+          first_name: userData.first_name || '',
+          last_name: userData.last_name || '',
+          role: userData.role
+        });
+      
+      if (error) {
+        console.error("Error creating user profile:", error);
+        throw error;
+      }
+      
+      console.log("User profile created successfully");
+    } catch (error) {
+      console.error("Failed to create user profile:", error);
+      throw error;
+    }
+  };
+
   const signUpAsRenter = async (email: string, password: string, firstName: string = '', lastName: string = '') => {
     try {
       console.log("Attempting renter sign-up:", { email, firstName, lastName });
@@ -42,6 +73,21 @@ export function useAuthActions() {
           variant: "destructive"
         });
         return { success: false, error: error.message };
+      }
+      
+      // Create user profile after successful auth signup
+      if (data?.user) {
+        try {
+          await createUserProfile(data.user.id, {
+            email: data.user.email || email,
+            first_name: firstName,
+            last_name: lastName,
+            role: 'renter'
+          });
+        } catch (profileError) {
+          console.error("Profile creation failed but auth succeeded:", profileError);
+          // Don't fail the entire signup if profile creation fails
+        }
       }
       
       console.log("Renter sign-up successful:", data);
@@ -123,9 +169,18 @@ export function useAuthActions() {
       
       console.log("Company sign-up successful:", data);
       
-      // Create a rental company profile with the initial data
+      // Create user profile and company profile after successful auth signup
       if (data?.user) {
         try {
+          // Create user profile first
+          await createUserProfile(data.user.id, {
+            email: data.user.email || email,
+            first_name: '',
+            last_name: '',
+            role: 'rental_company'
+          });
+          
+          // Create company profile
           const companyData = {
             user_id: data.user.id,
             company_name: companyName,
@@ -141,7 +196,8 @@ export function useAuthActions() {
             console.error("Error creating company profile:", profileError);
           }
         } catch (profileError) {
-          console.error("Error creating initial company profile:", profileError);
+          console.error("Profile creation failed but auth succeeded:", profileError);
+          // Don't fail the entire signup if profile creation fails
         }
       }
       

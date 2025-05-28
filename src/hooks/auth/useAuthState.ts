@@ -12,6 +12,43 @@ export function useAuthState() {
   const [isRentalCompany, setIsRentalCompany] = useState(false);
   const [isRenter, setIsRenter] = useState(false);
 
+  const createProfileForOAuthUser = async (user: User) => {
+    try {
+      console.log("Creating profile for OAuth user:", user.id);
+      
+      // Check if profile already exists
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', user.id)
+        .maybeSingle();
+      
+      if (existingProfile) {
+        console.log("Profile already exists for OAuth user");
+        return;
+      }
+      
+      // Create profile for OAuth user (default to renter)
+      const { error } = await supabase
+        .from('profiles')
+        .insert({
+          id: user.id,
+          email: user.email || '',
+          first_name: user.user_metadata?.first_name || user.user_metadata?.full_name?.split(' ')[0] || '',
+          last_name: user.user_metadata?.last_name || user.user_metadata?.full_name?.split(' ').slice(1).join(' ') || '',
+          role: 'renter' // Default OAuth users to renter role
+        });
+      
+      if (error) {
+        console.error("Error creating OAuth user profile:", error);
+      } else {
+        console.log("OAuth user profile created successfully");
+      }
+    } catch (error) {
+      console.error("Failed to create OAuth user profile:", error);
+    }
+  };
+
   useEffect(() => {
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -19,7 +56,7 @@ export function useAuthState() {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        fetchProfile(session.user.id);
+        fetchProfile(session.user);
       } else {
         setIsLoading(false);
       }
@@ -32,7 +69,7 @@ export function useAuthState() {
         setSession(session);
         setUser(session?.user ?? null);
         if (session?.user) {
-          fetchProfile(session.user.id);
+          fetchProfile(session.user);
         } else {
           setProfile(null);
           setIsAdmin(false);
@@ -48,9 +85,9 @@ export function useAuthState() {
     };
   }, []);
 
-  const fetchProfile = async (userId: string) => {
+  const fetchProfile = async (user: User) => {
     try {
-      console.log("Fetching profile for user:", userId);
+      console.log("Fetching profile for user:", user.id);
       setIsLoading(true);
       
       // Initialize role states
@@ -59,61 +96,54 @@ export function useAuthState() {
       let userIsRenter = false;
       let profileToSet = null;
       
-      // First check if user has company role from metadata
-      const { data: userData } = await supabase.auth.getUser();
-      const userMetadata = userData?.user?.user_metadata;
-      
+      // Check for company flag in metadata
+      const userMetadata = user.user_metadata;
       console.log("User metadata:", userMetadata);
       
-      // Check for company flag in metadata
       if (userMetadata && userMetadata.is_company) {
         console.log("User is a company from metadata");
         userIsRentalCompany = true;
       }
       
-      // Check profiles table for role with improved error handling
+      // Check profiles table for role
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', userId)
+        .eq('id', user.id)
         .maybeSingle();
 
       if (profileError) {
         console.error('Error fetching user profile:', profileError);
-        // If profile doesn't exist, create one with renter role (new default)
-        console.log("Profile not found, creating renter profile");
         
-        // Try to create profile with simplified approach
-        const { data: newProfile, error: createError } = await supabase
-          .from('profiles')
-          .insert([
-            {
-              id: userId,
-              email: userData?.user?.email || '',
-              role: userMetadata?.is_company ? 'rental_company' : 'renter',
-              first_name: userMetadata?.first_name || '',
-              last_name: userMetadata?.last_name || ''
-            }
-          ])
-          .select()
-          .single();
+        // For OAuth users, try to create a profile if it doesn't exist
+        if (user.app_metadata?.provider === 'google') {
+          console.log("OAuth user without profile, creating one");
+          await createProfileForOAuthUser(user);
           
-        if (createError) {
-          console.error('Error creating profile:', createError);
-          // If we still can't create a profile, set basic user info
+          // Retry fetching the profile
+          const { data: retryProfileData } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .maybeSingle();
+            
+          if (retryProfileData) {
+            profileToSet = retryProfileData;
+            userIsAdmin = retryProfileData.role === 'admin';
+            userIsRenter = retryProfileData.role === 'renter';
+            userIsRentalCompany = retryProfileData.role === 'rental_company';
+          }
+        }
+        
+        // If still no profile, set basic fallback
+        if (!profileToSet) {
           profileToSet = {
-            id: userId,
-            email: userData?.user?.email || '',
+            id: user.id,
+            email: user.email || '',
             role: userMetadata?.is_company ? 'rental_company' : 'renter'
           };
           userIsRenter = !userMetadata?.is_company;
           userIsRentalCompany = !!userMetadata?.is_company;
-        } else {
-          console.log("Created new profile:", newProfile);
-          profileToSet = newProfile;
-          userIsAdmin = newProfile.role === 'admin';
-          userIsRenter = newProfile.role === 'renter';
-          userIsRentalCompany = newProfile.role === 'rental_company';
         }
       } else if (profileData) {
         console.log("Profile data from profiles table:", profileData);
@@ -127,7 +157,7 @@ export function useAuthState() {
       const { data: companyData, error: companyError } = await supabase
         .from('rental_companies')
         .select('*')
-        .eq('user_id', userId)
+        .eq('user_id', user.id)
         .maybeSingle();
         
       if (companyError) {
@@ -152,7 +182,7 @@ export function useAuthState() {
       console.error('Unexpected error fetching profile:', error);
       // Set basic fallback state
       setProfile({
-        id: userId,
+        id: user.id,
         role: 'renter'
       });
       setIsRenter(true);
