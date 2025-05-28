@@ -20,6 +20,7 @@ export interface CalendarBlock {
   end_date: string;
   reason: string | null;
   created_by_user_id: string | null;
+  booking_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -38,11 +39,13 @@ export interface ICalBooking {
 
 export interface AvailabilityData {
   date: Date;
-  status: 'available' | 'booked-ical' | 'blocked-manual';
+  status: 'available' | 'booked-ical' | 'blocked-manual' | 'booked-confirmed';
   reason?: string;
   source?: string;
   blockId?: string;
   feedName?: string;
+  bookingId?: string;
+  isBooking?: boolean;
 }
 
 // Get calendar feeds for a vehicle (public access)
@@ -120,7 +123,7 @@ export const getVehicleICalBookings = async (vehicleId: string): Promise<ICalBoo
   }
 };
 
-// Get combined availability data (iCal + manual blocks) - public access
+// Get combined availability data (iCal + manual blocks + confirmed bookings) - public access
 export const getVehicleAvailability = async (vehicleId: string): Promise<AvailabilityData[]> => {
   console.log('calendarService: Getting vehicle availability for:', vehicleId);
   
@@ -134,23 +137,27 @@ export const getVehicleAvailability = async (vehicleId: string): Promise<Availab
     
     const availabilityData: AvailabilityData[] = [];
     
-    // Add manual blocks to availability data
+    // Add manual blocks to availability data (includes both manual blocks and booking blocks)
     manualBlocks.forEach(block => {
       const startDate = new Date(block.start_date);
       const endDate = new Date(block.end_date);
       
-      console.log('calendarService: Processing manual block from', block.start_date, 'to', block.end_date);
+      console.log('calendarService: Processing block from', block.start_date, 'to', block.end_date, 'booking_id:', block.booking_id);
       
       for (let date = new Date(startDate); date <= endDate; date.setDate(date.getDate() + 1)) {
         const blockDate = new Date(date);
+        const isBooking = !!block.booking_id;
+        
         availabilityData.push({
           date: blockDate,
-          status: 'blocked-manual',
-          reason: block.reason || 'Manually blocked',
-          source: 'manual',
-          blockId: block.id
+          status: isBooking ? 'booked-confirmed' : 'blocked-manual',
+          reason: block.reason || (isBooking ? 'Confirmed booking' : 'Manually blocked'),
+          source: isBooking ? 'booking' : 'manual',
+          blockId: block.id,
+          bookingId: block.booking_id || undefined,
+          isBooking: isBooking
         });
-        console.log('calendarService: Added manual block for date:', blockDate.toDateString());
+        console.log('calendarService: Added', isBooking ? 'booking' : 'manual block', 'for date:', blockDate.toDateString());
       }
     });
 
@@ -259,7 +266,8 @@ export const removeManualBlock = async (blockId: string): Promise<void> => {
   const { error } = await supabase
     .from('vehicle_calendar_blocks')
     .delete()
-    .eq('id', blockId);
+    .eq('id', blockId)
+    .is('booking_id', null); // Only allow deletion of manual blocks, not booking blocks
 
   if (error) {
     throw new Error(error.message);
@@ -271,7 +279,8 @@ export const clearAllManualBlocks = async (vehicleId: string): Promise<void> => 
   const { error } = await supabase
     .from('vehicle_calendar_blocks')
     .delete()
-    .eq('vehicle_id', vehicleId);
+    .eq('vehicle_id', vehicleId)
+    .is('booking_id', null); // Only delete manual blocks, not booking blocks
 
   if (error) {
     throw new Error(error.message);
@@ -305,14 +314,15 @@ export const clearAllCompanyManualBlocks = async (): Promise<void> => {
 
   if (!vehicles) return;
 
-  // Delete all manual blocks for all company vehicles
+  // Delete all manual blocks for all company vehicles (not booking blocks)
   const vehicleIds = vehicles.map(v => v.id);
   
   if (vehicleIds.length > 0) {
     const { error } = await supabase
       .from('vehicle_calendar_blocks')
       .delete()
-      .in('vehicle_id', vehicleIds);
+      .in('vehicle_id', vehicleIds)
+      .is('booking_id', null); // Only delete manual blocks, not booking blocks
 
     if (error) {
       throw new Error(error.message);

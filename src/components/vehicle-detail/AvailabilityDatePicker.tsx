@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { CalendarIcon } from 'lucide-react';
 import { format, isSameDay } from 'date-fns';
@@ -86,6 +87,8 @@ const AvailabilityDatePicker: React.FC<AvailabilityDatePickerProps> = ({
         return `Unavailable - ${dateStatus.reason || 'External booking'}${dateStatus.feedName ? ` (${dateStatus.feedName})` : ''}`;
       case 'blocked-manual':
         return `Blocked - ${dateStatus.reason || 'Manually blocked'}`;
+      case 'booked-confirmed':
+        return `Unavailable - ${dateStatus.reason || 'Confirmed booking'}`;
       default:
         return 'Available';
     }
@@ -117,7 +120,7 @@ const AvailabilityDatePicker: React.FC<AvailabilityDatePickerProps> = ({
             modifiers={{
               unavailable: (date) => {
                 const status = getDateStatus(date);
-                return status?.status === 'booked-ical' || status?.status === 'blocked-manual';
+                return status?.status === 'booked-ical' || status?.status === 'blocked-manual' || status?.status === 'booked-confirmed';
               },
             }}
             modifiersClassNames={{

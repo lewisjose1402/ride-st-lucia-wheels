@@ -438,6 +438,7 @@ export type Database = {
       }
       vehicle_calendar_blocks: {
         Row: {
+          booking_id: string | null
           created_at: string
           created_by_user_id: string | null
           end_date: string
@@ -448,6 +449,7 @@ export type Database = {
           vehicle_id: string
         }
         Insert: {
+          booking_id?: string | null
           created_at?: string
           created_by_user_id?: string | null
           end_date: string
@@ -458,6 +460,7 @@ export type Database = {
           vehicle_id: string
         }
         Update: {
+          booking_id?: string | null
           created_at?: string
           created_by_user_id?: string | null
           end_date?: string
@@ -487,6 +490,20 @@ export type Database = {
             columns: ["vehicle_id"]
             isOneToOne: false
             referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_calendar_blocks_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "admin_bookings_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_calendar_blocks_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
             referencedColumns: ["id"]
           },
         ]

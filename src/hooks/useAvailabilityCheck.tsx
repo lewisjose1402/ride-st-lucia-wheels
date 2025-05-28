@@ -19,7 +19,7 @@ export const useAvailabilityCheck = ({ vehicleId }: UseAvailabilityCheckProps) =
     try {
       setIsLoading(true);
       console.log('useAvailabilityCheck: Starting to load availability for vehicle:', vehicleId);
-      const data = await getVehicleAvailability(vehicleId);
+      const data = await getVailabilityCheck(vehicleId);
       console.log('useAvailabilityCheck: Raw availability data received:', data);
       setAvailability(data);
       console.log('useAvailabilityCheck: Availability state updated with', data.length, 'blocked dates');
@@ -29,7 +29,8 @@ export const useAvailabilityCheck = ({ vehicleId }: UseAvailabilityCheckProps) =
         console.log('useAvailabilityCheck: Sample availability items:', data.slice(0, 5));
         const manualBlocks = data.filter(item => item.status === 'blocked-manual');
         const icalBlocks = data.filter(item => item.status === 'booked-ical');
-        console.log(`useAvailabilityCheck: Found ${manualBlocks.length} manual blocks and ${icalBlocks.length} iCal blocks`);
+        const confirmedBookings = data.filter(item => item.status === 'booked-confirmed');
+        console.log(`useAvailabilityCheck: Found ${manualBlocks.length} manual blocks, ${icalBlocks.length} iCal blocks, and ${confirmedBookings.length} confirmed bookings`);
       } else {
         console.log('useAvailabilityCheck: No blocked dates found - vehicle is fully available');
       }
@@ -61,13 +62,14 @@ export const useAvailabilityCheck = ({ vehicleId }: UseAvailabilityCheckProps) =
       const itemDate = item.date instanceof Date ? item.date : new Date(item.date);
       const itemDateISO = formatDateToISO(itemDate);
       const isConflict = itemDateISO === dateISO &&
-        (item.status === 'booked-ical' || item.status === 'blocked-manual');
+        (item.status === 'booked-ical' || item.status === 'blocked-manual' || item.status === 'booked-confirmed');
       
       if (isConflict) {
         console.log(`useAvailabilityCheck: Date ${dateISO} has conflict:`, {
           status: item.status,
           reason: item.reason,
-          source: item.source
+          source: item.source,
+          isBooking: item.isBooking
         });
       }
       

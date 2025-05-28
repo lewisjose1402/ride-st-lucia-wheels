@@ -67,6 +67,16 @@ export const useInteractiveCalendar = ({ vehicleId }: UseInteractiveCalendarProp
       return;
     }
 
+    // Prevent interaction with confirmed booking dates
+    if (dateStatus.status === 'booked-confirmed') {
+      toast({
+        title: 'Cannot modify',
+        description: 'This date has a confirmed booking and cannot be manually blocked',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     // If date is manually blocked, show block details
     if (dateStatus.status === 'blocked-manual') {
       try {
@@ -117,7 +127,7 @@ export const useInteractiveCalendar = ({ vehicleId }: UseInteractiveCalendarProp
       console.error('Error removing block:', error);
       toast({
         title: 'Error',
-        description: 'Failed to remove block',
+        description: 'Failed to remove block. Booking blocks cannot be manually deleted.',
         variant: 'destructive',
       });
     } finally {
@@ -165,8 +175,8 @@ export const useInteractiveCalendar = ({ vehicleId }: UseInteractiveCalendarProp
       await loadAvailability();
       
       toast({
-        title: 'Blocks Cleared',
-        description: 'All manual blocks for this vehicle have been removed',
+        title: 'Manual Blocks Cleared',
+        description: 'All manual blocks for this vehicle have been removed (booking blocks remain)',
       });
     } catch (error) {
       console.error('Error clearing blocks:', error);
@@ -187,8 +197,8 @@ export const useInteractiveCalendar = ({ vehicleId }: UseInteractiveCalendarProp
       await loadAvailability();
       
       toast({
-        title: 'All Blocks Cleared',
-        description: 'All manual blocks for all vehicles have been removed',
+        title: 'All Manual Blocks Cleared',
+        description: 'All manual blocks for all vehicles have been removed (booking blocks remain)',
       });
     } catch (error) {
       console.error('Error clearing all blocks:', error);

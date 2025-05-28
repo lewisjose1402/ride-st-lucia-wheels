@@ -71,13 +71,15 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({ vehicleId }) 
           className="rounded-md border bg-white"
           disabled={[{ before: new Date() }]}
           modifiers={{
-            booked: (date) => getDateStatus(date).status === 'booked-ical',
-            blocked: (date) => getDateStatus(date).status === 'blocked-manual',
+            'booked-ical': (date) => getDateStatus(date).status === 'booked-ical',
+            'blocked-manual': (date) => getDateStatus(date).status === 'blocked-manual',
+            'booked-confirmed': (date) => getDateStatus(date).status === 'booked-confirmed',
             selected: (date) => selectedDates.some(selected => isSameDay(selected, date)),
           }}
           modifiersClassNames={{
-            booked: 'bg-red-200 text-red-800 hover:bg-red-300',
-            blocked: 'bg-yellow-200 text-yellow-800 hover:bg-yellow-300 cursor-pointer',
+            'booked-ical': 'bg-red-200 text-red-800 hover:bg-red-300',
+            'blocked-manual': 'bg-yellow-200 text-yellow-800 hover:bg-yellow-300 cursor-pointer',
+            'booked-confirmed': 'bg-blue-200 text-blue-800 hover:bg-blue-300 cursor-pointer',
             selected: 'ring-2 ring-blue-500',
           }}
           onDayClick={onDateClick}
