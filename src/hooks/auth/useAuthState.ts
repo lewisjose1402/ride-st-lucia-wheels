@@ -12,40 +12,35 @@ export function useAuthState() {
   const [isRentalCompany, setIsRentalCompany] = useState(false);
   const [isRenter, setIsRenter] = useState(false);
 
-  const createProfileForOAuthUser = async (user: User) => {
+  const createProfileForUser = async (user: User) => {
     try {
-      console.log("Creating profile for OAuth user:", user.id);
+      console.log("Creating profile for user:", user.id);
       
-      // Check if profile already exists
-      const { data: existingProfile } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('id', user.id)
-        .maybeSingle();
+      // Determine role based on user metadata
+      const userMetadata = user.user_metadata;
+      let role = 'renter';
       
-      if (existingProfile) {
-        console.log("Profile already exists for OAuth user");
-        return;
+      if (userMetadata?.role === 'rental_company' || userMetadata?.is_company) {
+        role = 'rental_company';
       }
       
-      // Create profile for OAuth user (default to renter)
       const { error } = await supabase
         .from('profiles')
         .insert({
           id: user.id,
           email: user.email || '',
-          first_name: user.user_metadata?.first_name || user.user_metadata?.full_name?.split(' ')[0] || '',
-          last_name: user.user_metadata?.last_name || user.user_metadata?.full_name?.split(' ').slice(1).join(' ') || '',
-          role: 'renter' // Default OAuth users to renter role
+          first_name: userMetadata?.first_name || userMetadata?.full_name?.split(' ')[0] || '',
+          last_name: userMetadata?.last_name || userMetadata?.full_name?.split(' ').slice(1).join(' ') || '',
+          role: role
         });
       
       if (error) {
-        console.error("Error creating OAuth user profile:", error);
+        console.error("Error creating user profile:", error);
       } else {
-        console.log("OAuth user profile created successfully");
+        console.log("User profile created successfully");
       }
     } catch (error) {
-      console.error("Failed to create OAuth user profile:", error);
+      console.error("Failed to create user profile:", error);
     }
   };
 
@@ -114,29 +109,27 @@ export function useAuthState() {
 
       if (profileError) {
         console.error('Error fetching user profile:', profileError);
+      }
+
+      if (!profileData) {
+        console.log("No profile found, creating one for user");
+        // Create profile if it doesn't exist
+        await createProfileForUser(user);
         
-        // For OAuth users, try to create a profile if it doesn't exist
-        if (user.app_metadata?.provider === 'google') {
-          console.log("OAuth user without profile, creating one");
-          await createProfileForOAuthUser(user);
+        // Retry fetching the profile
+        const { data: retryProfileData } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .maybeSingle();
           
-          // Retry fetching the profile
-          const { data: retryProfileData } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', user.id)
-            .maybeSingle();
-            
-          if (retryProfileData) {
-            profileToSet = retryProfileData;
-            userIsAdmin = retryProfileData.role === 'admin';
-            userIsRenter = retryProfileData.role === 'renter';
-            userIsRentalCompany = retryProfileData.role === 'rental_company';
-          }
-        }
-        
-        // If still no profile, set basic fallback
-        if (!profileToSet) {
+        if (retryProfileData) {
+          profileToSet = retryProfileData;
+          userIsAdmin = retryProfileData.role === 'admin';
+          userIsRenter = retryProfileData.role === 'renter';
+          userIsRentalCompany = retryProfileData.role === 'rental_company';
+        } else {
+          // Fallback if profile creation failed
           profileToSet = {
             id: user.id,
             email: user.email || '',
@@ -145,7 +138,7 @@ export function useAuthState() {
           userIsRenter = !userMetadata?.is_company;
           userIsRentalCompany = !!userMetadata?.is_company;
         }
-      } else if (profileData) {
+      } else {
         console.log("Profile data from profiles table:", profileData);
         profileToSet = profileData;
         userIsAdmin = profileData.role === 'admin';
