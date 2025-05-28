@@ -140,32 +140,18 @@ const MyBookings = () => {
 
   const viewDriverLicense = async (url: string) => {
     try {
-      // Extract the file path from the URL
-      const urlParts = url.split('/');
-      const bucketIndex = urlParts.findIndex(part => part === 'driver-licenses');
-      if (bucketIndex !== -1 && bucketIndex < urlParts.length - 1) {
-        const filePath = urlParts.slice(bucketIndex + 1).join('/');
-        
-        // Get the signed URL for viewing
-        const { data, error } = await supabase.storage
-          .from('driver-licenses')
-          .createSignedUrl(filePath, 60 * 60); // 1 hour expiry
-        
-        if (error) {
-          console.error('Error creating signed URL:', error);
-          // Fallback to original URL
-          window.open(url, '_blank');
-        } else if (data) {
-          window.open(data.signedUrl, '_blank');
-        }
-      } else {
-        // Fallback to original URL
-        window.open(url, '_blank');
-      }
-    } catch (error) {
-      console.error('Error viewing driver license:', error);
-      // Fallback to original URL
+      console.log('User viewing driver license:', url);
+      
+      // First try to open the original URL directly
       window.open(url, '_blank');
+      
+    } catch (error) {
+      console.error('Error viewing driver license for user:', error);
+      toast({
+        title: "Error",
+        description: "Could not view driver license",
+        variant: "destructive",
+      });
     }
   };
 
@@ -237,7 +223,7 @@ const MyBookings = () => {
               </div>
               <div class="info-item">
                 <span class="label">Return Location:</span>
-                <span class="value">${primaryLocation}</span>
+                <span class="value">TBD</span>
               </div>
             </div>
           </div>
@@ -296,7 +282,7 @@ const MyBookings = () => {
                 </div>
               ` : ''}
               <div class="info-item">
-                <span class="label">Confirmation Fee Paid:</span>
+                <span class="label">Non-refundable Booking Fee Paid:</span>
                 <span class="value price">$${booking.confirmation_fee_paid.toFixed(2)}</span>
               </div>
             </div>
@@ -422,9 +408,9 @@ const MyBookings = () => {
                       </div>
                       <div className="flex items-center gap-2">
                         <MapPin className="h-4 w-4 text-gray-500" />
-                        <div>
+                        <div className="flex-1 min-w-0">
                           <p className="text-sm text-gray-600">Location</p>
-                          <p className="font-medium">
+                          <p className="font-medium break-words text-sm overflow-hidden">
                             {booking.delivery_location || booking.pickup_location}
                           </p>
                         </div>
@@ -435,7 +421,7 @@ const MyBookings = () => {
                       </div>
                       {booking.confirmation_fee_paid > 0 && (
                         <div>
-                          <p className="text-sm text-gray-600">Confirmation Fee Paid</p>
+                          <p className="text-sm text-gray-600">Non-refundable Booking Fee Paid</p>
                           <p className="font-medium text-green-600">
                             ${booking.confirmation_fee_paid}
                           </p>

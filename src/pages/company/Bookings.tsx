@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
@@ -173,13 +174,13 @@ const CompanyBookings = () => {
 
   const viewDriverLicense = async (url: string) => {
     try {
-      console.log('Company attempting to view driver license:', url);
+      console.log('Company viewing driver license:', url);
       
-      // Simply open the URL directly - let the browser handle the authentication
+      // First try to open the original URL directly
       window.open(url, '_blank');
       
     } catch (error) {
-      console.error('Error viewing driver license:', error);
+      console.error('Error viewing driver license for company:', error);
       toast({
         title: "Error",
         description: "Could not view driver license",
@@ -315,7 +316,7 @@ const CompanyBookings = () => {
                 </div>
               ` : ''}
               <div class="info-item">
-                <span class="label">Confirmation Fee Paid:</span>
+                <span class="label">Non-refundable Booking Fee Paid:</span>
                 <span class="value price">$${booking.confirmation_fee_paid.toFixed(2)}</span>
               </div>
             </div>
