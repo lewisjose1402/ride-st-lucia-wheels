@@ -14,6 +14,10 @@ export type AuthContextType = {
     success: boolean;
     error: string | null;
   }>;
+  signInWithGoogle: () => Promise<{
+    success: boolean;
+    error: string | null;
+  }>;
   signOut: () => Promise<void>;
   isAdmin: boolean;
   isRentalCompany: boolean;

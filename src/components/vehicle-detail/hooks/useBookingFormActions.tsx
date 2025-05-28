@@ -28,7 +28,6 @@ export const useBookingFormActions = ({
   const uploadDriverLicense = async (file: File, bookingId: string): Promise<string | null> => {
     try {
       const fileExt = file.name.split('.').pop();
-      // Use booking ID for anonymous users, user ID for authenticated users
       const userId = user?.id || bookingId;
       const fileName = `${userId}/${vehicle.id}/${bookingId}/${Date.now()}.${fileExt}`;
       
@@ -52,58 +51,24 @@ export const useBookingFormActions = ({
     }
   };
 
-  const debugAuthState = async () => {
-    try {
-      console.log('=== DEBUGGING AUTH STATE ===');
-      
-      // Check current session
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      console.log('Current session:', { session, sessionError });
-      console.log('Session user:', session?.user?.id || 'No user');
-      
-      // Check auth user
-      const { data: { user: authUser }, error: userError } = await supabase.auth.getUser();
-      console.log('Auth user:', { authUser, userError });
-      console.log('Auth user ID:', authUser?.id || 'No auth user');
-      
-      // Check context user
-      console.log('Context user:', user?.id || 'No context user');
-      
-      // Test a simple query to see what auth.uid() returns
-      const { data: testData, error: testError } = await supabase
-        .rpc('generate_uuid_v4')
-        .select();
-      console.log('Test query result:', { testData, testError });
-      
-      console.log('=== END AUTH DEBUG ===');
-      
-      return {
-        hasSession: !!session,
-        hasAuthUser: !!authUser,
-        hasContextUser: !!user,
-        sessionUserId: session?.user?.id,
-        authUserId: authUser?.id,
-        contextUserId: user?.id
-      };
-    } catch (error) {
-      console.error('Error debugging auth state:', error);
-      return null;
-    }
-  };
-
   const handleBooking = async () => {
-    const isAnonymousBooking = !user;
     console.log('handleBooking called with validation state:', {
       isValid: validation.isValid,
       errorsCount: validation.errors.length,
       blockingErrorsCount: validation.blockingErrors.length,
-      userAuthenticated: !!user,
-      isAnonymousBooking
+      userAuthenticated: !!user
     });
 
-    // Debug auth state before proceeding
-    const authDebugInfo = await debugAuthState();
-    console.log('Auth debug info:', authDebugInfo);
+    // Ensure user is authenticated
+    if (!user) {
+      console.log('User not authenticated, cannot proceed with booking');
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to continue with your booking",
+        variant: "destructive",
+      });
+      return;
+    }
 
     // Check validation first
     if (!validation.isValid) {
@@ -118,25 +83,12 @@ export const useBookingFormActions = ({
 
     try {
       setIsProcessing(true);
-      console.log('Starting booking process...', isAnonymousBooking ? 'Anonymous user' : 'Authenticated user');
-
-      // For anonymous users, ensure we don't have any lingering auth state
-      if (isAnonymousBooking) {
-        console.log('Processing anonymous booking - ensuring clean auth state');
-        
-        // Clear any potential cached auth state
-        try {
-          await supabase.auth.signOut();
-          console.log('Cleared any existing auth state for anonymous booking');
-        } catch (signOutError) {
-          console.log('No auth state to clear (expected for anonymous):', signOutError);
-        }
-      }
+      console.log('Starting booking process for authenticated user:', user.id);
 
       // Create booking record with all form data
       const bookingData = {
         vehicle_id: vehicle.id,
-        user_id: user?.id || null, // Explicitly set to null for anonymous users
+        user_id: user.id, // Always set to the authenticated user's ID
         pickup_date: formState.pickupDate,
         dropoff_date: formState.dropoffDate,
         pickup_location: "TBD", // This should come from form in the future
@@ -158,15 +110,6 @@ export const useBookingFormActions = ({
 
       console.log("Creating booking with data:", bookingData);
       console.log("User ID being sent:", bookingData.user_id);
-      console.log("Is user_id null?", bookingData.user_id === null);
-
-      // Debug: Check what auth.uid() would return right now
-      const { data: authCheck, error: authCheckError } = await supabase
-        .from('bookings')
-        .select('id')
-        .limit(0); // Don't actually select any rows, just test the connection
-      
-      console.log('Pre-insert auth check:', { authCheck, authCheckError });
 
       const { data: booking, error: bookingError } = await supabase
         .from('bookings')
@@ -183,20 +126,11 @@ export const useBookingFormActions = ({
           details: bookingError.details
         });
         
-        // If it's an RLS error, provide more specific guidance
-        if (bookingError.message?.includes('row-level security policy')) {
-          toast({
-            title: "Booking Creation Failed",
-            description: `RLS Policy Error: ${bookingError.message}. Please try refreshing the page and trying again.`,
-            variant: "destructive",
-          });
-        } else {
-          toast({
-            title: "Booking Creation Failed",
-            description: `Failed to create booking: ${bookingError.message}`,
-            variant: "destructive",
-          });
-        }
+        toast({
+          title: "Booking Creation Failed",
+          description: `Failed to create booking: ${bookingError.message}`,
+          variant: "destructive",
+        });
         return;
       }
 
@@ -233,7 +167,7 @@ export const useBookingFormActions = ({
         booking.id,
         pricing.confirmationFee,
         `Confirmation fee for ${vehicle.name} rental`,
-        formState.email // Pass email for both anonymous and authenticated users
+        formState.email
       );
 
       if (checkoutUrl) {

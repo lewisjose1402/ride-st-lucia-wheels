@@ -1,7 +1,6 @@
 
 import { Button } from '@/components/ui/button';
 import { useAvailabilityCheck } from '@/hooks/useAvailabilityCheck';
-import { debugBookingRLS } from '@/utils/debugBookingRLS';
 
 interface BookingActionsProps {
   onBooking: () => void;
@@ -45,10 +44,6 @@ const BookingActions = ({
     dropoffDate: dropoffDate ? 'set' : 'not set'
   });
 
-  const handleDebugRLS = async () => {
-    await debugBookingRLS();
-  };
-
   return (
     <>
       <Button 
@@ -57,15 +52,6 @@ const BookingActions = ({
         disabled={!isBookingValid || isProcessing}
       >
         {isProcessing ? 'Processing...' : !isAvailable ? 'Dates Unavailable' : 'Book Now'}
-      </Button>
-      
-      {/* Temporary debug button - remove after fixing */}
-      <Button 
-        variant="outline"
-        className="w-full mt-2" 
-        onClick={handleDebugRLS}
-      >
-        Debug RLS (Dev Only)
       </Button>
       
       <div className="text-center text-sm text-gray-500 mt-2">

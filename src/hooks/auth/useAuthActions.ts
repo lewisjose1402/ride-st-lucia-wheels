@@ -137,6 +137,36 @@ export function useAuthActions() {
     }
   };
 
+  const signInWithGoogle = async () => {
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin
+        }
+      });
+      
+      if (error) {
+        toast({
+          title: "Google sign in failed",
+          description: error.message,
+          variant: "destructive"
+        });
+        return { success: false, error: error.message };
+      }
+      
+      return { success: true, error: null };
+    } catch (error) {
+      const errorMessage = (error as Error).message;
+      toast({
+        title: "Google sign in failed",
+        description: errorMessage,
+        variant: "destructive"
+      });
+      return { success: false, error: errorMessage };
+    }
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
     toast({
@@ -148,6 +178,7 @@ export function useAuthActions() {
   return {
     signUp,
     signIn,
+    signInWithGoogle,
     signOut,
   };
 }

@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { LogOut, Settings, Building } from 'lucide-react';
+import { LogOut, Settings, Building, Calendar } from 'lucide-react';
 
 const AuthButtons = () => {
   const { user, signOut, isRentalCompany, isAdmin } = useAuth();
@@ -42,6 +42,14 @@ const AuthButtons = () => {
               {user.email || 'User Account'}
             </div>
             <DropdownMenuSeparator />
+            
+            {/* My Bookings - available to all authenticated users */}
+            <DropdownMenuItem asChild>
+              <Link to="/my-bookings" className="w-full flex items-center cursor-pointer">
+                <Calendar className="mr-2 h-4 w-4" />
+                <span>My Bookings</span>
+              </Link>
+            </DropdownMenuItem>
             
             {isRentalCompany && (
               <DropdownMenuItem asChild>
