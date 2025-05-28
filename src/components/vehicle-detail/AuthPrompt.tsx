@@ -10,12 +10,13 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 const AuthPrompt = () => {
-  const { signInWithGoogle, signIn, signUp } = useAuth();
+  const { signInWithGoogle, signIn, signUpAsRenter } = useAuth();
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [companyName, setCompanyName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
@@ -42,13 +43,7 @@ const AuthPrompt = () => {
           return;
         }
 
-        const metadata = {
-          company_name: companyName,
-          is_company: true,
-          role: 'rental_company'
-        };
-        
-        const result = await signUp(email, password, metadata);
+        const result = await signUpAsRenter(email, password, firstName, lastName);
         if (!result.success && result.error) {
           setError(result.error);
         }
@@ -108,17 +103,30 @@ const AuthPrompt = () => {
           </div>
 
           {isSignUp && (
-            <div className="space-y-2">
-              <Label htmlFor="companyName">Company Name</Label>
-              <Input
-                id="companyName"
-                type="text"
-                value={companyName}
-                onChange={(e) => setCompanyName(e.target.value)}
-                placeholder="Enter your company name"
-                required
-              />
-            </div>
+            <>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-2">
+                  <Label htmlFor="firstName">First Name</Label>
+                  <Input
+                    id="firstName"
+                    type="text"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    placeholder="First name"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="lastName">Last Name</Label>
+                  <Input
+                    id="lastName"
+                    type="text"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    placeholder="Last name"
+                  />
+                </div>
+              </div>
+            </>
           )}
 
           <div className="space-y-2">
@@ -175,6 +183,15 @@ const AuthPrompt = () => {
               : "Don't have an account? Sign up"
             }
           </button>
+        </div>
+
+        <div className="text-center">
+          <Link 
+            to="/company/signup"
+            className="text-xs text-gray-500 hover:text-brand-purple"
+          >
+            Are you a rental company? Sign up here
+          </Link>
         </div>
 
         <p className="text-xs text-gray-500 text-center">

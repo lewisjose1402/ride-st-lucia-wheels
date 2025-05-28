@@ -10,6 +10,7 @@ export function useAuthState() {
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isRentalCompany, setIsRentalCompany] = useState(false);
+  const [isRenter, setIsRenter] = useState(false);
 
   useEffect(() => {
     // Get initial session
@@ -36,6 +37,7 @@ export function useAuthState() {
           setProfile(null);
           setIsAdmin(false);
           setIsRentalCompany(false);
+          setIsRenter(false);
           setIsLoading(false);
         }
       }
@@ -54,6 +56,7 @@ export function useAuthState() {
       // Initialize role states
       let userIsAdmin = false;
       let userIsRentalCompany = false;
+      let userIsRenter = false;
       let profileToSet = null;
       
       // First check if user has company role from metadata
@@ -77,15 +80,15 @@ export function useAuthState() {
 
       if (profileError) {
         console.error('Error fetching user profile:', profileError);
-        // If profile doesn't exist, create one with guest role
-        console.log("Profile not found, creating guest profile");
+        // If profile doesn't exist, create one with renter role (new default)
+        console.log("Profile not found, creating renter profile");
         const { data: newProfile, error: createError } = await supabase
           .from('profiles')
           .insert([
             {
               id: userId,
               email: userData?.user?.email || '',
-              role: 'guest'
+              role: 'renter'
             }
           ])
           .select()
@@ -97,11 +100,13 @@ export function useAuthState() {
           console.log("Created new profile:", newProfile);
           profileToSet = newProfile;
           userIsAdmin = newProfile.role === 'admin';
+          userIsRenter = newProfile.role === 'renter';
         }
       } else if (profileData) {
         console.log("Profile data from profiles table:", profileData);
         profileToSet = profileData;
         userIsAdmin = profileData.role === 'admin';
+        userIsRenter = profileData.role === 'renter';
         // If user has rental_company role in profiles, they are also a rental company
         if (profileData.role === 'rental_company') {
           userIsRentalCompany = true;
@@ -123,7 +128,6 @@ export function useAuthState() {
         profileToSet = companyData;
         userIsRentalCompany = true;
         
-        // Debug log to verify logo URL is being loaded correctly
         console.log("Company logo URL from fetch:", companyData.logo_url);
       }
       
@@ -131,8 +135,9 @@ export function useAuthState() {
       setProfile(profileToSet);
       setIsAdmin(userIsAdmin);
       setIsRentalCompany(userIsRentalCompany);
+      setIsRenter(userIsRenter);
       
-      console.log("Final auth state - isAdmin:", userIsAdmin, "isRentalCompany:", userIsRentalCompany);
+      console.log("Final auth state - isAdmin:", userIsAdmin, "isRentalCompany:", userIsRentalCompany, "isRenter:", userIsRenter);
     } catch (error) {
       console.error('Unexpected error fetching profile:', error);
     } finally {
@@ -147,5 +152,6 @@ export function useAuthState() {
     isLoading,
     isAdmin,
     isRentalCompany,
+    isRenter,
   };
 }

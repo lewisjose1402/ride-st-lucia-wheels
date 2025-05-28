@@ -13,7 +13,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { LogOut, Settings, Building, Calendar } from 'lucide-react';
 
 const AuthButtons = () => {
-  const { user, signOut, isRentalCompany, isAdmin } = useAuth();
+  const { user, signOut, isRentalCompany, isAdmin, isRenter } = useAuth();
 
   return (
     <div>
@@ -44,12 +44,14 @@ const AuthButtons = () => {
             <DropdownMenuSeparator />
             
             {/* My Bookings - available to all authenticated users */}
-            <DropdownMenuItem asChild>
-              <Link to="/my-bookings" className="w-full flex items-center cursor-pointer">
-                <Calendar className="mr-2 h-4 w-4" />
-                <span>My Bookings</span>
-              </Link>
-            </DropdownMenuItem>
+            {(isRenter || isRentalCompany) && (
+              <DropdownMenuItem asChild>
+                <Link to="/my-bookings" className="w-full flex items-center cursor-pointer">
+                  <Calendar className="mr-2 h-4 w-4" />
+                  <span>My Bookings</span>
+                </Link>
+              </DropdownMenuItem>
+            )}
             
             {isRentalCompany && (
               <DropdownMenuItem asChild>

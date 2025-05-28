@@ -1,11 +1,61 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 
 export function useAuthActions() {
   const { toast } = useToast();
 
-  const signUp = async (email: string, password: string, metadata: Record<string, any> = {}) => {
+  const signUpAsRenter = async (email: string, password: string, firstName: string = '', lastName: string = '') => {
+    try {
+      const metadata = {
+        role: 'renter',
+        first_name: firstName,
+        last_name: lastName,
+        is_company: false
+      };
+      
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: metadata
+        }
+      });
+      
+      if (error) {
+        if (error.message.includes('already registered') || error.message.includes('already exists')) {
+          toast({
+            title: "Email already registered",
+            description: "This email is already in use. Please use a different email or try signing in.",
+            variant: "destructive"
+          });
+          return { success: false, error: "Email already registered" };
+        }
+        
+        toast({
+          title: "Sign up failed",
+          description: error.message,
+          variant: "destructive"
+        });
+        return { success: false, error: error.message };
+      }
+      
+      toast({
+        title: "Sign up successful",
+        description: "Please check your email to verify your account before signing in.",
+      });
+      return { success: true, error: null };
+    } catch (error) {
+      const errorMessage = (error as Error).message;
+      toast({
+        title: "Sign up failed",
+        description: errorMessage,
+        variant: "destructive"
+      });
+      return { success: false, error: errorMessage };
+    }
+  };
+
+  const signUpAsCompany = async (email: string, password: string, companyName: string) => {
     try {
       // Check if email already exists in rental_companies table
       const { data: existingCompany, error: checkError } = await supabase
@@ -24,19 +74,14 @@ export function useAuthActions() {
       }
       
       if (checkError && checkError.code !== 'PGRST116') {
-        // If there's an error other than "no rows returned", handle it
         console.error("Error checking existing company:", checkError);
       }
 
-      // Always set company flag for all signups
-      if (!metadata.is_company) {
-        metadata.is_company = true;
-      }
-      
-      // Always set rental_company role for all signups
-      if (!metadata.role) {
-        metadata.role = 'rental_company';
-      }
+      const metadata = {
+        company_name: companyName,
+        is_company: true,
+        role: 'rental_company'
+      };
       
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -47,7 +92,6 @@ export function useAuthActions() {
       });
       
       if (error) {
-        // Handle specific Supabase Auth errors for duplicate emails
         if (error.message.includes('already registered') || error.message.includes('already exists')) {
           toast({
             title: "Email already registered",
@@ -70,9 +114,9 @@ export function useAuthActions() {
         try {
           const companyData = {
             user_id: data.user.id,
-            company_name: metadata.company_name || '',
+            company_name: companyName,
             email: email,
-            phone: '000-000-0000' // Adding default phone as it's required
+            phone: '000-000-0000'
           };
           
           const { error: profileError } = await supabase
@@ -81,8 +125,6 @@ export function useAuthActions() {
             
           if (profileError) {
             console.error("Error creating company profile:", profileError);
-            // If company profile creation fails, we should still consider the signup successful
-            // since the user was created in Supabase Auth
           }
         } catch (profileError) {
           console.error("Error creating initial company profile:", profileError);
@@ -103,6 +145,22 @@ export function useAuthActions() {
       });
       return { success: false, error: errorMessage };
     }
+  };
+
+  // Default signUp method now defaults to renter
+  const signUp = async (email: string, password: string, metadata: Record<string, any> = {}) => {
+    // If no specific role is provided, default to renter
+    if (!metadata.role) {
+      return signUpAsRenter(email, password, metadata.first_name, metadata.last_name);
+    }
+    
+    // If it's a company signup, use the company method
+    if (metadata.role === 'rental_company') {
+      return signUpAsCompany(email, password, metadata.company_name);
+    }
+    
+    // Otherwise use renter signup
+    return signUpAsRenter(email, password, metadata.first_name, metadata.last_name);
   };
 
   const signIn = async (email: string, password: string) => {
@@ -177,6 +235,8 @@ export function useAuthActions() {
 
   return {
     signUp,
+    signUpAsRenter,
+    signUpAsCompany,
     signIn,
     signInWithGoogle,
     signOut,

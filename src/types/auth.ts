@@ -10,6 +10,14 @@ export type AuthContextType = {
     success: boolean;
     error: string | null;
   }>;
+  signUpAsRenter: (email: string, password: string, firstName?: string, lastName?: string) => Promise<{
+    success: boolean;
+    error: string | null;
+  }>;
+  signUpAsCompany: (email: string, password: string, companyName: string) => Promise<{
+    success: boolean;
+    error: string | null;
+  }>;
   signIn: (email: string, password: string) => Promise<{
     success: boolean;
     error: string | null;
@@ -21,4 +29,5 @@ export type AuthContextType = {
   signOut: () => Promise<void>;
   isAdmin: boolean;
   isRentalCompany: boolean;
+  isRenter: boolean;
 };
