@@ -13,7 +13,7 @@ import {
   TableCell 
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Calendar, User, MapPin, Eye, Download, FileText } from 'lucide-react';
+import { Calendar, User, Eye, Download, FileText } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import BookingDetailModal from '@/components/bookings/BookingDetailModal';
 
@@ -39,6 +39,8 @@ interface Booking {
   status: string;
   payment_status: string;
   confirmation_fee_paid: number;
+  permit_fee?: number;
+  young_driver_fee?: number;
   vehicle_name: string;
   company_name?: string;
 }
@@ -99,6 +101,8 @@ const CompanyBookings = () => {
             status,
             payment_status,
             confirmation_fee_paid,
+            permit_fee,
+            young_driver_fee,
             vehicle:vehicles!inner(
               name,
               company_id,
@@ -170,33 +174,192 @@ const CompanyBookings = () => {
 
   const viewDriverLicense = async (url: string) => {
     try {
+      console.log('Attempting to view driver license:', url);
+      
       // Extract the file path from the URL
       const urlParts = url.split('/');
       const bucketIndex = urlParts.findIndex(part => part === 'driver-licenses');
+      
       if (bucketIndex !== -1 && bucketIndex < urlParts.length - 1) {
         const filePath = urlParts.slice(bucketIndex + 1).join('/');
+        console.log('Extracted file path:', filePath);
         
-        // Get the signed URL for viewing
+        // Get the signed URL for viewing with extended expiry
         const { data, error } = await supabase.storage
           .from('driver-licenses')
-          .createSignedUrl(filePath, 60 * 60); // 1 hour expiry
+          .createSignedUrl(filePath, 60 * 60 * 2); // 2 hours expiry
         
         if (error) {
           console.error('Error creating signed URL:', error);
-          // Fallback to original URL
+          toast({
+            title: "Error viewing license",
+            description: "Could not load driver license image. Please try again.",
+            variant: "destructive",
+          });
+          // Still try to open the original URL as fallback
           window.open(url, '_blank');
-        } else if (data) {
+        } else if (data?.signedUrl) {
+          console.log('Successfully created signed URL');
           window.open(data.signedUrl, '_blank');
         }
       } else {
-        // Fallback to original URL
+        console.log('Invalid URL format, using original URL');
         window.open(url, '_blank');
       }
     } catch (error) {
       console.error('Error viewing driver license:', error);
-      // Fallback to original URL
+      toast({
+        title: "Error",
+        description: "Could not view driver license",
+        variant: "destructive",
+      });
+      // Final fallback to original URL
       window.open(url, '_blank');
     }
+  };
+
+  const downloadBookingReceipt = (booking: Booking) => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      toast({
+        title: "Error",
+        description: "Could not open print window. Please check your popup blocker.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const fullName = booking.first_name && booking.last_name 
+      ? `${booking.first_name} ${booking.last_name}` 
+      : booking.driver_name;
+    const primaryLocation = booking.delivery_location || booking.pickup_location;
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Booking Receipt - ${booking.id}</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.5; color: #333; }
+            .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #e5e7eb; padding-bottom: 20px; }
+            .header h1 { color: #1f2937; margin-bottom: 10px; }
+            .section { margin-bottom: 25px; padding: 20px; border: 1px solid #d1d5db; border-radius: 8px; background: #f9fafb; }
+            .section h3 { margin-top: 0; color: #374151; font-size: 18px; border-bottom: 1px solid #d1d5db; padding-bottom: 8px; }
+            .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 15px; }
+            .info-item { margin-bottom: 12px; }
+            .label { font-weight: bold; color: #6b7280; margin-bottom: 4px; display: block; }
+            .value { color: #1f2937; }
+            .price { font-size: 18px; font-weight: bold; color: #059669; }
+            .total-price { font-size: 24px; font-weight: bold; color: #059669; text-align: center; padding: 15px; background: #ecfdf5; border-radius: 8px; margin: 20px 0; }
+            @media print { body { margin: 0; } }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>🚗 Vehicle Rental Receipt</h1>
+            <p><strong>Booking ID:</strong> ${booking.id}</p>
+            <p><strong>Issue Date:</strong> ${new Date().toLocaleDateString()}</p>
+          </div>
+
+          <div class="section">
+            <h3>🚙 Vehicle & Rental Details</h3>
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="label">Vehicle:</span>
+                <span class="value">${booking.vehicle_name}</span>
+              </div>
+              <div class="info-item">
+                <span class="label">Rental Company:</span>
+                <span class="value">${booking.company_name || 'Company'}</span>
+              </div>
+              <div class="info-item">
+                <span class="label">Pickup Date:</span>
+                <span class="value">${new Date(booking.pickup_date).toLocaleDateString()}</span>
+              </div>
+              <div class="info-item">
+                <span class="label">Return Date:</span>
+                <span class="value">${new Date(booking.dropoff_date).toLocaleDateString()}</span>
+              </div>
+              <div class="info-item">
+                <span class="label">Pickup Location:</span>
+                <span class="value">${primaryLocation}</span>
+              </div>
+              <div class="info-item">
+                <span class="label">Return Location:</span>
+                <span class="value">${primaryLocation}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="section">
+            <h3>👤 Renter Information</h3>
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="label">Full Name:</span>
+                <span class="value">${fullName}</span>
+              </div>
+              <div class="info-item">
+                <span class="label">Age:</span>
+                <span class="value">${booking.driver_age} years</span>
+              </div>
+              <div class="info-item">
+                <span class="label">Email:</span>
+                <span class="value">${booking.email || 'Not provided'}</span>
+              </div>
+              <div class="info-item">
+                <span class="label">Phone:</span>
+                <span class="value">${booking.phone_number || 'Not provided'}</span>
+              </div>
+              <div class="info-item">
+                <span class="label">Driving Experience:</span>
+                <span class="value">${booking.driving_experience || 'Not provided'} years</span>
+              </div>
+              <div class="info-item">
+                <span class="label">International License:</span>
+                <span class="value">${booking.has_international_license ? 'Yes' : 'No (Temporary permit processed)'}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="section">
+            <h3>💰 Payment Breakdown</h3>
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="label">Rental Fee:</span>
+                <span class="value price">$${(booking.total_price - (booking.permit_fee || 0) - (booking.young_driver_fee || 0)).toFixed(2)}</span>
+              </div>
+              <div class="info-item">
+                <span class="label">Security Deposit:</span>
+                <span class="value price">$${booking.deposit_amount.toFixed(2)}</span>
+              </div>
+              ${booking.permit_fee ? `
+                <div class="info-item">
+                  <span class="label">Permit Fee:</span>
+                  <span class="value price">$${booking.permit_fee.toFixed(2)}</span>
+                </div>
+              ` : ''}
+              ${booking.young_driver_fee ? `
+                <div class="info-item">
+                  <span class="label">Young Driver Fee:</span>
+                  <span class="value price">$${booking.young_driver_fee.toFixed(2)}</span>
+                </div>
+              ` : ''}
+              <div class="info-item">
+                <span class="label">Confirmation Fee Paid:</span>
+                <span class="value price">$${booking.confirmation_fee_paid.toFixed(2)}</span>
+              </div>
+            </div>
+            <div class="total-price">
+              Total Amount: $${booking.total_price.toFixed(2)}
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+    printWindow.print();
   };
 
   return (
@@ -267,7 +430,7 @@ const CompanyBookings = () => {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 flex-wrap">
                           <BookingDetailModal booking={booking}>
                             <Button variant="outline" size="sm">
                               <Eye className="h-4 w-4 mr-2" />
@@ -284,6 +447,14 @@ const CompanyBookings = () => {
                               License
                             </Button>
                           )}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => downloadBookingReceipt(booking)}
+                          >
+                            <Download className="h-4 w-4 mr-2" />
+                            Receipt
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>
