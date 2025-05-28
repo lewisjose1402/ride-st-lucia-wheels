@@ -13,7 +13,7 @@ import {
   TableCell 
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Calendar, User, MapPin, Eye } from 'lucide-react';
+import { Calendar, User, MapPin, Eye, Download, FileText } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import BookingDetailModal from '@/components/bookings/BookingDetailModal';
 
@@ -37,6 +37,8 @@ interface Booking {
   total_price: number;
   deposit_amount: number;
   status: string;
+  payment_status: string;
+  confirmation_fee_paid: number;
   vehicle_name: string;
   company_name?: string;
 }
@@ -95,13 +97,16 @@ const CompanyBookings = () => {
             total_price,
             deposit_amount,
             status,
+            payment_status,
+            confirmation_fee_paid,
             vehicle:vehicles!inner(
               name,
               company_id,
               rental_companies!vehicles_company_id_fkey(company_name)
             )
           `)
-          .eq('vehicle.company_id', companyData.id);
+          .eq('vehicle.company_id', companyData.id)
+          .order('created_at', { ascending: false });
         
         if (error) {
           console.error("Error fetching bookings:", error);
@@ -118,6 +123,7 @@ const CompanyBookings = () => {
             company_name: booking.vehicle.rental_companies?.company_name
           }));
           setBookings(transformedBookings);
+          console.log('Company bookings loaded:', transformedBookings);
         }
       } catch (error) {
         console.error("Unexpected error:", error);
@@ -133,6 +139,38 @@ const CompanyBookings = () => {
     
     fetchBookings();
   }, [user, toast]);
+
+  const getStatusBadge = (status: string, paymentStatus: string) => {
+    if (paymentStatus === 'paid' && status === 'confirmed') {
+      return (
+        <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+          Confirmed
+        </span>
+      );
+    } else if (paymentStatus === 'failed') {
+      return (
+        <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+          Payment Failed
+        </span>
+      );
+    } else if (status === 'cancelled') {
+      return (
+        <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+          Cancelled
+        </span>
+      );
+    } else {
+      return (
+        <span className="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+          Pending
+        </span>
+      );
+    }
+  };
+
+  const viewDriverLicense = (url: string) => {
+    window.open(url, '_blank');
+  };
 
   return (
     <CompanyLayout title="Bookings">
@@ -160,7 +198,6 @@ const CompanyBookings = () => {
                     <TableHead>Customer</TableHead>
                     <TableHead>Vehicle</TableHead>
                     <TableHead>Dates</TableHead>
-                    <TableHead>Location</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Amount</TableHead>
                     <TableHead>Actions</TableHead>
@@ -172,9 +209,14 @@ const CompanyBookings = () => {
                       <TableCell>
                         <div className="flex items-center">
                           <User className="h-5 w-5 text-gray-500 mr-2" />
-                          {booking.first_name && booking.last_name 
-                            ? `${booking.first_name} ${booking.last_name}` 
-                            : booking.driver_name}
+                          <div>
+                            <p className="font-medium">
+                              {booking.first_name && booking.last_name 
+                                ? `${booking.first_name} ${booking.last_name}` 
+                                : booking.driver_name}
+                            </p>
+                            <p className="text-sm text-gray-500">{booking.email}</p>
+                          </div>
                         </div>
                       </TableCell>
                       <TableCell>{booking.vehicle_name}</TableCell>
@@ -185,30 +227,37 @@ const CompanyBookings = () => {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="text-sm">
-                          <div className="flex items-center">
-                            <MapPin className="h-3 w-3 mr-1" />
-                            {booking.pickup_location}
-                          </div>
+                        {getStatusBadge(booking.status, booking.payment_status)}
+                      </TableCell>
+                      <TableCell>
+                        <div>
+                          <p className="font-medium">${booking.total_price}</p>
+                          {booking.confirmation_fee_paid > 0 && (
+                            <p className="text-sm text-green-600">
+                              ${booking.confirmation_fee_paid} paid
+                            </p>
+                          )}
                         </div>
                       </TableCell>
                       <TableCell>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          booking.status === 'completed' ? 'bg-green-100 text-green-800' : 
-                          booking.status === 'cancelled' ? 'bg-red-100 text-red-800' : 
-                          'bg-yellow-100 text-yellow-800'
-                        }`}>
-                          {booking.status}
-                        </span>
-                      </TableCell>
-                      <TableCell>${booking.total_price}</TableCell>
-                      <TableCell>
-                        <BookingDetailModal booking={booking}>
-                          <Button variant="outline" size="sm">
-                            <Eye className="h-4 w-4 mr-2" />
-                            View Details
-                          </Button>
-                        </BookingDetailModal>
+                        <div className="flex gap-2">
+                          <BookingDetailModal booking={booking}>
+                            <Button variant="outline" size="sm">
+                              <Eye className="h-4 w-4 mr-2" />
+                              Details
+                            </Button>
+                          </BookingDetailModal>
+                          {booking.driver_license_url && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => viewDriverLicense(booking.driver_license_url!)}
+                            >
+                              <FileText className="h-4 w-4 mr-2" />
+                              License
+                            </Button>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}

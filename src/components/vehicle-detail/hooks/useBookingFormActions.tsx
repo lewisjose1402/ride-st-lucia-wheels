@@ -27,26 +27,54 @@ export const useBookingFormActions = ({
 
   const uploadDriverLicense = async (file: File, bookingId: string): Promise<string | null> => {
     try {
+      console.log('Starting driver license upload for booking:', bookingId);
+      
       const fileExt = file.name.split('.').pop();
-      const userId = user?.id || bookingId;
+      const userId = user?.id;
+      
+      if (!userId) {
+        console.error('No user ID available for upload');
+        return null;
+      }
+      
+      // Create a proper file path structure: userId/vehicleId/bookingId/timestamp.ext
       const fileName = `${userId}/${vehicle.id}/${bookingId}/${Date.now()}.${fileExt}`;
       
-      const { error: uploadError } = await supabase.storage
+      console.log('Uploading file to path:', fileName);
+      
+      const { data, error: uploadError } = await supabase.storage
         .from('driver-licenses')
-        .upload(fileName, file);
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
 
       if (uploadError) {
         console.error('Upload error:', uploadError);
+        toast({
+          title: "Upload Error",
+          description: `Failed to upload driver's license: ${uploadError.message}`,
+          variant: "destructive",
+        });
         return null;
       }
 
+      console.log('Upload successful:', data);
+
+      // Get the public URL for the uploaded file
       const { data: { publicUrl } } = supabase.storage
         .from('driver-licenses')
         .getPublicUrl(fileName);
 
+      console.log('Generated public URL:', publicUrl);
       return publicUrl;
     } catch (error) {
       console.error('Error uploading driver license:', error);
+      toast({
+        title: "Upload Error",
+        description: "An unexpected error occurred while uploading the driver's license",
+        variant: "destructive",
+      });
       return null;
     }
   };
@@ -88,11 +116,11 @@ export const useBookingFormActions = ({
       // Create booking record with all form data
       const bookingData = {
         vehicle_id: vehicle.id,
-        user_id: user.id, // Always set to the authenticated user's ID
+        user_id: user.id,
         pickup_date: formState.pickupDate,
         dropoff_date: formState.dropoffDate,
-        pickup_location: "TBD", // This should come from form in the future
-        dropoff_location: "TBD", // This should come from form in the future
+        pickup_location: "TBD",
+        dropoff_location: "TBD",
         driver_name: `${formState.firstName} ${formState.lastName}`,
         first_name: formState.firstName,
         last_name: formState.lastName,
@@ -102,14 +130,14 @@ export const useBookingFormActions = ({
         driving_experience: formState.drivingExperience ? parseInt(formState.drivingExperience) : null,
         has_international_license: formState.isInternationalLicense,
         delivery_location: formState.deliveryLocation,
-        driver_license_url: null, // Will be updated after upload
+        driver_license_url: null,
         total_price: pricing.totalCost,
         deposit_amount: pricing.confirmationFee,
-        status: 'pending' as const
+        status: 'pending' as const,
+        payment_status: 'pending'
       };
 
       console.log("Creating booking with data:", bookingData);
-      console.log("User ID being sent:", bookingData.user_id);
 
       const { data: booking, error: bookingError } = await supabase
         .from('bookings')
@@ -119,13 +147,6 @@ export const useBookingFormActions = ({
 
       if (bookingError) {
         console.error("Booking creation error:", bookingError);
-        console.error("Error details:", {
-          message: bookingError.message,
-          code: bookingError.code,
-          hint: bookingError.hint,
-          details: bookingError.details
-        });
-        
         toast({
           title: "Booking Creation Failed",
           description: `Failed to create booking: ${bookingError.message}`,
@@ -136,10 +157,12 @@ export const useBookingFormActions = ({
 
       console.log("Booking created successfully:", booking);
 
-      // Upload driver license if provided, now that we have the booking ID
+      // Upload driver license if provided
+      let driverLicenseUrl = null;
       if (formState.driverLicense) {
         console.log('Uploading driver license...');
-        const driverLicenseUrl = await uploadDriverLicense(formState.driverLicense, booking.id);
+        driverLicenseUrl = await uploadDriverLicense(formState.driverLicense, booking.id);
+        
         if (driverLicenseUrl) {
           // Update booking with driver license URL
           const { error: updateError } = await supabase
@@ -149,15 +172,14 @@ export const useBookingFormActions = ({
           
           if (updateError) {
             console.error('Error updating booking with driver license URL:', updateError);
+            toast({
+              title: "Upload Warning",
+              description: "Driver's license uploaded but failed to link to booking. Please contact support.",
+              variant: "destructive",
+            });
           } else {
             console.log('Driver license uploaded and booking updated successfully');
           }
-        } else {
-          toast({
-            title: "Upload Warning",
-            description: "Driver's license upload failed, but booking will continue. You can upload it later.",
-            variant: "destructive",
-          });
         }
       }
 

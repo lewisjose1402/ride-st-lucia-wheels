@@ -37,9 +37,9 @@ export interface Vehicle {
   description?: string;
   is_available?: boolean;
   feed_token?: string;
-  location: any; // Added location property to match VehicleType
+  location: any;
   vehicle_images?: VehicleImage[];
-  [key: string]: any; // For other properties that might be present
+  [key: string]: any;
 }
 
 interface Booking {
@@ -49,8 +49,9 @@ interface Booking {
   pickup_date: string;
   dropoff_date: string;
   status: string;
+  payment_status: string;
   total_price: number;
-  [key: string]: any; // For other properties
+  [key: string]: any;
 }
 
 interface BookingStats {
@@ -66,9 +67,6 @@ interface CompanyDashboardResult {
   bookingStats: BookingStats;
 }
 
-/**
- * Hook to fetch and manage company dashboard data
- */
 export const useCompanyDashboard = (): CompanyDashboardResult => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -85,27 +83,21 @@ export const useCompanyDashboard = (): CompanyDashboardResult => {
     loadDashboardData();
   }, [user, toast]);
 
-  /**
-   * Main function to load all dashboard data
-   */
   const loadDashboardData = async () => {
     if (!user) return;
     
     try {
       setIsLoading(true);
       
-      // Step 1: Fetch company data or create if needed
       const company = await fetchCompanyData(user.id);
       if (!company) {
         setIsLoading(false);
         return;
       }
       
-      // Step 2: Load vehicles for this company
       const vehiclesData = await fetchVehiclesData(company.id);
       setVehicles(vehiclesData || []);
       
-      // Step 3: Fetch bookings for these vehicles
       if (vehiclesData && vehiclesData.length > 0) {
         await fetchBookingsData(vehiclesData);
       }
@@ -122,12 +114,8 @@ export const useCompanyDashboard = (): CompanyDashboardResult => {
     }
   };
 
-  /**
-   * Fetch company data by user ID
-   */
   const fetchCompanyData = async (userId: string): Promise<Company | null> => {
     try {
-      // Get company directly from rental_companies table
       const { data: companies, error: companyError } = await supabase
         .from('rental_companies')
         .select('*')
@@ -143,15 +131,12 @@ export const useCompanyDashboard = (): CompanyDashboardResult => {
         return null;
       }
       
-      // Check if any company was found
       const company = companies && companies.length > 0 ? companies[0] : null;
       
       if (!company) {
-        // If no company record exists, create one from user metadata
         return await createCompanyFromMetadata(userId);
       }
       
-      // Company found, set it and return
       setCompanyData(company as Company);
       return company as Company;
       
@@ -166,9 +151,6 @@ export const useCompanyDashboard = (): CompanyDashboardResult => {
     }
   };
 
-  /**
-   * Create a new company from user metadata if needed
-   */
   const createCompanyFromMetadata = async (userId: string): Promise<Company | null> => {
     try {
       const { data: userData } = await supabase.auth.getUser();
@@ -177,7 +159,6 @@ export const useCompanyDashboard = (): CompanyDashboardResult => {
       if (userMetadata && userMetadata.company_name) {
         console.log("Creating new company from metadata:", userMetadata);
         
-        // Create a new company record
         const { data: newCompany, error: insertError } = await supabase
           .from('rental_companies')
           .insert([{
@@ -221,12 +202,8 @@ export const useCompanyDashboard = (): CompanyDashboardResult => {
     }
   };
 
-  /**
-   * Fetch vehicles data for a company
-   */
   const fetchVehiclesData = async (companyId: string): Promise<Vehicle[]> => {
     try {
-      // Always pass companyId as a string to getCompanyVehicles
       const vehiclesData = await getCompanyVehicles(companyId);
       return vehiclesData || [];
     } catch (error) {
@@ -240,18 +217,12 @@ export const useCompanyDashboard = (): CompanyDashboardResult => {
     }
   };
 
-  /**
-   * Fetch bookings for a set of vehicles
-   */
   const fetchBookingsData = async (vehiclesData: Vehicle[]): Promise<void> => {
     try {
-      // Create an array of vehicle IDs, explicitly as strings
-      const vehicleIdStrings: string[] = vehiclesData.map((vehicle) => {
-        // Ensure each ID is a string, even if it comes as a number or UUID object
-        return String(vehicle.id);
-      });
+      const vehicleIdStrings: string[] = vehiclesData.map((vehicle) => String(vehicle.id));
       
-      // Use the array of strings with Supabase query
+      console.log('Fetching bookings for vehicles:', vehicleIdStrings);
+      
       const { data: bookingsData, error: bookingsError } = await supabase
         .from('bookings')
         .select('*')
@@ -262,10 +233,8 @@ export const useCompanyDashboard = (): CompanyDashboardResult => {
         return;
       }
       
-      // Set bookings data
+      console.log('Bookings fetched:', bookingsData);
       setBookings(bookingsData || []);
-      
-      // Calculate booking statistics
       calculateBookingStats(bookingsData || []);
       
     } catch (error) {
@@ -273,24 +242,20 @@ export const useCompanyDashboard = (): CompanyDashboardResult => {
     }
   };
 
-  /**
-   * Calculate booking statistics
-   */
   const calculateBookingStats = (bookingsData: Booking[]): void => {
     const currentDate = new Date();
     
-    // Count active bookings (not completed/cancelled and current date is between pickup and dropoff)
+    // Count active bookings (confirmed and current date is between pickup and dropoff)
     const active = bookingsData.filter(booking => 
-      booking.status !== 'completed' && 
-      booking.status !== 'cancelled' &&
+      booking.status === 'confirmed' && 
+      booking.payment_status === 'paid' &&
       new Date(booking.pickup_date) <= currentDate &&
       new Date(booking.dropoff_date) >= currentDate
     ).length;
     
-    // Calculate total revenue from completed bookings
+    // Calculate total revenue from confirmed and paid bookings
     const revenue = bookingsData.reduce((total, booking) => {
-      if (booking.status === 'completed') {
-        // Ensure we're working with numbers for the calculation
+      if (booking.status === 'confirmed' && booking.payment_status === 'paid') {
         const bookingPrice = typeof booking.total_price === 'string' 
           ? parseFloat(booking.total_price) 
           : Number(booking.total_price) || 0;
@@ -299,13 +264,14 @@ export const useCompanyDashboard = (): CompanyDashboardResult => {
       return total;
     }, 0);
     
+    console.log('Calculated booking stats:', { active, revenue, totalBookings: bookingsData.length });
+    
     setBookingStats({
       activeBookings: active,
       totalRevenue: revenue
     });
   };
 
-  // Return the data and state
   return {
     isLoading,
     companyData,

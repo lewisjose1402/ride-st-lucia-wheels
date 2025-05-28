@@ -68,7 +68,7 @@ serve(async (req) => {
     // Check current booking status first
     const { data: currentBooking, error: fetchError } = await supabaseClient
       .from('bookings')
-      .select('payment_status, confirmation_fee_paid')
+      .select('payment_status, confirmation_fee_paid, status')
       .eq('id', bookingId)
       .single();
 
@@ -80,12 +80,14 @@ serve(async (req) => {
 
     // Update booking based on payment status
     let paymentStatus = 'pending';
+    let bookingStatus = currentBooking.status;
     let confirmationFeePaid = currentBooking.confirmation_fee_paid || 0;
 
     if (session.payment_status === 'paid') {
       paymentStatus = 'paid';
+      bookingStatus = 'confirmed'; // Update booking status to confirmed when payment is successful
       confirmationFeePaid = (session.amount_total || 0) / 100; // Convert from cents
-      logStep("Payment successful", { paymentStatus, confirmationFeePaid });
+      logStep("Payment successful - updating booking to confirmed", { paymentStatus, bookingStatus, confirmationFeePaid });
     } else if (session.payment_status === 'unpaid') {
       paymentStatus = 'failed';
       logStep("Payment failed", { paymentStatus });
@@ -94,10 +96,12 @@ serve(async (req) => {
     }
 
     // Only update if status has changed
-    if (currentBooking.payment_status !== paymentStatus || currentBooking.confirmation_fee_paid !== confirmationFeePaid) {
+    if (currentBooking.payment_status !== paymentStatus || currentBooking.confirmation_fee_paid !== confirmationFeePaid || currentBooking.status !== bookingStatus) {
       logStep("Updating booking status", { 
-        oldStatus: currentBooking.payment_status, 
-        newStatus: paymentStatus,
+        oldPaymentStatus: currentBooking.payment_status, 
+        newPaymentStatus: paymentStatus,
+        oldBookingStatus: currentBooking.status,
+        newBookingStatus: bookingStatus,
         oldFee: currentBooking.confirmation_fee_paid,
         newFee: confirmationFeePaid
       });
@@ -107,6 +111,7 @@ serve(async (req) => {
         .update({ 
           payment_status: paymentStatus,
           confirmation_fee_paid: confirmationFeePaid,
+          status: bookingStatus,
           updated_at: new Date().toISOString()
         })
         .eq('id', bookingId);
@@ -123,6 +128,7 @@ serve(async (req) => {
     const response = { 
       success: true,
       payment_status: paymentStatus,
+      booking_status: bookingStatus,
       amount_paid: confirmationFeePaid,
       session_status: session.payment_status,
       booking_id: bookingId
