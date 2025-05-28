@@ -168,8 +168,35 @@ const CompanyBookings = () => {
     }
   };
 
-  const viewDriverLicense = (url: string) => {
-    window.open(url, '_blank');
+  const viewDriverLicense = async (url: string) => {
+    try {
+      // Extract the file path from the URL
+      const urlParts = url.split('/');
+      const bucketIndex = urlParts.findIndex(part => part === 'driver-licenses');
+      if (bucketIndex !== -1 && bucketIndex < urlParts.length - 1) {
+        const filePath = urlParts.slice(bucketIndex + 1).join('/');
+        
+        // Get the signed URL for viewing
+        const { data, error } = await supabase.storage
+          .from('driver-licenses')
+          .createSignedUrl(filePath, 60 * 60); // 1 hour expiry
+        
+        if (error) {
+          console.error('Error creating signed URL:', error);
+          // Fallback to original URL
+          window.open(url, '_blank');
+        } else if (data) {
+          window.open(data.signedUrl, '_blank');
+        }
+      } else {
+        // Fallback to original URL
+        window.open(url, '_blank');
+      }
+    } catch (error) {
+      console.error('Error viewing driver license:', error);
+      // Fallback to original URL
+      window.open(url, '_blank');
+    }
   };
 
   return (

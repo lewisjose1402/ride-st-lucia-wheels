@@ -3,6 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { User, Mail, Phone, Eye, FileText, Shield, AlertTriangle } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface RenterInfoSectionProps {
   booking: {
@@ -22,6 +23,37 @@ export const RenterInfoSection = ({ booking }: RenterInfoSectionProps) => {
   const fullName = booking.first_name && booking.last_name 
     ? `${booking.first_name} ${booking.last_name}` 
     : booking.driver_name;
+
+  const viewDriverLicense = async (url: string) => {
+    try {
+      // Extract the file path from the URL
+      const urlParts = url.split('/');
+      const bucketIndex = urlParts.findIndex(part => part === 'driver-licenses');
+      if (bucketIndex !== -1 && bucketIndex < urlParts.length - 1) {
+        const filePath = urlParts.slice(bucketIndex + 1).join('/');
+        
+        // Get the signed URL for viewing
+        const { data, error } = await supabase.storage
+          .from('driver-licenses')
+          .createSignedUrl(filePath, 60 * 60); // 1 hour expiry
+        
+        if (error) {
+          console.error('Error creating signed URL:', error);
+          // Fallback to original URL
+          window.open(url, '_blank');
+        } else if (data) {
+          window.open(data.signedUrl, '_blank');
+        }
+      } else {
+        // Fallback to original URL
+        window.open(url, '_blank');
+      }
+    } catch (error) {
+      console.error('Error viewing driver license:', error);
+      // Fallback to original URL
+      window.open(url, '_blank');
+    }
+  };
 
   return (
     <Card className="h-fit">
@@ -105,7 +137,7 @@ export const RenterInfoSection = ({ booking }: RenterInfoSectionProps) => {
                   src={booking.driver_license_url}
                   alt="Driver's License"
                   className="w-full max-w-sm h-32 object-cover rounded-lg border-2 border-gray-200 cursor-pointer transition-all group-hover:border-blue-300"
-                  onClick={() => window.open(booking.driver_license_url, '_blank')}
+                  onClick={() => viewDriverLicense(booking.driver_license_url!)}
                 />
                 <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 rounded-lg transition-all cursor-pointer flex items-center justify-center">
                   <Eye className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -115,7 +147,7 @@ export const RenterInfoSection = ({ booking }: RenterInfoSectionProps) => {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => window.open(booking.driver_license_url, '_blank')}
+                onClick={() => viewDriverLicense(booking.driver_license_url!)}
                 className="flex items-center gap-2"
               >
                 <Eye className="h-4 w-4" />
