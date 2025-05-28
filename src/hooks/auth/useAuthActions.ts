@@ -9,7 +9,7 @@ export function useAuthActions() {
     email: string;
     first_name?: string;
     last_name?: string;
-    role: string;
+    role: 'guest' | 'rental_company' | 'admin' | 'renter';
   }) => {
     try {
       console.log("Creating user profile:", userData);
