@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -252,12 +253,40 @@ export function useAuthActions() {
   };
 
   const signOut = async () => {
-    console.log("Signing out user");
-    await supabase.auth.signOut();
-    toast({
-      title: "Signed out",
-      description: "You have successfully signed out."
-    });
+    try {
+      console.log("Signing out user");
+      
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error("Sign out error:", error);
+        toast({
+          title: "Sign out failed",
+          description: error.message,
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Clear any cached data
+      localStorage.clear();
+      sessionStorage.clear();
+      
+      // Force a page reload to clear all state
+      window.location.href = '/';
+      
+      toast({
+        title: "Signed out",
+        description: "You have successfully signed out."
+      });
+    } catch (error) {
+      console.error("Unexpected error during sign out:", error);
+      toast({
+        title: "Sign out failed",
+        description: "An unexpected error occurred during sign out.",
+        variant: "destructive"
+      });
+    }
   };
 
   return {

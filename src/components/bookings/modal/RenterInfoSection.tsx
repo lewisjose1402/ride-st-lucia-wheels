@@ -30,36 +30,9 @@ export const RenterInfoSection = ({ booking }: RenterInfoSectionProps) => {
     try {
       console.log('Company viewing driver license:', url);
       
-      // Extract the file path from the URL
-      const urlParts = url.split('/');
-      const bucketIndex = urlParts.findIndex(part => part === 'driver-licenses');
+      // First try to open the original URL directly
+      window.open(url, '_blank');
       
-      if (bucketIndex !== -1 && bucketIndex < urlParts.length - 1) {
-        const filePath = urlParts.slice(bucketIndex + 1).join('/');
-        console.log('Extracted file path for company view:', filePath);
-        
-        // Get the signed URL for viewing with extended expiry
-        const { data, error } = await supabase.storage
-          .from('driver-licenses')
-          .createSignedUrl(filePath, 60 * 60 * 2); // 2 hours expiry
-        
-        if (error) {
-          console.error('Error creating signed URL for company:', error);
-          toast({
-            title: "Error viewing license",
-            description: "Could not load driver license image. Please try again.",
-            variant: "destructive",
-          });
-          // Still try to open the original URL as fallback
-          window.open(url, '_blank');
-        } else if (data?.signedUrl) {
-          console.log('Successfully created signed URL for company');
-          window.open(data.signedUrl, '_blank');
-        }
-      } else {
-        console.log('Invalid URL format for company view, using original URL');
-        window.open(url, '_blank');
-      }
     } catch (error) {
       console.error('Error viewing driver license for company:', error);
       toast({
@@ -67,8 +40,6 @@ export const RenterInfoSection = ({ booking }: RenterInfoSectionProps) => {
         description: "Could not view driver license",
         variant: "destructive",
       });
-      // Final fallback to original URL
-      window.open(url, '_blank');
     }
   };
 
@@ -149,22 +120,6 @@ export const RenterInfoSection = ({ booking }: RenterInfoSectionProps) => {
           <p className="text-sm font-medium text-gray-600 mb-3">Driver's License</p>
           {booking.driver_license_url ? (
             <div className="space-y-3">
-              <div className="relative group">
-                <img
-                  src={booking.driver_license_url}
-                  alt="Driver's License"
-                  className="w-full max-w-sm h-32 object-cover rounded-lg border-2 border-gray-200 cursor-pointer transition-all group-hover:border-blue-300"
-                  onClick={() => viewDriverLicense(booking.driver_license_url!)}
-                  onError={(e) => {
-                    console.log('Image failed to load, hiding preview');
-                    e.currentTarget.style.display = 'none';
-                  }}
-                />
-                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 rounded-lg transition-all cursor-pointer flex items-center justify-center">
-                  <Eye className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-                </div>
-              </div>
-              <p className="text-xs text-gray-500 italic">Uploaded Driver's License</p>
               <Button
                 variant="outline"
                 size="sm"
@@ -172,7 +127,7 @@ export const RenterInfoSection = ({ booking }: RenterInfoSectionProps) => {
                 className="flex items-center gap-2"
               >
                 <Eye className="h-4 w-4" />
-                View Full Size
+                View Driver's License
               </Button>
             </div>
           ) : (

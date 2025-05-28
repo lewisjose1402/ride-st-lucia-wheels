@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -134,7 +133,7 @@ const BookingReceipt = ({ booking, showDownloadButton = true }: BookingReceiptPr
               </div>
               <div class="info-item">
                 <span class="label">Return Location:</span>
-                <span class="value">${primaryLocation}</span>
+                <span class="value">TBD</span>
               </div>
             </div>
           </div>
@@ -319,8 +318,8 @@ const BookingReceipt = ({ booking, showDownloadButton = true }: BookingReceiptPr
             <div>
               <p className="text-sm font-medium text-gray-600">Return Location</p>
               <div className="flex items-center gap-1">
-                <MapPin className="h-4 w-4 text-green-600" />
-                <p className="font-medium">{primaryLocation}</p>
+                <MapPin className="h-4 w-4 text-gray-400" />
+                <p className="font-medium text-gray-500">TBD</p>
               </div>
             </div>
           </CardContent>

@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
@@ -174,38 +173,11 @@ const CompanyBookings = () => {
 
   const viewDriverLicense = async (url: string) => {
     try {
-      console.log('Attempting to view driver license:', url);
+      console.log('Company attempting to view driver license:', url);
       
-      // Extract the file path from the URL
-      const urlParts = url.split('/');
-      const bucketIndex = urlParts.findIndex(part => part === 'driver-licenses');
+      // Simply open the URL directly - let the browser handle the authentication
+      window.open(url, '_blank');
       
-      if (bucketIndex !== -1 && bucketIndex < urlParts.length - 1) {
-        const filePath = urlParts.slice(bucketIndex + 1).join('/');
-        console.log('Extracted file path:', filePath);
-        
-        // Get the signed URL for viewing with extended expiry
-        const { data, error } = await supabase.storage
-          .from('driver-licenses')
-          .createSignedUrl(filePath, 60 * 60 * 2); // 2 hours expiry
-        
-        if (error) {
-          console.error('Error creating signed URL:', error);
-          toast({
-            title: "Error viewing license",
-            description: "Could not load driver license image. Please try again.",
-            variant: "destructive",
-          });
-          // Still try to open the original URL as fallback
-          window.open(url, '_blank');
-        } else if (data?.signedUrl) {
-          console.log('Successfully created signed URL');
-          window.open(data.signedUrl, '_blank');
-        }
-      } else {
-        console.log('Invalid URL format, using original URL');
-        window.open(url, '_blank');
-      }
     } catch (error) {
       console.error('Error viewing driver license:', error);
       toast({
@@ -213,8 +185,6 @@ const CompanyBookings = () => {
         description: "Could not view driver license",
         variant: "destructive",
       });
-      // Final fallback to original URL
-      window.open(url, '_blank');
     }
   };
 
@@ -286,7 +256,7 @@ const CompanyBookings = () => {
               </div>
               <div class="info-item">
                 <span class="label">Return Location:</span>
-                <span class="value">${primaryLocation}</span>
+                <span class="value">TBD</span>
               </div>
             </div>
           </div>
