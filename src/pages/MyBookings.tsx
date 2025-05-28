@@ -7,10 +7,21 @@ import Footer from '@/components/Footer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar, MapPin, Car, Download, Eye, FileText } from 'lucide-react';
+import { Calendar, MapPin, Car, Download, Eye, FileText, X } from 'lucide-react';
 import LoadingState from '@/components/company/dashboard/LoadingState';
 import BookingReceipt from '@/components/bookings/BookingReceipt';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 interface MyBooking {
   id: string;
@@ -51,6 +62,7 @@ const MyBookings = () => {
   const { toast } = useToast();
   const [bookings, setBookings] = useState<MyBooking[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [cancellingBooking, setCancellingBooking] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchMyBookings = async () => {
@@ -152,6 +164,68 @@ const MyBookings = () => {
         description: "Could not view driver license",
         variant: "destructive",
       });
+    }
+  };
+
+  const canCancelBooking = (booking: MyBooking) => {
+    // Can only cancel if status is confirmed/pending and payment is successful
+    if (booking.status === 'cancelled' || booking.payment_status === 'failed') {
+      return false;
+    }
+
+    // Check if pickup date is more than 2 days away
+    const pickupDate = new Date(booking.pickup_date);
+    const now = new Date();
+    const twoDaysFromNow = new Date(now.getTime() + (2 * 24 * 60 * 60 * 1000));
+    
+    return pickupDate > twoDaysFromNow;
+  };
+
+  const cancelBooking = async (bookingId: string) => {
+    try {
+      setCancellingBooking(bookingId);
+      console.log('Cancelling booking:', bookingId);
+
+      const { error } = await supabase
+        .from('bookings')
+        .update({ 
+          status: 'cancelled',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', bookingId);
+
+      if (error) {
+        console.error('Error cancelling booking:', error);
+        toast({
+          title: "Cancellation Failed",
+          description: "Failed to cancel your booking. Please try again.",
+          variant: "destructive",
+        });
+      } else {
+        console.log('Booking cancelled successfully');
+        toast({
+          title: "Booking Cancelled",
+          description: "Your booking has been cancelled successfully.",
+        });
+        
+        // Update the local state to reflect the cancellation
+        setBookings(prevBookings =>
+          prevBookings.map(booking =>
+            booking.id === bookingId
+              ? { ...booking, status: 'cancelled' }
+              : booking
+          )
+        );
+      }
+    } catch (error) {
+      console.error('Unexpected error cancelling booking:', error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred while cancelling your booking",
+        variant: "destructive",
+      });
+    } finally {
+      setCancellingBooking(null);
     }
   };
 
@@ -464,6 +538,40 @@ const MyBookings = () => {
                         <Download className="h-4 w-4 mr-2" />
                         Download Receipt
                       </Button>
+
+                      {canCancelBooking(booking) && (
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            >
+                              <X className="h-4 w-4 mr-2" />
+                              Cancel Booking
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Cancel Booking</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to cancel this booking? This action cannot be undone.
+                                You can only cancel bookings up to 2 days before the pickup date.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Keep Booking</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => cancelBooking(booking.id)}
+                                disabled={cancellingBooking === booking.id}
+                                className="bg-red-600 hover:bg-red-700"
+                              >
+                                {cancellingBooking === booking.id ? 'Cancelling...' : 'Cancel Booking'}
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
