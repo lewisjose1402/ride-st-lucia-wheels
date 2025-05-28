@@ -11,7 +11,7 @@ import BookingFormFields from './BookingFormFields';
 import ValidationErrorDisplay from './ValidationErrorDisplay';
 import PriceBreakdown from './PriceBreakdown';
 import BookingActions from './BookingActions';
-import GoogleSignInPrompt from './GoogleSignInPrompt';
+import AuthPrompt from './AuthPrompt';
 import { useAuth } from '@/context/AuthContext';
 import { useBookingRequirements } from '@/hooks/useBookingRequirements';
 import { useBookingFormState } from './hooks/useBookingFormState';
@@ -26,9 +26,9 @@ interface BookingCardProps {
 const BookingCard = ({ vehicle }: BookingCardProps) => {
   const { user } = useAuth();
   
-  // If user is not authenticated, show Google sign-in prompt
+  // If user is not authenticated, show auth prompt
   if (!user) {
-    return <GoogleSignInPrompt />;
+    return <AuthPrompt />;
   }
 
   // Custom hooks for form management (only load when user is authenticated)
