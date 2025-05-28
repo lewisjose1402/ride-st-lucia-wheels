@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -9,6 +9,9 @@ export const useCheckoutFlow = () => {
   const [isVerifying, setIsVerifying] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
+  
+  // Use ref to track ongoing verification to prevent multiple calls
+  const verificationInProgress = useRef(false);
 
   const createCheckoutSession = async (bookingId: string, amount: number, description?: string, customerEmail?: string) => {
     try {
@@ -49,6 +52,14 @@ export const useCheckoutFlow = () => {
   };
 
   const verifyPayment = async (sessionId: string, showToast: boolean = true) => {
+    // Prevent multiple simultaneous verification calls
+    if (verificationInProgress.current) {
+      console.log("Verification already in progress, skipping");
+      return null;
+    }
+
+    verificationInProgress.current = true;
+    
     try {
       setIsVerifying(true);
       console.log("Starting payment verification for session:", sessionId);
@@ -93,6 +104,7 @@ export const useCheckoutFlow = () => {
       throw error;
     } finally {
       setIsVerifying(false);
+      verificationInProgress.current = false;
     }
   };
 

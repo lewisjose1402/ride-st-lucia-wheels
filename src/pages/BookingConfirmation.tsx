@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useCheckoutFlow } from '@/hooks/useCheckoutFlow';
 import { supabase } from '@/integrations/supabase/client';
@@ -37,15 +37,24 @@ const BookingConfirmation = () => {
   const [booking, setBooking] = useState<BookingDetails | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [verificationError, setVerificationError] = useState<string | null>(null);
+  const [hasVerifiedPayment, setHasVerifiedPayment] = useState(false);
+  
+  // Use refs to prevent multiple simultaneous calls
+  const verificationInProgress = useRef(false);
+  const fetchInProgress = useRef(false);
 
   const sessionId = searchParams.get('session_id');
   const bookingId = searchParams.get('booking_id');
 
   const fetchBookingDetails = async () => {
+    if (fetchInProgress.current) return null;
+    fetchInProgress.current = true;
+    
     console.log("Fetching booking details", { bookingId, user: !!user });
     
     if (!user) {
       console.log("No user found, stopping process");
+      fetchInProgress.current = false;
       return null;
     }
 
@@ -128,27 +137,34 @@ const BookingConfirmation = () => {
     } catch (error) {
       console.error("Error fetching booking details:", error);
       return null;
+    } finally {
+      fetchInProgress.current = false;
     }
   };
 
   const handlePaymentVerificationAndBookingFetch = async () => {
+    if (verificationInProgress.current) return;
+    verificationInProgress.current = true;
+    
     console.log("Starting booking confirmation process", { sessionId, bookingId, user: !!user });
     
     if (!user) {
       console.log("No user found, stopping process");
       setIsLoading(false);
+      verificationInProgress.current = false;
       return;
     }
 
     try {
       setVerificationError(null);
 
-      // If we have a session_id, verify the payment first
-      if (sessionId) {
+      // If we have a session_id and haven't verified yet, verify the payment first
+      if (sessionId && !hasVerifiedPayment) {
         console.log("Verifying payment for session:", sessionId);
         try {
           const result = await verifyPayment(sessionId, false);
           console.log("Payment verification result:", result);
+          setHasVerifiedPayment(true);
         } catch (error) {
           console.error("Payment verification failed:", error);
           setVerificationError(error instanceof Error ? error.message : "Payment verification failed");
@@ -162,18 +178,20 @@ const BookingConfirmation = () => {
       console.error("Error in booking confirmation process:", error);
     } finally {
       setIsLoading(false);
+      verificationInProgress.current = false;
     }
   };
 
   const handleManualVerification = async () => {
-    if (!booking?.stripe_session_id && !sessionId) {
-      console.error("No session ID available for manual verification");
+    if (verificationInProgress.current || (!booking?.stripe_session_id && !sessionId)) {
+      console.error("Verification in progress or no session ID available");
       return;
     }
 
     const sessionIdToUse = sessionId || booking?.stripe_session_id;
     if (!sessionIdToUse) return;
 
+    verificationInProgress.current = true;
     try {
       console.log("Manual verification triggered for session:", sessionIdToUse);
       await verifyPayment(sessionIdToUse, true);
@@ -183,16 +201,22 @@ const BookingConfirmation = () => {
       if (updatedBooking) {
         setBooking(updatedBooking);
         setVerificationError(null);
+        setHasVerifiedPayment(true);
       }
     } catch (error) {
       console.error("Manual verification failed:", error);
       setVerificationError(error instanceof Error ? error.message : "Manual verification failed");
+    } finally {
+      verificationInProgress.current = false;
     }
   };
 
   useEffect(() => {
-    handlePaymentVerificationAndBookingFetch();
-  }, [sessionId, bookingId, user, verifyPayment]);
+    // Only run the effect once when the component mounts or when user changes
+    if (user && !verificationInProgress.current) {
+      handlePaymentVerificationAndBookingFetch();
+    }
+  }, [user]); // Only depend on user, not on sessionId or bookingId to prevent loops
 
   if (isLoading) {
     return <LoadingState />;
