@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Session, User } from '@supabase/supabase-js';
@@ -16,9 +15,9 @@ export function useAuthState() {
     try {
       console.log("Creating profile for user:", user.id);
       
-      // Determine role based on user metadata
+      // Determine role based on user metadata with proper typing
       const userMetadata = user.user_metadata;
-      let role = 'renter';
+      let role: 'renter' | 'rental_company' | 'guest' | 'admin' = 'renter';
       
       if (userMetadata?.role === 'rental_company' || userMetadata?.is_company) {
         role = 'rental_company';
