@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -6,6 +7,8 @@ export function useAuthActions() {
 
   const signUpAsRenter = async (email: string, password: string, firstName: string = '', lastName: string = '') => {
     try {
+      console.log("Attempting renter sign-up:", { email, firstName, lastName });
+      
       const metadata = {
         role: 'renter',
         first_name: firstName,
@@ -22,6 +25,8 @@ export function useAuthActions() {
       });
       
       if (error) {
+        console.error("Supabase auth sign-up error:", error);
+        
         if (error.message.includes('already registered') || error.message.includes('already exists')) {
           toast({
             title: "Email already registered",
@@ -39,12 +44,15 @@ export function useAuthActions() {
         return { success: false, error: error.message };
       }
       
+      console.log("Renter sign-up successful:", data);
+      
       toast({
         title: "Sign up successful",
         description: "Please check your email to verify your account before signing in.",
       });
       return { success: true, error: null };
     } catch (error) {
+      console.error("Unexpected error during renter sign-up:", error);
       const errorMessage = (error as Error).message;
       toast({
         title: "Sign up failed",
@@ -57,6 +65,8 @@ export function useAuthActions() {
 
   const signUpAsCompany = async (email: string, password: string, companyName: string) => {
     try {
+      console.log("Attempting company sign-up:", { email, companyName });
+      
       // Check if email already exists in rental_companies table
       const { data: existingCompany, error: checkError } = await supabase
         .from('rental_companies')
@@ -92,6 +102,8 @@ export function useAuthActions() {
       });
       
       if (error) {
+        console.error("Supabase auth sign-up error:", error);
+        
         if (error.message.includes('already registered') || error.message.includes('already exists')) {
           toast({
             title: "Email already registered",
@@ -108,6 +120,8 @@ export function useAuthActions() {
         });
         return { success: false, error: error.message };
       }
+      
+      console.log("Company sign-up successful:", data);
       
       // Create a rental company profile with the initial data
       if (data?.user) {
@@ -137,6 +151,7 @@ export function useAuthActions() {
       });
       return { success: true, error: null };
     } catch (error) {
+      console.error("Unexpected error during company sign-up:", error);
       const errorMessage = (error as Error).message;
       toast({
         title: "Sign up failed",
@@ -165,12 +180,15 @@ export function useAuthActions() {
 
   const signIn = async (email: string, password: string) => {
     try {
+      console.log("Attempting sign-in:", { email });
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       
       if (error) {
+        console.error("Sign-in error:", error);
         toast({
           title: "Sign in failed",
           description: error.message,
@@ -179,12 +197,15 @@ export function useAuthActions() {
         return { success: false, error: error.message };
       }
       
+      console.log("Sign-in successful:", data);
+      
       toast({
         title: "Welcome back!",
         description: "You have successfully signed in.",
       });
       return { success: true, error: null };
     } catch (error) {
+      console.error("Unexpected error during sign-in:", error);
       const errorMessage = (error as Error).message;
       toast({
         title: "Sign in failed",
@@ -197,6 +218,8 @@ export function useAuthActions() {
 
   const signInWithGoogle = async () => {
     try {
+      console.log("Attempting Google sign-in");
+      
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -205,6 +228,7 @@ export function useAuthActions() {
       });
       
       if (error) {
+        console.error("Google sign-in error:", error);
         toast({
           title: "Google sign in failed",
           description: error.message,
@@ -213,8 +237,10 @@ export function useAuthActions() {
         return { success: false, error: error.message };
       }
       
+      console.log("Google sign-in initiated:", data);
       return { success: true, error: null };
     } catch (error) {
+      console.error("Unexpected error during Google sign-in:", error);
       const errorMessage = (error as Error).message;
       toast({
         title: "Google sign in failed",
@@ -226,6 +252,7 @@ export function useAuthActions() {
   };
 
   const signOut = async () => {
+    console.log("Signing out user");
     await supabase.auth.signOut();
     toast({
       title: "Signed out",
