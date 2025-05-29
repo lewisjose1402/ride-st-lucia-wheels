@@ -19,7 +19,7 @@ export const useAvailabilityCheck = ({ vehicleId }: UseAvailabilityCheckProps) =
     try {
       setIsLoading(true);
       console.log('useAvailabilityCheck: Starting to load availability for vehicle:', vehicleId);
-      const data = await getVailabilityCheck(vehicleId);
+      const data = await getVehicleAvailability(vehicleId);
       console.log('useAvailabilityCheck: Raw availability data received:', data);
       setAvailability(data);
       console.log('useAvailabilityCheck: Availability state updated with', data.length, 'blocked dates');

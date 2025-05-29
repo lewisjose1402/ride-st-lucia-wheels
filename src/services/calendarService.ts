@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export interface CalendarFeed {
@@ -374,4 +373,33 @@ export const deleteCalendarFeed = async (id: string): Promise<void> => {
   if (error) {
     throw new Error(error.message);
   }
+};
+
+// Get booking details by block ID (requires auth)
+export const getBookingDetailsByBlockId = async (blockId: string): Promise<any | null> => {
+  const { data, error } = await supabase
+    .from('vehicle_calendar_blocks')
+    .select(`
+      booking_id,
+      bookings (
+        id,
+        first_name,
+        last_name,
+        driver_name,
+        pickup_date,
+        dropoff_date
+      )
+    `)
+    .eq('id', blockId)
+    .not('booking_id', 'is', null)
+    .single();
+
+  if (error) {
+    if (error.code === 'PGRST116') {
+      return null; // No booking found
+    }
+    throw new Error(error.message);
+  }
+
+  return data?.bookings || null;
 };

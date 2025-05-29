@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -8,6 +7,7 @@ import SelectionInstructions from './calendar/SelectionInstructions';
 import ClearBlocksActions from './calendar/ClearBlocksActions';
 import BlockCreationDialog from './calendar/BlockCreationDialog';
 import BlockDetailsDialog from './calendar/BlockDetailsDialog';
+import BookingDetailsDialog from './calendar/BookingDetailsDialog';
 import { isSameDay } from 'date-fns';
 
 interface InteractiveCalendarProps {
@@ -21,6 +21,7 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({ vehicleId }) 
     availability,
     selectedDates,
     selectedBlock,
+    selectedBooking,
     isLoading,
     getDateStatus,
     handleDateClick,
@@ -29,6 +30,7 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({ vehicleId }) 
     handleClearVehicleBlocks,
     handleClearAllCompanyBlocks,
     handleCloseBlockDialog,
+    handleCloseBookingDialog,
     setSelectedDates
   } = useInteractiveCalendar({ vehicleId });
 
@@ -108,6 +110,12 @@ const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({ vehicleId }) 
           block={selectedBlock}
           isLoading={isLoading}
           onRemoveBlock={handleRemoveBlock}
+        />
+
+        <BookingDetailsDialog
+          isOpen={!!selectedBooking}
+          onClose={handleCloseBookingDialog}
+          booking={selectedBooking}
         />
       </div>
     </TooltipProvider>

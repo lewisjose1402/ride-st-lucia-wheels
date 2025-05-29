@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import {
@@ -8,6 +7,7 @@ import {
   clearAllCompanyManualBlocks,
   getManualBlockByDate,
   removeManualBlock,
+  getBookingDetailsByBlockId,
   AvailabilityData,
   CalendarBlock
 } from '@/services/calendarService';
@@ -22,6 +22,7 @@ export const useInteractiveCalendar = ({ vehicleId }: UseInteractiveCalendarProp
   const [availability, setAvailability] = useState<AvailabilityData[]>([]);
   const [selectedDates, setSelectedDates] = useState<Date[]>([]);
   const [selectedBlock, setSelectedBlock] = useState<CalendarBlock | null>(null);
+  const [selectedBooking, setSelectedBooking] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const loadAvailability = async () => {
@@ -67,17 +68,33 @@ export const useInteractiveCalendar = ({ vehicleId }: UseInteractiveCalendarProp
       return;
     }
 
-    // Prevent interaction with confirmed booking dates
+    // Handle confirmed booking clicks - show booking details
     if (dateStatus.status === 'booked-confirmed') {
-      toast({
-        title: 'Cannot modify',
-        description: 'This date has a confirmed booking and cannot be manually blocked',
-        variant: 'destructive',
-      });
+      if (dateStatus.blockId) {
+        try {
+          const bookingDetails = await getBookingDetailsByBlockId(dateStatus.blockId);
+          if (bookingDetails) {
+            setSelectedBooking(bookingDetails);
+          } else {
+            toast({
+              title: 'Error',
+              description: 'Could not load booking details',
+              variant: 'destructive',
+            });
+          }
+        } catch (error) {
+          console.error('Error fetching booking details:', error);
+          toast({
+            title: 'Error',
+            description: 'Failed to load booking details',
+            variant: 'destructive',
+          });
+        }
+      }
       return;
     }
 
-    // If date is manually blocked, show block details
+    // Prevent interaction with manually blocked dates
     if (dateStatus.status === 'blocked-manual') {
       try {
         const block = await getManualBlockByDate(vehicleId, date);
@@ -216,10 +233,15 @@ export const useInteractiveCalendar = ({ vehicleId }: UseInteractiveCalendarProp
     setSelectedBlock(null);
   };
 
+  const handleCloseBookingDialog = () => {
+    setSelectedBooking(null);
+  };
+
   return {
     availability,
     selectedDates,
     selectedBlock,
+    selectedBooking,
     isLoading,
     getDateStatus,
     handleDateClick,
@@ -228,6 +250,7 @@ export const useInteractiveCalendar = ({ vehicleId }: UseInteractiveCalendarProp
     handleClearVehicleBlocks,
     handleClearAllCompanyBlocks,
     handleCloseBlockDialog,
+    handleCloseBookingDialog,
     setSelectedDates
   };
 };
