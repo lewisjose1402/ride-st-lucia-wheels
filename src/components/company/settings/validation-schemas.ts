@@ -20,6 +20,7 @@ export const BookingRequirementsSchema = z.object({
   require_damage_deposit: z.boolean().default(false),
   damage_deposit_type: z.enum(['Cash', 'Card']).default('Cash'),
   damage_deposit_amount: z.number().min(1).max(10000).default(250),
+  minimum_rental_days: z.number().min(1).max(365).default(1),
 });
 
 export const SecuritySettingsSchema = z.object({

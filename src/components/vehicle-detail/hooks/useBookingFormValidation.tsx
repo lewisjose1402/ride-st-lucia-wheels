@@ -3,53 +3,53 @@ import { useMemo } from 'react';
 import { validateBookingForm } from '@/utils/bookingValidation';
 
 interface UseBookingFormValidationProps {
-  driverLicense: File | null;
-  driverAge: string;
-  drivingExperience: string;
-  deliveryLocation: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phoneNumber: string;
-  pickupDate: string;
-  dropoffDate: string;
-  requireDriverLicense: boolean;
-  minimumDriverAge: number;
-  minimumDrivingExperience: number;
+  formData: {
+    driverLicense: File | null;
+    driverAge: string;
+    drivingExperience: string;
+    deliveryLocation: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phoneNumber: string;
+    pickupDate: string;
+    dropoffDate: string;
+  };
+  requirements: {
+    requireDriverLicense: boolean;
+    minimumDriverAge: number;
+    minimumDrivingExperience: number;
+    minimumRentalDays: number;
+  } | null;
 }
 
-export const useBookingFormValidation = (props: UseBookingFormValidationProps) => {
+export const useBookingFormValidation = ({ formData, requirements }: UseBookingFormValidationProps) => {
   const validation = useMemo(() => {
+    if (!requirements) {
+      return {
+        isValid: false,
+        errors: [],
+        blockingErrors: ['Loading requirements...']
+      };
+    }
+
     return validateBookingForm({
-      driverLicense: props.driverLicense,
-      driverAge: props.driverAge,
-      drivingExperience: props.drivingExperience,
-      deliveryLocation: props.deliveryLocation,
-      firstName: props.firstName,
-      lastName: props.lastName,
-      email: props.email,
-      phoneNumber: props.phoneNumber,
-      pickupDate: props.pickupDate,
-      dropoffDate: props.dropoffDate,
-      requireDriverLicense: props.requireDriverLicense,
-      minimumDriverAge: props.minimumDriverAge,
-      minimumDrivingExperience: props.minimumDrivingExperience
+      driverLicense: formData.driverLicense,
+      driverAge: formData.driverAge,
+      drivingExperience: formData.drivingExperience,
+      deliveryLocation: formData.deliveryLocation,
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      email: formData.email,
+      phoneNumber: formData.phoneNumber,
+      pickupDate: formData.pickupDate,
+      dropoffDate: formData.dropoffDate,
+      requireDriverLicense: requirements.requireDriverLicense,
+      minimumDriverAge: requirements.minimumDriverAge,
+      minimumDrivingExperience: requirements.minimumDrivingExperience,
+      minimumRentalDays: requirements.minimumRentalDays,
     });
-  }, [
-    props.driverLicense,
-    props.driverAge,
-    props.drivingExperience,
-    props.deliveryLocation,
-    props.firstName,
-    props.lastName,
-    props.email,
-    props.phoneNumber,
-    props.pickupDate,
-    props.dropoffDate,
-    props.requireDriverLicense,
-    props.minimumDriverAge,
-    props.minimumDrivingExperience
-  ]);
+  }, [formData, requirements]);
 
   return validation;
 };

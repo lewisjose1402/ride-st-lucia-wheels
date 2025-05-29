@@ -15,6 +15,7 @@ interface ValidationInputs {
   requireDriverLicense: boolean;
   minimumDriverAge: number;
   minimumDrivingExperience: number;
+  minimumRentalDays: number;
 }
 
 interface ValidationResult {
@@ -37,7 +38,8 @@ export const validateBookingForm = (inputs: ValidationInputs): ValidationResult 
     dropoffDate,
     requireDriverLicense,
     minimumDriverAge,
-    minimumDrivingExperience
+    minimumDrivingExperience,
+    minimumRentalDays
   } = inputs;
 
   console.log('Validating booking form with inputs:', {
@@ -53,7 +55,8 @@ export const validateBookingForm = (inputs: ValidationInputs): ValidationResult 
     driverLicense: driverLicense ? 'FILE UPLOADED' : 'NO FILE',
     requireDriverLicense,
     minimumDriverAge,
-    minimumDrivingExperience
+    minimumDrivingExperience,
+    minimumRentalDays
   });
 
   const errors: string[] = [];
@@ -100,6 +103,18 @@ export const validateBookingForm = (inputs: ValidationInputs): ValidationResult 
   if (!dropoffDate) {
     errors.push('Dropoff date is required');
     console.log('VALIDATION ERROR: Dropoff date is empty');
+  }
+
+  // Minimum rental days validation
+  if (pickupDate && dropoffDate) {
+    const pickup = new Date(pickupDate);
+    const dropoff = new Date(dropoffDate);
+    const rentalDays = Math.ceil((dropoff.getTime() - pickup.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (rentalDays < minimumRentalDays) {
+      blockingErrors.push(`Minimum rental period is ${minimumRentalDays} day${minimumRentalDays > 1 ? 's' : ''}`);
+      console.log(`VALIDATION ERROR: Rental period ${rentalDays} days is below minimum required ${minimumRentalDays} days`);
+    }
   }
 
   // Driver's license validation

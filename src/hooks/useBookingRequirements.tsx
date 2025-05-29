@@ -1,35 +1,84 @@
 
-import { useQuery } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
 import { getCompanySettings } from '@/services/companySettingsService';
 
 interface BookingRequirements {
   requireDriverLicense: boolean;
   minimumDriverAge: number;
   minimumDrivingExperience: number;
+  minimumRentalDays: number;
   requireDamageDeposit: boolean;
   damageDepositAmount: number;
   damageDepositType: string;
 }
 
-export const useBookingRequirements = (companyId: string) => {
-  const { data: companySettings, isLoading, error } = useQuery({
-    queryKey: ['company-settings', companyId],
-    queryFn: () => getCompanySettings(companyId),
-    enabled: !!companyId,
-  });
+export const useBookingRequirements = (companyId: string | null) => {
+  const [requirements, setRequirements] = useState<BookingRequirements | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const requirements: BookingRequirements = {
-    requireDriverLicense: companySettings?.require_driver_license ?? true,
-    minimumDriverAge: companySettings?.minimum_driver_age ?? 25,
-    minimumDrivingExperience: companySettings?.minimum_driving_experience ?? 3,
-    requireDamageDeposit: companySettings?.require_damage_deposit ?? false,
-    damageDepositAmount: companySettings?.damage_deposit_amount ?? 250,
-    damageDepositType: companySettings?.damage_deposit_type ?? 'Cash',
-  };
+  useEffect(() => {
+    const fetchRequirements = async () => {
+      if (!companyId) {
+        console.log('useBookingRequirements: No company ID provided');
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        console.log('useBookingRequirements: Fetching requirements for company:', companyId);
+        
+        const settings = await getCompanySettings(companyId);
+        
+        if (settings) {
+          console.log('useBookingRequirements: Raw settings from database:', settings);
+          
+          const mappedRequirements: BookingRequirements = {
+            requireDriverLicense: settings.require_driver_license ?? true,
+            minimumDriverAge: settings.minimum_driver_age ?? 25,
+            minimumDrivingExperience: settings.minimum_driving_experience ?? 3,
+            minimumRentalDays: settings.minimum_rental_days ?? 1,
+            requireDamageDeposit: settings.require_damage_deposit ?? false,
+            damageDepositAmount: settings.damage_deposit_amount ?? 250,
+            damageDepositType: settings.damage_deposit_type ?? 'Cash'
+          };
+          
+          console.log('useBookingRequirements: Mapped requirements:', mappedRequirements);
+          setRequirements(mappedRequirements);
+        } else {
+          console.log('useBookingRequirements: No settings found, using defaults');
+          // Use default requirements if no settings found
+          setRequirements({
+            requireDriverLicense: true,
+            minimumDriverAge: 25,
+            minimumDrivingExperience: 3,
+            minimumRentalDays: 1,
+            requireDamageDeposit: false,
+            damageDepositAmount: 250,
+            damageDepositType: 'Cash'
+          });
+        }
+      } catch (error) {
+        console.error('useBookingRequirements: Error fetching requirements:', error);
+        // Set default requirements on error
+        setRequirements({
+          requireDriverLicense: true,
+          minimumDriverAge: 25,
+          minimumDrivingExperience: 3,
+          minimumRentalDays: 1,
+          requireDamageDeposit: false,
+          damageDepositAmount: 250,
+          damageDepositType: 'Cash'
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchRequirements();
+  }, [companyId]);
 
   return {
     requirements,
-    isLoading,
-    error
+    isLoading
   };
 };

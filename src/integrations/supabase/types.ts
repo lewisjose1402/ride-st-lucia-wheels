@@ -134,6 +134,7 @@ export type Database = {
           id: string
           minimum_driver_age: number
           minimum_driving_experience: number
+          minimum_rental_days: number
           notification_booking_cancellation: boolean
           notification_booking_fee_collected: boolean
           notification_new_booking: boolean
@@ -152,6 +153,7 @@ export type Database = {
           id?: string
           minimum_driver_age?: number
           minimum_driving_experience?: number
+          minimum_rental_days?: number
           notification_booking_cancellation?: boolean
           notification_booking_fee_collected?: boolean
           notification_new_booking?: boolean
@@ -170,6 +172,7 @@ export type Database = {
           id?: string
           minimum_driver_age?: number
           minimum_driving_experience?: number
+          minimum_rental_days?: number
           notification_booking_cancellation?: boolean
           notification_booking_fee_collected?: boolean
           notification_new_booking?: boolean

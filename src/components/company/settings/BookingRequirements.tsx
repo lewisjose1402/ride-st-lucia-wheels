@@ -1,37 +1,30 @@
 
-import React from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { 
-  Form, 
-  FormControl, 
-  FormDescription, 
-  FormField, 
-  FormItem, 
-  FormLabel, 
-  FormMessage 
-} from "@/components/ui/form";
-import { Switch } from "@/components/ui/switch";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BookingRequirementsSchema } from "./validation-schemas";
 import { updateCompanySettings } from "@/services/companySettingsService";
+import type { z } from "zod";
+
+type BookingRequirementsFormData = z.infer<typeof BookingRequirementsSchema>;
 
 interface BookingRequirementsProps {
   settingsData: any;
   onSettingsUpdated: () => void;
 }
 
-const BookingRequirements: React.FC<BookingRequirementsProps> = ({
-  settingsData,
-  onSettingsUpdated
-}) => {
+const BookingRequirements = ({ settingsData, onSettingsUpdated }: BookingRequirementsProps) => {
   const { toast } = useToast();
-  
-  const form = useForm({
+  const [isLoading, setIsLoading] = useState(false);
+
+  const form = useForm<BookingRequirementsFormData>({
     resolver: zodResolver(BookingRequirementsSchema),
     defaultValues: {
       require_driver_license: settingsData?.require_driver_license ?? true,
@@ -42,79 +35,89 @@ const BookingRequirements: React.FC<BookingRequirementsProps> = ({
       require_damage_deposit: settingsData?.require_damage_deposit ?? false,
       damage_deposit_type: settingsData?.damage_deposit_type ?? 'Cash',
       damage_deposit_amount: settingsData?.damage_deposit_amount ?? 250,
+      minimum_rental_days: settingsData?.minimum_rental_days ?? 1,
     },
   });
 
-  const watchRequireMinimumAge = form.watch("require_minimum_age");
-  const watchRequireDrivingExperience = form.watch("require_driving_experience");
-  const watchRequireDamageDeposit = form.watch("require_damage_deposit");
-
-  const onSubmit = async (values: any) => {
+  const onSubmit = async (data: BookingRequirementsFormData) => {
     try {
-      await updateCompanySettings(settingsData.id, values);
+      setIsLoading(true);
+      await updateCompanySettings(settingsData.id, data);
+      
       toast({
-        title: "Settings Updated",
-        description: "Booking requirements have been updated successfully.",
+        title: "Settings updated",
+        description: "Your booking requirements have been updated successfully.",
       });
+      
       onSettingsUpdated();
     } catch (error) {
       console.error("Error updating booking requirements:", error);
       toast({
-        title: "Update Failed",
+        title: "Error",
         description: "Failed to update booking requirements. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="p-6 bg-white rounded-lg shadow-sm">
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <div className="space-y-4">
+    <Card>
+      <CardHeader>
+        <CardTitle>Booking Requirements</CardTitle>
+        <CardDescription>
+          Set requirements that renters must meet to book your vehicles
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {/* Driver License Requirement */}
             <FormField
               control={form.control}
               name="require_driver_license"
               render={({ field }) => (
                 <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                   <div className="space-y-0.5">
-                    <FormLabel className="text-base">Require Valid Driver's License</FormLabel>
+                    <FormLabel className="text-base">Driver's License</FormLabel>
                     <FormDescription>
-                      Require customers to have a valid driver's license to book your vehicles.
+                      Require renters to upload a valid driver's license
                     </FormDescription>
                   </div>
                   <FormControl>
-                    <Switch 
-                      checked={field.value} 
-                      onCheckedChange={field.onChange} 
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
                     />
                   </FormControl>
                 </FormItem>
               )}
             />
-            
+
+            {/* Minimum Age Requirement */}
             <FormField
               control={form.control}
               name="require_minimum_age"
               render={({ field }) => (
                 <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                   <div className="space-y-0.5">
-                    <FormLabel className="text-base">Require Minimum Age</FormLabel>
+                    <FormLabel className="text-base">Minimum Age</FormLabel>
                     <FormDescription>
-                      Require customers to meet a minimum age requirement.
+                      Require renters to meet minimum age requirement
                     </FormDescription>
                   </div>
                   <FormControl>
-                    <Switch 
-                      checked={field.value} 
-                      onCheckedChange={field.onChange} 
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
                     />
                   </FormControl>
                 </FormItem>
               )}
             />
-            
-            {watchRequireMinimumAge && (
+
+            {form.watch("require_minimum_age") && (
               <FormField
                 control={form.control}
                 name="minimum_driver_age"
@@ -124,130 +127,158 @@ const BookingRequirements: React.FC<BookingRequirementsProps> = ({
                     <FormControl>
                       <Input
                         type="number"
+                        min="18"
+                        max="100"
                         {...field}
-                        onChange={(e) => field.onChange(parseInt(e.target.value, 10) || 0)}
+                        onChange={(e) => field.onChange(parseInt(e.target.value) || 18)}
                       />
                     </FormControl>
+                    <FormDescription>
+                      Minimum age required to rent your vehicles (18-100 years)
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             )}
-            
+
+            {/* Driving Experience Requirement */}
             <FormField
               control={form.control}
               name="require_driving_experience"
               render={({ field }) => (
                 <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                   <div className="space-y-0.5">
-                    <FormLabel className="text-base">Require Minimum Driving Experience</FormLabel>
+                    <FormLabel className="text-base">Driving Experience</FormLabel>
                     <FormDescription>
-                      Require customers to have a minimum number of years of driving experience.
+                      Require renters to have minimum driving experience
                     </FormDescription>
                   </div>
                   <FormControl>
-                    <Switch 
-                      checked={field.value} 
-                      onCheckedChange={field.onChange} 
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
                     />
                   </FormControl>
                 </FormItem>
               )}
             />
-            
-            {watchRequireDrivingExperience && (
+
+            {form.watch("require_driving_experience") && (
               <FormField
                 control={form.control}
                 name="minimum_driving_experience"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Minimum Driving Experience (years)</FormLabel>
+                    <FormLabel>Minimum Driving Experience (Years)</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
+                        min="0"
+                        max="50"
                         {...field}
-                        onChange={(e) => field.onChange(parseInt(e.target.value, 10) || 0)}
+                        onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                       />
                     </FormControl>
+                    <FormDescription>
+                      Minimum years of driving experience required (0-50 years)
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             )}
 
+            {/* Minimum Rental Days */}
+            <FormField
+              control={form.control}
+              name="minimum_rental_days"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Minimum Rental Days</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      min="1"
+                      max="365"
+                      {...field}
+                      onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Minimum number of days required for vehicle bookings (1-365 days)
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Damage Deposit Requirement */}
             <FormField
               control={form.control}
               name="require_damage_deposit"
               render={({ field }) => (
                 <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                   <div className="space-y-0.5">
-                    <FormLabel className="text-base">Require Damage Deposit</FormLabel>
+                    <FormLabel className="text-base">Damage Deposit</FormLabel>
                     <FormDescription>
-                      Require customers to provide a damage deposit when booking your vehicles.
+                      Require renters to pay a refundable damage deposit
                     </FormDescription>
                   </div>
                   <FormControl>
-                    <Switch 
-                      checked={field.value} 
-                      onCheckedChange={field.onChange} 
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
                     />
                   </FormControl>
                 </FormItem>
               )}
             />
 
-            {watchRequireDamageDeposit && (
-              <div className="space-y-4 ml-4 border-l-2 border-gray-200 pl-4">
+            {form.watch("require_damage_deposit") && (
+              <div className="space-y-4">
                 <FormField
                   control={form.control}
                   name="damage_deposit_type"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Deposit Payment Method</FormLabel>
-                      <FormControl>
-                        <RadioGroup
-                          onValueChange={field.onChange}
-                          value={field.value}
-                          className="flex flex-row space-x-6"
-                        >
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="Cash" id="cash" />
-                            <Label htmlFor="cash">Cash</Label>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="Card" id="card" />
-                            <Label htmlFor="card">Card</Label>
-                          </div>
-                        </RadioGroup>
-                      </FormControl>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select payment method" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="Cash">Cash</SelectItem>
+                          <SelectItem value="Card">Card</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>
+                        How renters should pay the damage deposit
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={form.control}
                   name="damage_deposit_amount"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Damage Deposit Amount (USD)</FormLabel>
+                      <FormLabel>Deposit Amount ($)</FormLabel>
                       <FormControl>
-                        <div className="relative">
-                          <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
-                          <Input
-                            type="number"
-                            step="0.01"
-                            min="1"
-                            max="10000"
-                            className="pl-8"
-                            placeholder="250.00"
-                            {...field}
-                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                          />
-                        </div>
+                        <Input
+                          type="number"
+                          min="1"
+                          max="10000"
+                          {...field}
+                          onChange={(e) => field.onChange(parseInt(e.target.value) || 250)}
+                        />
                       </FormControl>
                       <FormDescription>
-                        Enter the deposit amount customers must provide (minimum $1, maximum $10,000).
+                        Amount of damage deposit required ($1-$10,000)
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -255,12 +286,14 @@ const BookingRequirements: React.FC<BookingRequirementsProps> = ({
                 />
               </div>
             )}
-          </div>
 
-          <Button type="submit">Save Booking Requirements</Button>
-        </form>
-      </Form>
-    </div>
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? "Updating..." : "Update Requirements"}
+            </Button>
+          </form>
+        </Form>
+      </CardContent>
+    </Card>
   );
 };
 
