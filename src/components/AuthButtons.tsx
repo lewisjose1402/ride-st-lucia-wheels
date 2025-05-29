@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { LogOut, Settings, Building, Calendar } from 'lucide-react';
+import { LogOut, Settings, Building, Calendar, Shield } from 'lucide-react';
 
 const AuthButtons = () => {
   const { user, signOut, isRentalCompany, isAdmin, isRenter } = useAuth();
@@ -65,8 +65,8 @@ const AuthButtons = () => {
             {isAdmin && (
               <DropdownMenuItem asChild>
                 <Link to="/admin/dashboard" className="w-full flex items-center cursor-pointer">
-                  <Settings className="mr-2 h-4 w-4" />
-                  <span>Admin Panel</span>
+                  <Shield className="mr-2 h-4 w-4" />
+                  <span>Admin Dashboard</span>
                 </Link>
               </DropdownMenuItem>
             )}
