@@ -43,7 +43,17 @@ const AuthButtons = () => {
             </div>
             <DropdownMenuSeparator />
             
-            {/* My Bookings - available to all authenticated users */}
+            {/* Admin Dashboard - show first for admin users */}
+            {isAdmin && (
+              <DropdownMenuItem asChild>
+                <Link to="/admin/dashboard" className="w-full flex items-center cursor-pointer">
+                  <Shield className="mr-2 h-4 w-4" />
+                  <span>Admin Dashboard</span>
+                </Link>
+              </DropdownMenuItem>
+            )}
+            
+            {/* My Bookings - available to renters and rental companies */}
             {(isRenter || isRentalCompany) && (
               <DropdownMenuItem asChild>
                 <Link to="/my-bookings" className="w-full flex items-center cursor-pointer">
@@ -53,20 +63,12 @@ const AuthButtons = () => {
               </DropdownMenuItem>
             )}
             
+            {/* Company Dashboard - for rental companies */}
             {isRentalCompany && (
               <DropdownMenuItem asChild>
                 <Link to="/company/dashboard" className="w-full flex items-center cursor-pointer">
                   <Building className="mr-2 h-4 w-4" />
                   <span>Company Dashboard</span>
-                </Link>
-              </DropdownMenuItem>
-            )}
-            
-            {isAdmin && (
-              <DropdownMenuItem asChild>
-                <Link to="/admin/dashboard" className="w-full flex items-center cursor-pointer">
-                  <Shield className="mr-2 h-4 w-4" />
-                  <span>Admin Dashboard</span>
                 </Link>
               </DropdownMenuItem>
             )}
