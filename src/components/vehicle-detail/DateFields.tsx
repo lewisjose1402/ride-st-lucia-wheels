@@ -9,6 +9,7 @@ interface DateFieldsProps {
   setPickupDate: (date: string) => void;
   dropoffDate: string;
   setDropoffDate: (date: string) => void;
+  minimumRentalDays?: number;
 }
 
 const DateFields: React.FC<DateFieldsProps> = ({
@@ -17,9 +18,12 @@ const DateFields: React.FC<DateFieldsProps> = ({
   setPickupDate,
   dropoffDate,
   setDropoffDate,
+  minimumRentalDays = 1
 }) => {
   const today = new Date();
   const pickupDateObj = pickupDate ? new Date(pickupDate) : undefined;
+
+  console.log('DateFields: minimumRentalDays received:', minimumRentalDays);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -35,6 +39,7 @@ const DateFields: React.FC<DateFieldsProps> = ({
             placeholder="Select pickup date"
             minDate={today}
             className="w-full"
+            minimumRentalDays={minimumRentalDays}
           />
         </div>
       </div>
@@ -51,6 +56,9 @@ const DateFields: React.FC<DateFieldsProps> = ({
             placeholder="Select dropoff date"
             minDate={pickupDateObj || today}
             className="w-full"
+            isDropoff={true}
+            pickupDate={pickupDate}
+            minimumRentalDays={minimumRentalDays}
           />
         </div>
       </div>

@@ -1,4 +1,3 @@
-
 import { 
   Card, 
   CardContent, 
@@ -34,6 +33,8 @@ const BookingCard = ({ vehicle }: BookingCardProps) => {
   // Custom hooks for form management (only load when user is authenticated)
   const formState = useBookingFormState();
   const { requirements, isLoading: requirementsLoading } = useBookingRequirements(vehicle.company_id);
+
+  console.log('BookingCard: requirements loaded:', requirements);
 
   // Calculate pricing in real-time
   const pricing = useBookingPricing({
@@ -99,7 +100,11 @@ const BookingCard = ({ vehicle }: BookingCardProps) => {
           <BookingRequirementsDisplay requirements={requirements} />
 
           {/* Form Fields */}
-          <BookingFormFields vehicleId={vehicle.id} formState={formState} />
+          <BookingFormFields 
+            vehicleId={vehicle.id} 
+            formState={formState}
+            minimumRentalDays={requirements?.minimumRentalDays || 1}
+          />
 
           {/* Validation Errors Display */}
           <ValidationErrorDisplay 

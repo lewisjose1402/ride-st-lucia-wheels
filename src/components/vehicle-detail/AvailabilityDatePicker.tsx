@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { CalendarIcon } from 'lucide-react';
-import { format, isSameDay } from 'date-fns';
+import { format, isSameDay, differenceInDays } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -17,6 +17,9 @@ interface AvailabilityDatePickerProps {
   minDate?: Date;
   disabledDates?: Date[];
   className?: string;
+  isDropoff?: boolean;
+  pickupDate?: string;
+  minimumRentalDays?: number;
 }
 
 const AvailabilityDatePicker: React.FC<AvailabilityDatePickerProps> = ({
@@ -26,7 +29,10 @@ const AvailabilityDatePicker: React.FC<AvailabilityDatePickerProps> = ({
   placeholder,
   minDate = new Date(),
   disabledDates = [],
-  className
+  className,
+  isDropoff = false,
+  pickupDate,
+  minimumRentalDays = 1
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
@@ -36,6 +42,7 @@ const AvailabilityDatePicker: React.FC<AvailabilityDatePickerProps> = ({
   const { availability, isLoading, getDateStatus, isDateAvailable } = useAvailabilityCheck({ vehicleId });
 
   console.log('AvailabilityDatePicker: Rendered for vehicle:', vehicleId, 'with', availability.length, 'blocked dates');
+  console.log('AvailabilityDatePicker: minimumRentalDays:', minimumRentalDays, 'isDropoff:', isDropoff, 'pickupDate:', pickupDate);
 
   useEffect(() => {
     if (value) {
@@ -55,6 +62,18 @@ const AvailabilityDatePicker: React.FC<AvailabilityDatePickerProps> = ({
       return;
     }
 
+    // For dropoff dates, check minimum rental period
+    if (isDropoff && pickupDate) {
+      const pickup = new Date(pickupDate);
+      const daysDifference = differenceInDays(date, pickup);
+      console.log('AvailabilityDatePicker: Days difference:', daysDifference, 'minimum required:', minimumRentalDays);
+      
+      if (daysDifference < minimumRentalDays) {
+        console.log('AvailabilityDatePicker: Date selection blocked - below minimum rental days');
+        return;
+      }
+    }
+
     console.log('AvailabilityDatePicker: Date selection allowed - date is available');
     setSelectedDate(date);
     onSelect(format(date, 'yyyy-MM-dd'));
@@ -72,12 +91,30 @@ const AvailabilityDatePicker: React.FC<AvailabilityDatePickerProps> = ({
       return true;
     }
     
+    // For dropoff dates, check minimum rental period
+    if (isDropoff && pickupDate) {
+      const pickup = new Date(pickupDate);
+      const daysDifference = differenceInDays(date, pickup);
+      if (daysDifference < minimumRentalDays) {
+        return true;
+      }
+    }
+    
     // Check availability status using the hook
     const available = isDateAvailable(date);
     return !available;
   };
 
   const getTooltipContent = (date: Date): string => {
+    // For dropoff dates, check minimum rental period first
+    if (isDropoff && pickupDate) {
+      const pickup = new Date(pickupDate);
+      const daysDifference = differenceInDays(date, pickup);
+      if (daysDifference < minimumRentalDays) {
+        return `Minimum rental period is ${minimumRentalDays} day${minimumRentalDays > 1 ? 's' : ''}`;
+      }
+    }
+
     const dateStatus = getDateStatus(date);
     
     if (!dateStatus) return 'Available';
@@ -122,9 +159,18 @@ const AvailabilityDatePicker: React.FC<AvailabilityDatePickerProps> = ({
                 const status = getDateStatus(date);
                 return status?.status === 'booked-ical' || status?.status === 'blocked-manual' || status?.status === 'booked-confirmed';
               },
+              belowMinimum: (date) => {
+                if (isDropoff && pickupDate) {
+                  const pickup = new Date(pickupDate);
+                  const daysDifference = differenceInDays(date, pickup);
+                  return daysDifference < minimumRentalDays;
+                }
+                return false;
+              },
             }}
             modifiersClassNames={{
               unavailable: 'bg-gray-100 text-gray-500 cursor-not-allowed',
+              belowMinimum: 'bg-red-100 text-red-500 cursor-not-allowed',
             }}
             initialFocus
             className="pointer-events-auto"
@@ -140,6 +186,12 @@ const AvailabilityDatePicker: React.FC<AvailabilityDatePickerProps> = ({
                 <div className="w-3 h-3 bg-gray-100 border border-gray-300 rounded"></div>
                 <span>Unavailable</span>
               </div>
+              {isDropoff && minimumRentalDays > 1 && (
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-red-100 border border-red-300 rounded"></div>
+                  <span>Below minimum rental period ({minimumRentalDays} days)</span>
+                </div>
+              )}
             </div>
             {isLoading && (
               <div className="text-xs text-gray-500 mt-2">
