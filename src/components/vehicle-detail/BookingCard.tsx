@@ -42,26 +42,26 @@ const BookingCard = ({ vehicle }: BookingCardProps) => {
     pricePerDay: vehicle.price_per_day,
     driverAge: formState.driverAge,
     isInternationalLicense: formState.isInternationalLicense,
-    minimumDriverAge: requirements.minimumDriverAge,
-    requireDamageDeposit: requirements.requireDamageDeposit,
-    damageDepositAmount: requirements.damageDepositAmount
+    minimumDriverAge: requirements?.minimumDriverAge || 25,
+    requireDamageDeposit: requirements?.requireDamageDeposit || false,
+    damageDepositAmount: requirements?.damageDepositAmount || 250
   });
 
   // Validate form
   const validation = useBookingFormValidation({
-    driverLicense: formState.driverLicense,
-    driverAge: formState.driverAge,
-    drivingExperience: formState.drivingExperience,
-    deliveryLocation: formState.deliveryLocation,
-    firstName: formState.firstName,
-    lastName: formState.lastName,
-    email: formState.email,
-    phoneNumber: formState.phoneNumber,
-    pickupDate: formState.pickupDate,
-    dropoffDate: formState.dropoffDate,
-    requireDriverLicense: requirements.requireDriverLicense,
-    minimumDriverAge: requirements.minimumDriverAge,
-    minimumDrivingExperience: requirements.minimumDrivingExperience
+    formData: {
+      driverLicense: formState.driverLicense,
+      driverAge: formState.driverAge,
+      drivingExperience: formState.drivingExperience,
+      deliveryLocation: formState.deliveryLocation,
+      firstName: formState.firstName,
+      lastName: formState.lastName,
+      email: formState.email,
+      phoneNumber: formState.phoneNumber,
+      pickupDate: formState.pickupDate,
+      dropoffDate: formState.dropoffDate,
+    },
+    requirements
   });
 
   // Form actions
@@ -121,7 +121,7 @@ const BookingCard = ({ vehicle }: BookingCardProps) => {
               damageDeposit={pricing.damageDeposit}
               totalCost={pricing.totalCost}
               pricePerDay={vehicle.price_per_day}
-              damageDepositType={requirements.damageDepositType}
+              damageDepositType={requirements?.damageDepositType || 'Cash'}
             />
           )}
 
