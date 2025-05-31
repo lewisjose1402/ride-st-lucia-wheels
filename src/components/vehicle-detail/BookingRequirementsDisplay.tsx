@@ -73,30 +73,36 @@ const BookingRequirementsDisplay = ({ requirements, isLoading = false }: Booking
           Booking Requirements
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-3">
+      <CardContent className="space-y-4">
+        {/* Driver's License Requirement */}
         {requirements.requireDriverLicense && (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 p-2 bg-blue-50 rounded">
             <CreditCard className="h-4 w-4 text-blue-600" />
-            <span className="text-sm">Valid driver's license required</span>
+            <span className="text-sm font-medium">Valid driver's license required</span>
             <Badge variant="secondary">Required</Badge>
           </div>
         )}
         
-        <div className="flex items-center gap-2">
+        {/* Minimum Age */}
+        <div className="flex items-center gap-2 p-2 bg-green-50 rounded">
           <User className="h-4 w-4 text-green-600" />
-          <span className="text-sm">Minimum age: {requirements.minimumDriverAge} years</span>
+          <span className="text-sm font-medium">
+            Minimum age: {requirements.minimumDriverAge} years
+          </span>
           <Badge variant="secondary">Required</Badge>
         </div>
         
-        <div className="flex items-center gap-2">
+        {/* Driving Experience */}
+        <div className="flex items-center gap-2 p-2 bg-purple-50 rounded">
           <Car className="h-4 w-4 text-purple-600" />
-          <span className="text-sm">
+          <span className="text-sm font-medium">
             Minimum driving experience: {requirements.minimumDrivingExperience} year{requirements.minimumDrivingExperience !== 1 ? 's' : ''}
           </span>
           <Badge variant="secondary">Required</Badge>
         </div>
 
-        <div className="flex items-center gap-2 bg-blue-50 p-2 rounded">
+        {/* Minimum Rental Period */}
+        <div className="flex items-center gap-2 p-2 bg-orange-50 rounded">
           <Calendar className="h-4 w-4 text-orange-600" />
           <span className="text-sm font-medium">
             Minimum rental period: {requirements.minimumRentalDays} day{requirements.minimumRentalDays !== 1 ? 's' : ''}
@@ -104,21 +110,20 @@ const BookingRequirementsDisplay = ({ requirements, isLoading = false }: Booking
           <Badge variant="secondary">Required</Badge>
         </div>
         
-        {requirements.requireDamageDeposit && (
-          <div className="flex items-center gap-2 bg-yellow-50 p-2 rounded">
+        {/* Damage Deposit */}
+        {requirements.requireDamageDeposit ? (
+          <div className="flex items-center gap-2 p-2 bg-red-50 rounded">
             <CreditCard className="h-4 w-4 text-red-600" />
             <span className="text-sm font-medium">
               Damage deposit: ${requirements.damageDepositAmount} ({requirements.damageDepositType})
             </span>
             <Badge variant="secondary">Required</Badge>
           </div>
-        )}
-
-        {!requirements.requireDamageDeposit && (
-          <div className="flex items-center gap-2 bg-green-50 p-2 rounded">
+        ) : (
+          <div className="flex items-center gap-2 p-2 bg-green-50 rounded">
             <CreditCard className="h-4 w-4 text-green-600" />
-            <span className="text-sm">No damage deposit required</span>
-            <Badge variant="outline" className="bg-green-100 text-green-700">Optional</Badge>
+            <span className="text-sm font-medium">No damage deposit required</span>
+            <Badge variant="outline" className="bg-green-100 text-green-700">No Deposit</Badge>
           </div>
         )}
       </CardContent>

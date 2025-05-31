@@ -32,14 +32,14 @@ export const useBookingRequirements = (companyId: string | null) => {
         const settings = await getCompanySettings(companyId);
         console.log('useBookingRequirements: Raw settings from database:', settings);
         
-        // Always provide defaults, whether settings exist or not
+        // Map the database fields correctly to match what the display component expects
         const mappedRequirements: BookingRequirements = {
           requireDriverLicense: settings?.require_driver_license ?? true,
           minimumDriverAge: settings?.minimum_driver_age ?? 25,
           minimumDrivingExperience: settings?.minimum_driving_experience ?? 3,
           minimumRentalDays: settings?.minimum_rental_days ?? 1,
           requireDamageDeposit: settings?.require_damage_deposit ?? false,
-          damageDepositAmount: settings?.damage_deposit_amount ?? 250,
+          damageDepositAmount: Number(settings?.damage_deposit_amount) ?? 250,
           damageDepositType: settings?.damage_deposit_type ?? 'Cash'
         };
         
