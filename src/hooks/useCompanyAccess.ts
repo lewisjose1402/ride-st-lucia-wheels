@@ -4,7 +4,7 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
 export function useCompanyAccess() {
-  const { user, isRentalCompany } = useAuth();
+  const { user, isRentalCompany, isAdmin } = useAuth();
   const [hasCompanyProfile, setHasCompanyProfile] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -42,6 +42,8 @@ export function useCompanyAccess() {
   return {
     hasCompanyProfile,
     isLoading,
-    shouldShowCompanyDashboard: isRentalCompany || hasCompanyProfile
+    // Admin users who have company profiles should also see company dashboard
+    // Regular rental company users should see it if they have the role or profile
+    shouldShowCompanyDashboard: (isAdmin && hasCompanyProfile) || isRentalCompany || hasCompanyProfile
   };
 }

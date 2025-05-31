@@ -1,6 +1,7 @@
 
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import { useCompanyAccess } from '@/hooks/useCompanyAccess';
 import LoadingState from '@/components/company/dashboard/LoadingState';
 
 type ProtectedRouteProps = {
@@ -10,11 +11,12 @@ type ProtectedRouteProps = {
 
 const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
   const { user, isLoading, isAdmin, isRentalCompany } = useAuth();
+  const { hasCompanyProfile, isLoading: companyLoading } = useCompanyAccess();
 
-  console.log("ProtectedRoute - user:", !!user, "isLoading:", isLoading, "isAdmin:", isAdmin, "isRentalCompany:", isRentalCompany, "requiredRole:", requiredRole);
+  console.log("ProtectedRoute - user:", !!user, "isLoading:", isLoading, "isAdmin:", isAdmin, "isRentalCompany:", isRentalCompany, "requiredRole:", requiredRole, "hasCompanyProfile:", hasCompanyProfile);
 
   // Show loading while authentication state is being determined
-  if (isLoading) {
+  if (isLoading || companyLoading) {
     console.log("Still loading, showing loading state");
     return <LoadingState />;
   }
@@ -31,9 +33,13 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
     return <Navigate to="/" replace />;
   }
 
-  if (requiredRole === 'rental_company' && !isRentalCompany) {
-    console.log("Rental company required but user is not rental company, redirecting to home");
-    return <Navigate to="/" replace />;
+  if (requiredRole === 'rental_company') {
+    // Allow access if user is a rental company OR if they're an admin with a company profile
+    const canAccessCompanyRoutes = isRentalCompany || (isAdmin && hasCompanyProfile);
+    if (!canAccessCompanyRoutes) {
+      console.log("Rental company access required but user doesn't qualify, redirecting to home");
+      return <Navigate to="/" replace />;
+    }
   }
 
   console.log("Access granted, rendering protected content");

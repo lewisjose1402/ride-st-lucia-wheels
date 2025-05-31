@@ -17,6 +17,8 @@ const AuthButtons = () => {
   const { user, signOut, isRentalCompany, isAdmin, isRenter } = useAuth();
   const { shouldShowCompanyDashboard } = useCompanyAccess();
 
+  console.log("AuthButtons - isAdmin:", isAdmin, "isRentalCompany:", isRentalCompany, "shouldShowCompanyDashboard:", shouldShowCompanyDashboard);
+
   return (
     <div>
       {!user ? (
@@ -56,7 +58,7 @@ const AuthButtons = () => {
             )}
             
             {/* My Bookings - available to renters and rental companies */}
-            {(isRenter || isRentalCompany) && (
+            {(isRenter || isRentalCompany || isAdmin) && (
               <DropdownMenuItem asChild>
                 <Link to="/my-bookings" className="w-full flex items-center cursor-pointer">
                   <Calendar className="mr-2 h-4 w-4" />
@@ -65,7 +67,7 @@ const AuthButtons = () => {
               </DropdownMenuItem>
             )}
             
-            {/* Company Dashboard - for users with company profiles */}
+            {/* Company Dashboard - for users with company profiles (including admin users) */}
             {shouldShowCompanyDashboard && (
               <DropdownMenuItem asChild>
                 <Link to="/company/dashboard" className="w-full flex items-center cursor-pointer">
