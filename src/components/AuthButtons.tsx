@@ -2,6 +2,7 @@
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import { useCompanyAccess } from '@/hooks/useCompanyAccess';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,6 +15,7 @@ import { LogOut, Settings, Building, Calendar, Shield } from 'lucide-react';
 
 const AuthButtons = () => {
   const { user, signOut, isRentalCompany, isAdmin, isRenter } = useAuth();
+  const { shouldShowCompanyDashboard } = useCompanyAccess();
 
   return (
     <div>
@@ -63,8 +65,8 @@ const AuthButtons = () => {
               </DropdownMenuItem>
             )}
             
-            {/* Company Dashboard - for rental companies */}
-            {isRentalCompany && (
+            {/* Company Dashboard - for users with company profiles */}
+            {shouldShowCompanyDashboard && (
               <DropdownMenuItem asChild>
                 <Link to="/company/dashboard" className="w-full flex items-center cursor-pointer">
                   <Building className="mr-2 h-4 w-4" />
