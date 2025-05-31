@@ -26,7 +26,8 @@ const VehicleDetailContent = ({ vehicle, companyData }: VehicleDetailContentProp
   console.log('VehicleDetailContent: Requirements loaded:', requirements);
   console.log('VehicleDetailContent: Requirements loading:', requirementsLoading);
 
-  const images = vehicle.vehicle_images || [];
+  // Derive vehicle type from the vehicle data
+  const vehicleType = vehicle.vehicle_types?.name || 'Vehicle';
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -42,14 +43,9 @@ const VehicleDetailContent = ({ vehicle, companyData }: VehicleDetailContentProp
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left column - Vehicle details */}
         <div className="lg:col-span-2">
-          <VehicleHeader vehicle={vehicle} />
-          <VehicleImageGallery 
-            images={images}
-            vehicleName={vehicle.name}
-            selectedImage={selectedImage}
-            onImageSelect={setSelectedImage}
-          />
-          <VehicleInfoTabs vehicle={vehicle} />
+          <VehicleHeader vehicle={vehicle} vehicleType={vehicleType} />
+          <VehicleImageGallery vehicle={vehicle} />
+          <VehicleInfoTabs vehicle={vehicle} vehicleType={vehicleType} />
         </div>
         
         {/* Right column - Booking and company info */}
@@ -63,11 +59,7 @@ const VehicleDetailContent = ({ vehicle, companyData }: VehicleDetailContentProp
           )}
           
           {user ? (
-            <BookingCard 
-              vehicle={vehicle} 
-              companyData={companyData}
-              requirements={requirements}
-            />
+            <BookingCard vehicle={vehicle} />
           ) : (
             <div className="bg-white p-6 rounded-lg shadow-sm border">
               <p className="text-center text-gray-600 mb-4">
