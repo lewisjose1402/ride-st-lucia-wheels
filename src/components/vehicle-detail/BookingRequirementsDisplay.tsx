@@ -19,9 +19,33 @@ interface BookingRequirementsDisplayProps {
     damageDepositAmount: number;
     damageDepositType: string;
   } | null;
+  isLoading?: boolean;
 }
 
-const BookingRequirementsDisplay = ({ requirements }: BookingRequirementsDisplayProps) => {
+const BookingRequirementsDisplay = ({ requirements, isLoading = false }: BookingRequirementsDisplayProps) => {
+  console.log('BookingRequirementsDisplay: Rendering with requirements:', requirements);
+  console.log('BookingRequirementsDisplay: isLoading:', isLoading);
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Shield className="h-5 w-5" />
+            Booking Requirements
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="animate-pulse space-y-3">
+            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+            <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   if (!requirements) {
     return (
       <Card>
@@ -32,7 +56,9 @@ const BookingRequirementsDisplay = ({ requirements }: BookingRequirementsDisplay
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-gray-600">Loading requirements...</p>
+          <p className="text-sm text-gray-600">
+            Booking requirements will be displayed once available.
+          </p>
         </CardContent>
       </Card>
     );

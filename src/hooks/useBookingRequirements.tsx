@@ -19,7 +19,9 @@ export const useBookingRequirements = (companyId: string | null) => {
   useEffect(() => {
     const fetchRequirements = async () => {
       if (!companyId) {
-        console.log('useBookingRequirements: No company ID provided');
+        console.log('useBookingRequirements: No company ID provided, companyId:', companyId);
+        setRequirements(null);
+        setIsLoading(false);
         return;
       }
 
@@ -28,10 +30,9 @@ export const useBookingRequirements = (companyId: string | null) => {
         console.log('useBookingRequirements: Fetching requirements for company:', companyId);
         
         const settings = await getCompanySettings(companyId);
+        console.log('useBookingRequirements: Raw settings from database:', settings);
         
         if (settings) {
-          console.log('useBookingRequirements: Raw settings from database:', settings);
-          
           const mappedRequirements: BookingRequirements = {
             requireDriverLicense: settings.require_driver_license ?? true,
             minimumDriverAge: settings.minimum_driver_age ?? 25,
@@ -47,7 +48,7 @@ export const useBookingRequirements = (companyId: string | null) => {
         } else {
           console.log('useBookingRequirements: No settings found, using defaults');
           // Use default requirements if no settings found
-          setRequirements({
+          const defaultRequirements: BookingRequirements = {
             requireDriverLicense: true,
             minimumDriverAge: 25,
             minimumDrivingExperience: 3,
@@ -55,12 +56,13 @@ export const useBookingRequirements = (companyId: string | null) => {
             requireDamageDeposit: false,
             damageDepositAmount: 250,
             damageDepositType: 'Cash'
-          });
+          };
+          setRequirements(defaultRequirements);
         }
       } catch (error) {
         console.error('useBookingRequirements: Error fetching requirements:', error);
         // Set default requirements on error
-        setRequirements({
+        const defaultRequirements: BookingRequirements = {
           requireDriverLicense: true,
           minimumDriverAge: 25,
           minimumDrivingExperience: 3,
@@ -68,7 +70,8 @@ export const useBookingRequirements = (companyId: string | null) => {
           requireDamageDeposit: false,
           damageDepositAmount: 250,
           damageDepositType: 'Cash'
-        });
+        };
+        setRequirements(defaultRequirements);
       } finally {
         setIsLoading(false);
       }
