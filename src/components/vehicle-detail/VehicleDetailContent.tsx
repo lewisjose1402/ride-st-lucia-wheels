@@ -50,13 +50,11 @@ const VehicleDetailContent = ({ vehicle, companyData }: VehicleDetailContentProp
         
         {/* Right column - Booking and company info */}
         <div className="space-y-6">
-          {/* Always show booking requirements if we have company data */}
-          {companyData?.id && (
-            <BookingRequirementsDisplay 
-              requirements={requirements}
-              isLoading={requirementsLoading}
-            />
-          )}
+          {/* Always show booking requirements for all users when company data exists */}
+          <BookingRequirementsDisplay 
+            requirements={requirements}
+            isLoading={requirementsLoading}
+          />
           
           {user ? (
             <BookingCard vehicle={vehicle} />

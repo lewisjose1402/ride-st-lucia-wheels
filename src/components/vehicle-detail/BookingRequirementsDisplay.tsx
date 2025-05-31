@@ -46,6 +46,7 @@ const BookingRequirementsDisplay = ({ requirements, isLoading = false }: Booking
     );
   }
 
+  // Show requirements even if they're null/undefined, with helpful message
   if (!requirements) {
     return (
       <Card>
@@ -57,7 +58,7 @@ const BookingRequirementsDisplay = ({ requirements, isLoading = false }: Booking
         </CardHeader>
         <CardContent>
           <p className="text-sm text-gray-600">
-            Booking requirements will be displayed once available.
+            Loading booking requirements...
           </p>
         </CardContent>
       </Card>
@@ -95,21 +96,29 @@ const BookingRequirementsDisplay = ({ requirements, isLoading = false }: Booking
           <Badge variant="secondary">Required</Badge>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 bg-blue-50 p-2 rounded">
           <Calendar className="h-4 w-4 text-orange-600" />
-          <span className="text-sm">
+          <span className="text-sm font-medium">
             Minimum rental period: {requirements.minimumRentalDays} day{requirements.minimumRentalDays !== 1 ? 's' : ''}
           </span>
           <Badge variant="secondary">Required</Badge>
         </div>
         
         {requirements.requireDamageDeposit && (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 bg-yellow-50 p-2 rounded">
             <CreditCard className="h-4 w-4 text-red-600" />
-            <span className="text-sm">
+            <span className="text-sm font-medium">
               Damage deposit: ${requirements.damageDepositAmount} ({requirements.damageDepositType})
             </span>
             <Badge variant="secondary">Required</Badge>
+          </div>
+        )}
+
+        {!requirements.requireDamageDeposit && (
+          <div className="flex items-center gap-2 bg-green-50 p-2 rounded">
+            <CreditCard className="h-4 w-4 text-green-600" />
+            <span className="text-sm">No damage deposit required</span>
+            <Badge variant="outline" className="bg-green-100 text-green-700">Optional</Badge>
           </div>
         )}
       </CardContent>
