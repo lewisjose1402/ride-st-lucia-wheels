@@ -1,3 +1,4 @@
+
 import { 
   Card, 
   CardContent, 
@@ -5,7 +6,6 @@ import {
   CardHeader, 
   CardTitle 
 } from '@/components/ui/card';
-import BookingRequirementsDisplay from './BookingRequirementsDisplay';
 import BookingFormFields from './BookingFormFields';
 import ValidationErrorDisplay from './ValidationErrorDisplay';
 import PriceBreakdown from './PriceBreakdown';
@@ -96,9 +96,6 @@ const BookingCard = ({ vehicle }: BookingCardProps) => {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {/* Company Requirements Display */}
-          <BookingRequirementsDisplay requirements={requirements} />
-
           {/* Form Fields */}
           <BookingFormFields 
             vehicleId={vehicle.id} 
