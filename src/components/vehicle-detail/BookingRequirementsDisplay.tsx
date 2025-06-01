@@ -46,7 +46,7 @@ const BookingRequirementsDisplay = ({ requirements, isLoading = false }: Booking
     );
   }
 
-  // Show requirements even if they're null/undefined, with helpful message
+  // Show default message if no requirements data is available
   if (!requirements) {
     return (
       <Card>
@@ -101,7 +101,7 @@ const BookingRequirementsDisplay = ({ requirements, isLoading = false }: Booking
           <Badge variant="secondary">Required</Badge>
         </div>
 
-        {/* Minimum Rental Period */}
+        {/* Minimum Rental Period - Now using actual data */}
         <div className="flex items-center gap-2 p-2 bg-orange-50 rounded">
           <Calendar className="h-4 w-4 text-orange-600" />
           <span className="text-sm font-medium">
@@ -110,7 +110,7 @@ const BookingRequirementsDisplay = ({ requirements, isLoading = false }: Booking
           <Badge variant="secondary">Required</Badge>
         </div>
         
-        {/* Damage Deposit */}
+        {/* Damage Deposit - Now using actual data */}
         {requirements.requireDamageDeposit ? (
           <div className="flex items-center gap-2 p-2 bg-red-50 rounded">
             <CreditCard className="h-4 w-4 text-red-600" />
