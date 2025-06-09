@@ -7,6 +7,7 @@ import VehicleInfoTabs from './VehicleInfoTabs';
 import BookingCard from './BookingCard';
 import CompanyInfoCard from './CompanyInfoCard';
 import BookingRequirementsDisplay from './BookingRequirementsDisplay';
+import VehicleBreadcrumbs from './VehicleBreadcrumbs';
 import { useBookingRequirements } from '@/hooks/useBookingRequirements';
 import { Vehicle } from '@/types/vehicle';
 
@@ -32,13 +33,7 @@ const VehicleDetailContent = ({ vehicle, companyData }: VehicleDetailContentProp
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Breadcrumbs */}
-      <div className="text-sm text-gray-500 mb-4">
-        <a href="/" className="hover:text-brand-purple">Home</a>
-        <span className="mx-2">/</span>
-        <a href="/vehicles" className="hover:text-brand-purple">Vehicles</a>
-        <span className="mx-2">/</span>
-        <span className="text-gray-700">{vehicle.name}</span>
-      </div>
+      <VehicleBreadcrumbs vehicleName={vehicle.name} />
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left column - Vehicle details */}
@@ -63,12 +58,12 @@ const VehicleDetailContent = ({ vehicle, companyData }: VehicleDetailContentProp
               <p className="text-center text-gray-600 mb-4">
                 Please sign in to book this vehicle
               </p>
-              <a 
-                href="/signin" 
+              <Link 
+                to="/signin" 
                 className="block w-full bg-brand-purple hover:bg-brand-purple-dark text-white text-center py-2 px-4 rounded"
               >
                 Sign In to Book
-              </a>
+              </Link>
             </div>
           )}
           

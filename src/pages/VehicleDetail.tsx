@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import ErrorBoundary from '@/components/ErrorBoundary';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import VehicleDetailContent from '@/components/vehicle-detail/VehicleDetailContent';
@@ -46,6 +47,8 @@ const VehicleDetail = () => {
       return vehicle as Vehicle;
     },
     enabled: !!id,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 2,
   });
 
   if (isLoading) {
@@ -108,10 +111,12 @@ const VehicleDetail = () => {
     <div className="min-h-screen flex flex-col">
       <Navbar />
       <main className="flex-grow pt-16 pb-12 bg-gray-50">
-        <VehicleDetailContent 
-          vehicle={vehicleData} 
-          companyData={companyData} 
-        />
+        <ErrorBoundary>
+          <VehicleDetailContent 
+            vehicle={vehicleData} 
+            companyData={companyData} 
+          />
+        </ErrorBoundary>
       </main>
       <Footer />
     </div>
