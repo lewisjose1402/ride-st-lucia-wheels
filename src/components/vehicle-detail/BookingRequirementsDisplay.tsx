@@ -7,7 +7,8 @@ import {
   Car, 
   Calendar,
   Shield,
-  AlertTriangle
+  AlertTriangle,
+  CheckCircle
 } from 'lucide-react';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 
@@ -63,7 +64,7 @@ const BookingRequirementsDisplay = ({
           <div className="flex items-center gap-2 text-amber-600">
             <AlertTriangle className="h-4 w-4" />
             <p className="text-sm">
-              Unable to load booking requirements. Please contact the rental company for details.
+              Unable to load booking requirements at this time. Please try again later.
             </p>
           </div>
         </CardContent>
@@ -82,9 +83,12 @@ const BookingRequirementsDisplay = ({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-gray-600">
-            No specific requirements configured for this rental company.
-          </p>
+          <div className="flex items-center gap-2 text-green-600">
+            <CheckCircle className="h-4 w-4" />
+            <p className="text-sm">
+              Standard booking requirements apply. Contact the rental company for specific details.
+            </p>
+          </div>
         </CardContent>
       </Card>
     );
