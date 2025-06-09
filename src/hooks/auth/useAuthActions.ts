@@ -5,9 +5,52 @@ import { useToast } from '@/components/ui/use-toast';
 export function useAuthActions() {
   const { toast } = useToast();
 
+  const checkExistingRenterEmail = async (email: string) => {
+    try {
+      // Check if email exists in profiles table (for all user types)
+      const { data: existingProfile, error: profileError } = await supabase
+        .from('profiles')
+        .select('email, role')
+        .eq('email', email)
+        .single();
+      
+      if (existingProfile) {
+        return {
+          exists: true,
+          userType: existingProfile.role
+        };
+      }
+      
+      // If no error but no data, the email doesn't exist
+      if (profileError && profileError.code !== 'PGRST116') {
+        console.error("Error checking existing profile:", profileError);
+      }
+      
+      return { exists: false, userType: null };
+    } catch (error) {
+      console.error("Unexpected error checking existing email:", error);
+      return { exists: false, userType: null };
+    }
+  };
+
   const signUpAsRenter = async (email: string, password: string, firstName: string = '', lastName: string = '') => {
     try {
       console.log("Attempting renter sign-up:", { email, firstName, lastName });
+      
+      // Check for existing email
+      const emailCheck = await checkExistingRenterEmail(email);
+      if (emailCheck.exists) {
+        const message = emailCheck.userType === 'rental_company' 
+          ? "This email is already registered as a rental company account. Please use a different email or sign in."
+          : "This email is already registered. Please use a different email or sign in.";
+        
+        toast({
+          title: "Email already registered",
+          description: message,
+          variant: "destructive"
+        });
+        return { success: false, error: "Email already registered" };
+      }
       
       const metadata = {
         role: 'renter',
@@ -85,6 +128,21 @@ export function useAuthActions() {
       
       if (checkError && checkError.code !== 'PGRST116') {
         console.error("Error checking existing company:", checkError);
+      }
+
+      // Also check profiles table for any existing user with this email
+      const profileCheck = await checkExistingRenterEmail(email);
+      if (profileCheck.exists) {
+        const message = profileCheck.userType === 'renter' 
+          ? "This email is already registered as a renter account. Please use a different email or sign in."
+          : "This email is already registered. Please use a different email or sign in.";
+        
+        toast({
+          title: "Email already registered",
+          description: message,
+          variant: "destructive"
+        });
+        return { success: false, error: "Email already registered" };
       }
 
       const metadata = {
