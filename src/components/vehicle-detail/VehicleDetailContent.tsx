@@ -9,6 +9,7 @@ import BookingCard from './BookingCard';
 import CompanyInfoCard from './CompanyInfoCard';
 import BookingRequirementsDisplay from './BookingRequirementsDisplay';
 import VehicleBreadcrumbs from './VehicleBreadcrumbs';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { useBookingRequirements } from '@/hooks/useBookingRequirements';
 import { Vehicle } from '@/types/vehicle';
 
@@ -19,14 +20,14 @@ interface VehicleDetailContentProps {
 
 const VehicleDetailContent = ({ vehicle, companyData }: VehicleDetailContentProps) => {
   const { user } = useAuth();
-  const [selectedImage, setSelectedImage] = useState('');
   
   // Fetch booking requirements for this vehicle's company
-  const { requirements, isLoading: requirementsLoading } = useBookingRequirements(companyData?.id);
+  const { requirements, isLoading: requirementsLoading, error: requirementsError } = useBookingRequirements(companyData?.id);
   
   console.log('VehicleDetailContent: Company ID for requirements:', companyData?.id);
   console.log('VehicleDetailContent: Requirements loaded:', requirements);
   console.log('VehicleDetailContent: Requirements loading:', requirementsLoading);
+  console.log('VehicleDetailContent: Requirements error:', requirementsError);
 
   // Derive vehicle type from the vehicle data
   const vehicleType = vehicle.vehicle_types?.name || 'Vehicle';
@@ -46,11 +47,20 @@ const VehicleDetailContent = ({ vehicle, companyData }: VehicleDetailContentProp
         
         {/* Right column - Booking and company info */}
         <div className="space-y-6">
-          {/* Always show booking requirements for all users when company data exists */}
-          <BookingRequirementsDisplay 
-            requirements={requirements}
-            isLoading={requirementsLoading}
-          />
+          {/* Booking requirements - show for all users when company data exists */}
+          {companyData ? (
+            <BookingRequirementsDisplay 
+              requirements={requirements}
+              isLoading={requirementsLoading}
+              error={requirementsError}
+            />
+          ) : (
+            <div className="bg-white p-6 rounded-lg shadow-sm border">
+              <p className="text-center text-gray-600">
+                Company information not available
+              </p>
+            </div>
+          )}
           
           {user ? (
             <BookingCard vehicle={vehicle} />
@@ -68,7 +78,7 @@ const VehicleDetailContent = ({ vehicle, companyData }: VehicleDetailContentProp
             </div>
           )}
           
-          <CompanyInfoCard companyData={companyData} />
+          {companyData && <CompanyInfoCard companyData={companyData} />}
         </div>
       </div>
     </div>

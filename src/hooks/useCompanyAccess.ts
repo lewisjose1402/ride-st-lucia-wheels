@@ -42,8 +42,9 @@ export function useCompanyAccess() {
   return {
     hasCompanyProfile,
     isLoading,
-    // Admin users who have company profiles should also see company dashboard
-    // Regular rental company users should see it if they have the role or profile
-    shouldShowCompanyDashboard: (isAdmin && hasCompanyProfile) || isRentalCompany || hasCompanyProfile
+    // Allow company dashboard access for:
+    // 1. Users with rental_company role
+    // 2. Admin users who have company profiles
+    shouldShowCompanyDashboard: isRentalCompany || (isAdmin && hasCompanyProfile)
   };
 }

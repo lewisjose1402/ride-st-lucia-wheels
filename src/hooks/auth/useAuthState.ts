@@ -16,7 +16,6 @@ export function useAuthState() {
     try {
       console.log("Creating profile for user:", user.id);
       
-      // Determine role based on user metadata with proper typing
       const userMetadata = user.user_metadata;
       let role: 'renter' | 'rental_company' | 'guest' | 'admin' = 'renter';
       
@@ -41,6 +40,31 @@ export function useAuthState() {
       }
     } catch (error) {
       console.error("Failed to create user profile:", error);
+    }
+  };
+
+  const createCompanyProfileForUser = async (user: User, userMetadata: any) => {
+    try {
+      if (userMetadata?.company_name || userMetadata?.is_company) {
+        console.log("Creating company profile for user:", user.id);
+        
+        const { error } = await supabase
+          .from('rental_companies')
+          .insert({
+            user_id: user.id,
+            company_name: userMetadata.company_name || 'Company Name Required',
+            email: user.email || '',
+            phone: userMetadata.phone || '000-000-0000'
+          });
+        
+        if (error && !error.message.includes('duplicate key')) {
+          console.error("Error creating company profile:", error);
+        } else {
+          console.log("Company profile created successfully");
+        }
+      }
+    } catch (error) {
+      console.error("Failed to create company profile:", error);
     }
   };
 
@@ -85,17 +109,15 @@ export function useAuthState() {
       console.log("Fetching profile for user:", user.id);
       setIsLoading(true);
       
-      // Initialize role states
       let userIsAdmin = false;
       let userIsRentalCompany = false;
       let userIsRenter = false;
       let profileToSet = null;
       
-      // Check for user metadata
       const userMetadata = user.user_metadata;
       console.log("User metadata:", userMetadata);
       
-      // FIRST: Always check the profiles table for the authoritative role
+      // First: Check the profiles table for authoritative role
       let { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
@@ -108,7 +130,6 @@ export function useAuthState() {
 
       if (!profileData) {
         console.log("No profile found, creating one for user");
-        // Create profile if it doesn't exist
         await createProfileForUser(user);
         
         // Retry fetching the profile
@@ -125,19 +146,17 @@ export function useAuthState() {
 
       if (profileData) {
         console.log("Profile data from profiles table:", profileData);
-        // Set roles based on the profiles table - this is the authoritative source
         userIsAdmin = profileData.role === 'admin';
         userIsRenter = profileData.role === 'renter';
         userIsRentalCompany = profileData.role === 'rental_company';
         
-        // Use the profile data as the base
         profileToSet = profileData;
         
         console.log("Roles set from profiles table - isAdmin:", userIsAdmin, "isRentalCompany:", userIsRentalCompany, "isRenter:", userIsRenter);
       }
       
-      // SECOND: If user is a rental company (based on profiles table), get company data for additional info
-      if (userIsRentalCompany) {
+      // Second: If user is a rental company or admin, check/create company data
+      if (userIsRentalCompany || userIsAdmin) {
         const { data: companyData, error: companyError } = await supabase
           .from('rental_companies')
           .select('*')
@@ -146,18 +165,35 @@ export function useAuthState() {
           
         if (companyError) {
           console.log('No company profile found:', companyError.message);
+          // Try to create company profile if user has company metadata
+          await createCompanyProfileForUser(user, userMetadata);
+          
+          // Retry fetching company data
+          const { data: retryCompanyData } = await supabase
+            .from('rental_companies')
+            .select('*')
+            .eq('user_id', user.id)
+            .maybeSingle();
+            
+          if (retryCompanyData) {
+            console.log("Company profile data loaded after creation:", retryCompanyData);
+            profileToSet = {
+              ...profileData,
+              ...retryCompanyData,
+              role: profileData?.role
+            };
+          }
         } else if (companyData) {
           console.log("Company profile data loaded:", companyData);
-          // Merge company data with profile data, but keep the role from profiles table
           profileToSet = {
             ...profileData,
             ...companyData,
-            role: profileData?.role // Ensure we keep the authoritative role from profiles
+            role: profileData?.role
           };
         }
       }
       
-      // Fallback: If no profile exists and metadata indicates company
+      // Fallback handling
       if (!profileData && (userMetadata?.is_company || userMetadata?.role === 'rental_company')) {
         console.log("No profile but metadata indicates company, setting fallback role");
         profileToSet = {
@@ -170,7 +206,6 @@ export function useAuthState() {
         userIsAdmin = false;
       }
       
-      // Final fallback
       if (!profileToSet) {
         console.log("Setting final fallback profile");
         profileToSet = {
@@ -192,7 +227,6 @@ export function useAuthState() {
       console.log("Final auth state - isAdmin:", userIsAdmin, "isRentalCompany:", userIsRentalCompany, "isRenter:", userIsRenter);
     } catch (error) {
       console.error('Unexpected error fetching profile:', error);
-      // Set basic fallback state
       const fallbackRole = user.user_metadata?.is_company || user.user_metadata?.role === 'rental_company' ? 'rental_company' : 'renter';
       setProfile({
         id: user.id,

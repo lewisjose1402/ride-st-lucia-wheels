@@ -5,7 +5,6 @@ import { useToast } from '@/hooks/use-toast';
 import { getCompanyVehicles } from '@/services/companyService';
 import { supabase } from '@/integrations/supabase/client';
 
-// Define proper types for our data structures
 interface Company {
   id: string;
   user_id: string;
@@ -65,32 +64,41 @@ interface CompanyDashboardResult {
   vehicles: Vehicle[];
   bookings: Booking[];
   bookingStats: BookingStats;
+  error: string | null;
 }
 
 export const useCompanyDashboard = (): CompanyDashboardResult => {
-  const { user } = useAuth();
+  const { user, isAdmin, isRentalCompany } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [companyData, setCompanyData] = useState<Company | null>(null);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const [bookingStats, setBookingStats] = useState<BookingStats>({
     activeBookings: 0,
     totalRevenue: 0
   });
 
   useEffect(() => {
-    loadDashboardData();
-  }, [user, toast]);
+    if (user && (isRentalCompany || isAdmin)) {
+      loadDashboardData();
+    } else {
+      setIsLoading(false);
+      setError('Access denied - insufficient permissions');
+    }
+  }, [user, isRentalCompany, isAdmin]);
 
   const loadDashboardData = async () => {
     if (!user) return;
     
     try {
       setIsLoading(true);
+      setError(null);
       
       const company = await fetchCompanyData(user.id);
       if (!company) {
+        setError('No company profile found');
         setIsLoading(false);
         return;
       }
@@ -103,7 +111,8 @@ export const useCompanyDashboard = (): CompanyDashboardResult => {
       }
       
     } catch (error) {
-      console.error("Unexpected error in dashboard data loading:", error);
+      console.error("Error in dashboard data loading:", error);
+      setError('Failed to load dashboard data');
       toast({
         title: "Error loading dashboard",
         description: "An unexpected error occurred",
@@ -123,11 +132,6 @@ export const useCompanyDashboard = (): CompanyDashboardResult => {
       
       if (companyError) {
         console.error("Error fetching company:", companyError);
-        toast({
-          title: "Error loading dashboard",
-          description: "Failed to load your company data. Please try again later.",
-          variant: "destructive",
-        });
         return null;
       }
       
@@ -142,11 +146,6 @@ export const useCompanyDashboard = (): CompanyDashboardResult => {
       
     } catch (error) {
       console.error("Error in fetchCompanyData:", error);
-      toast({
-        title: "Error loading company data",
-        description: "An unexpected error occurred",
-        variant: "destructive",
-      });
       return null;
     }
   };
@@ -165,17 +164,12 @@ export const useCompanyDashboard = (): CompanyDashboardResult => {
             user_id: userId,
             company_name: userMetadata.company_name,
             email: userMetadata.email || userData?.user?.email || '',
-            phone: userMetadata.phone || ''
+            phone: userMetadata.phone || '000-000-0000'
           }])
           .select();
         
         if (insertError) {
           console.error("Error creating company:", insertError);
-          toast({
-            title: "Error setting up company",
-            description: "Failed to set up your company profile",
-            variant: "destructive",
-          });
           return null;
         }
         
@@ -183,21 +177,10 @@ export const useCompanyDashboard = (): CompanyDashboardResult => {
           setCompanyData(newCompany[0] as Company);
           return newCompany[0] as Company;
         }
-      } else {
-        toast({
-          title: "Company profile missing",
-          description: "Please complete your company profile",
-          variant: "destructive",
-        });
       }
       return null;
     } catch (error) {
       console.error("Error in createCompanyFromMetadata:", error);
-      toast({
-        title: "Error setting up company",
-        description: "An unexpected error occurred while setting up your company",
-        variant: "destructive",
-      });
       return null;
     }
   };
@@ -208,11 +191,6 @@ export const useCompanyDashboard = (): CompanyDashboardResult => {
       return vehiclesData || [];
     } catch (error) {
       console.error("Error loading vehicles:", error);
-      toast({
-        title: "Error loading vehicles",
-        description: "Failed to load your vehicles",
-        variant: "destructive",
-      });
       return [];
     }
   };
@@ -245,7 +223,6 @@ export const useCompanyDashboard = (): CompanyDashboardResult => {
   const calculateBookingStats = (bookingsData: Booking[]): void => {
     const currentDate = new Date();
     
-    // Count active bookings (confirmed and current date is between pickup and dropoff)
     const active = bookingsData.filter(booking => 
       booking.status === 'confirmed' && 
       booking.payment_status === 'paid' &&
@@ -253,7 +230,6 @@ export const useCompanyDashboard = (): CompanyDashboardResult => {
       new Date(booking.dropoff_date) >= currentDate
     ).length;
     
-    // Calculate total revenue from confirmed and paid bookings
     const revenue = bookingsData.reduce((total, booking) => {
       if (booking.status === 'confirmed' && booking.payment_status === 'paid') {
         const bookingPrice = typeof booking.total_price === 'string' 
@@ -277,6 +253,7 @@ export const useCompanyDashboard = (): CompanyDashboardResult => {
     companyData,
     vehicles,
     bookings,
-    bookingStats
+    bookingStats,
+    error
   };
 };

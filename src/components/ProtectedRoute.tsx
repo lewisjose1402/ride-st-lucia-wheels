@@ -2,7 +2,7 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useCompanyAccess } from '@/hooks/useCompanyAccess';
-import LoadingState from '@/components/company/dashboard/LoadingState';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
 
 type ProtectedRouteProps = {
   children: React.ReactNode;
@@ -18,7 +18,11 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
   // Show loading while authentication state is being determined
   if (isLoading || companyLoading) {
     console.log("Still loading, showing loading state");
-    return <LoadingState />;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <LoadingSpinner message="Verifying access permissions..." />
+      </div>
+    );
   }
 
   // Redirect to signin if no user is authenticated

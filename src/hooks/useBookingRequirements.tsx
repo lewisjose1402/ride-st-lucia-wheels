@@ -15,6 +15,7 @@ interface BookingRequirements {
 export const useBookingRequirements = (companyId: string | null) => {
   const [requirements, setRequirements] = useState<BookingRequirements | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchRequirements = async () => {
@@ -22,17 +23,19 @@ export const useBookingRequirements = (companyId: string | null) => {
         console.log('useBookingRequirements: No company ID provided, companyId:', companyId);
         setRequirements(null);
         setIsLoading(false);
+        setError(null);
         return;
       }
 
       try {
         setIsLoading(true);
+        setError(null);
         console.log('useBookingRequirements: Fetching requirements for company:', companyId);
         
         const settings = await getCompanySettings(companyId);
         console.log('useBookingRequirements: Raw settings from database:', settings);
         
-        // Map the database fields correctly to match what the display component expects
+        // Map the database fields correctly
         const mappedRequirements: BookingRequirements = {
           requireDriverLicense: settings?.require_driver_license ?? true,
           minimumDriverAge: settings?.minimum_driver_age ?? 25,
@@ -47,6 +50,8 @@ export const useBookingRequirements = (companyId: string | null) => {
         setRequirements(mappedRequirements);
       } catch (error) {
         console.error('useBookingRequirements: Error fetching requirements:', error);
+        setError('Failed to load booking requirements');
+        
         // Set default requirements on error
         const defaultRequirements: BookingRequirements = {
           requireDriverLicense: true,
@@ -69,6 +74,7 @@ export const useBookingRequirements = (companyId: string | null) => {
 
   return {
     requirements,
-    isLoading
+    isLoading,
+    error
   };
 };

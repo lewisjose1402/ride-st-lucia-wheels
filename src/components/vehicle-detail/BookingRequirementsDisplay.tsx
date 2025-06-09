@@ -6,8 +6,10 @@ import {
   User, 
   Car, 
   Calendar,
-  Shield 
+  Shield,
+  AlertTriangle
 } from 'lucide-react';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
 
 interface BookingRequirementsDisplayProps {
   requirements: {
@@ -20,11 +22,17 @@ interface BookingRequirementsDisplayProps {
     damageDepositType: string;
   } | null;
   isLoading?: boolean;
+  error?: string | null;
 }
 
-const BookingRequirementsDisplay = ({ requirements, isLoading = false }: BookingRequirementsDisplayProps) => {
+const BookingRequirementsDisplay = ({ 
+  requirements, 
+  isLoading = false, 
+  error = null 
+}: BookingRequirementsDisplayProps) => {
   console.log('BookingRequirementsDisplay: Rendering with requirements:', requirements);
   console.log('BookingRequirementsDisplay: isLoading:', isLoading);
+  console.log('BookingRequirementsDisplay: error:', error);
 
   if (isLoading) {
     return (
@@ -36,10 +44,27 @@ const BookingRequirementsDisplay = ({ requirements, isLoading = false }: Booking
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="animate-pulse space-y-3" aria-label="Loading booking requirements">
-            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-            <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+          <LoadingSpinner message="Loading booking requirements..." size="sm" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Shield className="h-5 w-5" aria-hidden="true" />
+            Booking Requirements
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-2 text-amber-600">
+            <AlertTriangle className="h-4 w-4" />
+            <p className="text-sm">
+              Unable to load booking requirements. Please contact the rental company for details.
+            </p>
           </div>
         </CardContent>
       </Card>
@@ -58,7 +83,7 @@ const BookingRequirementsDisplay = ({ requirements, isLoading = false }: Booking
         </CardHeader>
         <CardContent>
           <p className="text-sm text-gray-600">
-            Loading booking requirements...
+            No specific requirements configured for this rental company.
           </p>
         </CardContent>
       </Card>
@@ -101,7 +126,7 @@ const BookingRequirementsDisplay = ({ requirements, isLoading = false }: Booking
           <Badge variant="secondary" aria-label="This requirement is mandatory">Required</Badge>
         </div>
 
-        {/* Minimum Rental Period - Now using actual data */}
+        {/* Minimum Rental Period */}
         <div className="flex items-center gap-2 p-2 bg-orange-50 rounded" role="listitem">
           <Calendar className="h-4 w-4 text-orange-600" aria-hidden="true" />
           <span className="text-sm font-medium">
@@ -110,7 +135,7 @@ const BookingRequirementsDisplay = ({ requirements, isLoading = false }: Booking
           <Badge variant="secondary" aria-label="This requirement is mandatory">Required</Badge>
         </div>
         
-        {/* Damage Deposit - Now using actual data */}
+        {/* Damage Deposit */}
         {requirements.requireDamageDeposit ? (
           <div className="flex items-center gap-2 p-2 bg-red-50 rounded" role="listitem">
             <CreditCard className="h-4 w-4 text-red-600" aria-hidden="true" />
