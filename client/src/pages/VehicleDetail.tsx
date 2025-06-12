@@ -5,7 +5,6 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { Button } from '@/components/ui/button';
-import { supabase } from '@/integrations/supabase/client';
 import VehicleDetailContent from '@/components/vehicle-detail/VehicleDetailContent';
 import { Vehicle } from '@/types/vehicle';
 
@@ -21,29 +20,14 @@ const VehicleDetail = () => {
       
       console.log('Fetching vehicle and company data for ID:', id);
       
-      const { data: vehicle, error: vehicleError } = await supabase
-        .from('vehicles')
-        .select(`
-          *,
-          vehicle_images(*),
-          vehicle_types(name),
-          rental_companies(*)
-        `)
-        .eq('id', id)
-        .single();
-
-      if (vehicleError) {
-        console.error('Error fetching vehicle with company data:', vehicleError);
-        throw new Error(vehicleError.message);
-      }
-
-      if (!vehicle) {
+      const response = await fetch(`/api/vehicles/${id}`);
+      if (!response.ok) {
         throw new Error('Vehicle not found');
       }
 
+      const vehicle = await response.json();
       console.log('Successfully fetched vehicle with company data:', vehicle);
       
-      // Type cast the vehicle data to match our Vehicle interface
       return vehicle as Vehicle;
     },
     enabled: !!id,
@@ -88,7 +72,7 @@ const VehicleDetail = () => {
               <p className="text-gray-600 mb-4">
                 {error?.message || 'The vehicle you\'re looking for doesn\'t exist or is no longer available.'}
               </p>
-              <Button onClick={() => navigate('/vehicles')} className="bg-brand-purple hover:bg-brand-purple-dark">
+              <Button onClick={() => setLocation('/vehicles')} className="bg-brand-purple hover:bg-brand-purple-dark">
                 Browse All Vehicles
               </Button>
             </div>

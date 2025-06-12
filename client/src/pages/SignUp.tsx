@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Link } from 'wouter';
+import { Link, useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/context/AuthContext';
@@ -24,7 +24,7 @@ const SignUp = () => {
   const [generalError, setGeneralError] = useState('');
   
   const { signUpAsRenter, signUpAsCompany } = useAuth();
-  const navigate = useNavigate();
+  const [, setLocation] = useLocation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,7 +58,7 @@ const SignUp = () => {
       
       if (result.success) {
         // Redirect to sign in page after successful registration
-        navigate('/signin');
+        setLocation('/signin');
       } else if (result.error) {
         setGeneralError(result.error);
       }
