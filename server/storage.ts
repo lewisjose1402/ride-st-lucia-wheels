@@ -260,7 +260,7 @@ export class DatabaseStorage implements IStorage {
     const result = await db.update(bookings)
       .set({ status: 'cancelled', updatedAt: new Date() })
       .where(eq(bookings.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Company settings methods
@@ -297,7 +297,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteCalendarFeed(id: string): Promise<boolean> {
     const result = await db.delete(vehicleCalendarFeeds).where(eq(vehicleCalendarFeeds.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   async getVehicleCalendarBlocks(vehicleId: string): Promise<VehicleCalendarBlock[]> {
@@ -313,7 +313,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteCalendarBlock(id: string): Promise<boolean> {
     const result = await db.delete(vehicleCalendarBlocks).where(eq(vehicleCalendarBlocks.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   async getIcalBookings(vehicleId: string): Promise<IcalBooking[]> {
@@ -329,7 +329,7 @@ export class DatabaseStorage implements IStorage {
 
   async clearIcalBookings(feedId: string): Promise<boolean> {
     const result = await db.delete(icalBookings).where(eq(icalBookings.sourceFeedId, feedId));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Legacy user methods (for compatibility)

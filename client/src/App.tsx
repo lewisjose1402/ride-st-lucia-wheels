@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Route, Switch } from "wouter";
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Index from "./pages/Index";
@@ -32,17 +32,31 @@ import AddEditVehicle from "./pages/company/AddEditVehicle";
 // Admin pages
 import AdminDashboard from "./pages/admin/Dashboard";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      queryFn: async ({ queryKey }) => {
+        const url = Array.isArray(queryKey) ? queryKey[0] : queryKey;
+        const response = await fetch(url as string);
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      },
+    },
+  },
+});
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
+const App = () => {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
         <AuthProvider>
-          <Routes>
+          <Switch>
             {/* Public routes */}
+
             <Route path="/" element={<Index />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
@@ -58,58 +72,85 @@ const App = () => (
             <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/terms" element={<TermsOfService />} />
 
+
             {/* Company routes */}
-            <Route path="/company" element={<Navigate to="/company/dashboard" replace />} />
-            <Route path="/company/dashboard" element={
-              <ProtectedRoute requiredRole="rental_company">
-                <CompanyDashboard />
-              </ProtectedRoute>
-            } />
-            <Route path="/company/profile" element={
-              <ProtectedRoute requiredRole="rental_company">
-                <CompanyProfile />
-              </ProtectedRoute>
-            } />
-            <Route path="/company/vehicles" element={
-              <ProtectedRoute requiredRole="rental_company">
-                <CompanyVehicles />
-              </ProtectedRoute>
-            } />
-            <Route path="/company/vehicles/add" element={
-              <ProtectedRoute requiredRole="rental_company">
-                <AddEditVehicle />
-              </ProtectedRoute>
-            } />
-            <Route path="/company/vehicles/edit/:id" element={
-              <ProtectedRoute requiredRole="rental_company">
-                <AddEditVehicle />
-              </ProtectedRoute>
-            } />
-            <Route path="/company/bookings" element={
-              <ProtectedRoute requiredRole="rental_company">
-                <CompanyBookings />
-              </ProtectedRoute>
-            } />
-            <Route path="/company/settings" element={
-              <ProtectedRoute requiredRole="rental_company">
-                <CompanySettings />
-              </ProtectedRoute>
-            } />
+            <Route path="/company">
+              {() => {
+                window.location.href = "/company/dashboard";
+                return null;
+              }}
+            </Route>
+            <Route path="/company/dashboard">
+              {() => (
+                <ProtectedRoute requiredRole="rental_company">
+                  <CompanyDashboard />
+                </ProtectedRoute>
+              )}
+            </Route>
+            <Route path="/company/profile">
+              {() => (
+                <ProtectedRoute requiredRole="rental_company">
+                  <CompanyProfile />
+                </ProtectedRoute>
+              )}
+            </Route>
+            <Route path="/company/vehicles">
+              {() => (
+                <ProtectedRoute requiredRole="rental_company">
+                  <CompanyVehicles />
+                </ProtectedRoute>
+              )}
+            </Route>
+            <Route path="/company/vehicles/add">
+              {() => (
+                <ProtectedRoute requiredRole="rental_company">
+                  <AddEditVehicle />
+                </ProtectedRoute>
+              )}
+            </Route>
+            <Route path="/company/vehicles/edit/:id">
+              {() => (
+                <ProtectedRoute requiredRole="rental_company">
+                  <AddEditVehicle />
+                </ProtectedRoute>
+              )}
+            </Route>
+            <Route path="/company/bookings">
+              {() => (
+                <ProtectedRoute requiredRole="rental_company">
+                  <CompanyBookings />
+                </ProtectedRoute>
+              )}
+            </Route>
+            <Route path="/company/settings">
+              {() => (
+                <ProtectedRoute requiredRole="rental_company">
+                  <CompanySettings />
+                </ProtectedRoute>
+              )}
+            </Route>
 
             {/* Admin routes */}
-            <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
-            <Route path="/admin/dashboard" element={
-              <ProtectedRoute requiredRole="admin">
-                <AdminDashboard />
-              </ProtectedRoute>
-            } />
+            <Route path="/admin">
+              {() => {
+                window.location.href = "/admin/dashboard";
+                return null;
+              }}
+            </Route>
+            <Route path="/admin/dashboard">
+              {() => (
+                <ProtectedRoute requiredRole="admin">
+                  <AdminDashboard />
+                </ProtectedRoute>
+              )}
+            </Route>
 
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+            <Route component={NotFound} />
+          </Switch>
         </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
