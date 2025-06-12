@@ -111,7 +111,7 @@ export const useVehicleFormSubmit = ({ isEditMode, companyData, images, id }: Us
           description: isEditMode ? "Vehicle has been updated successfully" : "Vehicle has been added successfully",
         });
         
-        navigate('/company/vehicles');
+        setLocation('/company/vehicles');
       } catch (vehicleError) {
         console.error("Error with vehicle operation:", vehicleError);
         throw vehicleError;
