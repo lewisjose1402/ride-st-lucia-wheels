@@ -1,5 +1,5 @@
 
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -10,7 +10,7 @@ import VehicleDetailContent from '@/components/vehicle-detail/VehicleDetailConte
 import { Vehicle } from '@/types/vehicle';
 
 const VehicleDetail = () => {
-  const navigate = useNavigate();
+  const [, setLocation] = useLocation();
   const { id } = useParams();
 
   // Single optimized query to fetch vehicle with company data, images, and type

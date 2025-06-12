@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation } from 'wouter';
 import { Button } from "@/components/ui/button";
 import { useVehicleFilters } from '@/hooks/useVehicleFilters';
 import LocationSelector from './search/LocationSelector';
@@ -8,7 +8,7 @@ import DateInputs from './search/DateInputs';
 import FilterControls from './search/FilterControls';
 
 const SearchForm = () => {
-  const navigate = useNavigate();
+  const [, setLocation] = useLocation();
   const [pickupLocation, setPickupLocation] = useState('');
   const [pickupDate, setPickupDate] = useState('');
   const [dropoffDate, setDropoffDate] = useState('');
@@ -20,16 +20,16 @@ const SearchForm = () => {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    navigate('/vehicles', { 
-      state: { 
-        pickupLocation,
-        pickupDate,
-        dropoffDate,
-        priceRange: priceRange[0],
-        vehicleType,
-        seats
-      } 
-    });
+    // Store search params in localStorage for vehicles page to read
+    localStorage.setItem('vehicleSearchParams', JSON.stringify({
+      pickupLocation,
+      pickupDate,
+      dropoffDate,
+      priceRange: priceRange[0],
+      vehicleType,
+      seats
+    }));
+    setLocation('/vehicles');
   };
 
   return (
