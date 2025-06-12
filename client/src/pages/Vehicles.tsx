@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import Navbar from '@/components/Navbar';
@@ -20,8 +20,13 @@ import { Button } from "@/components/ui/button";
 import { Calendar, SlidersHorizontal } from 'lucide-react';
 
 const VehiclesPage = () => {
-  const location = useLocation();
-  const searchParams = location.state || {};
+  const [location] = useLocation();
+  
+  // Get search params from localStorage (set by SearchForm component)
+  const [searchParams, setSearchParams] = useState(() => {
+    const storedParams = localStorage.getItem('vehicleSearchParams');
+    return storedParams ? JSON.parse(storedParams) : {};
+  });
   
   const [filteredVehicles, setFilteredVehicles] = useState<any[]>([]);
   const [isFilterMobileOpen, setIsFilterMobileOpen] = useState(false);

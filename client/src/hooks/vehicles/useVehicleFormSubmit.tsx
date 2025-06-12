@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation } from 'wouter';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import { createVehicle, updateVehicle } from '@/services/vehicleService';
@@ -15,7 +15,7 @@ interface UseVehicleFormSubmitProps {
 }
 
 export const useVehicleFormSubmit = ({ isEditMode, companyData, images, id }: UseVehicleFormSubmitProps) => {
-  const navigate = useNavigate();
+  const [, setLocation] = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);

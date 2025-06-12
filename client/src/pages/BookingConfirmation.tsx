@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearch } from 'wouter';
 import { useCheckoutFlow } from '@/hooks/useCheckoutFlow';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
@@ -43,7 +43,8 @@ interface BookingDetails {
 }
 
 const BookingConfirmation = () => {
-  const [searchParams] = useSearchParams();
+  const search = useSearch();
+  const searchParams = new URLSearchParams(search);
   const { verifyPayment, isVerifying } = useCheckoutFlow();
   const { user } = useAuth();
   const [booking, setBooking] = useState<BookingDetails | null>(null);
