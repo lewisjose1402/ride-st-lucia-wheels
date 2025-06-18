@@ -1,7 +1,8 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
+import { formatCurrency } from '@/utils/formatters';
+import { calculateDaysBetween } from '@/utils/pricingCalculations';
 
 interface BookingReceiptProps {
   booking: {
@@ -42,6 +43,21 @@ const BookingReceipt = ({ booking, showDownloadButton = false }: BookingReceiptP
   const primaryLocation = booking.delivery_location || booking.pickup_location;
   const companyInfo = booking.vehicle.rental_companies;
 
+  // Calculate detailed pricing breakdown
+  const rentalDays = calculateDaysBetween(booking.pickup_date, booking.dropoff_date);
+  const confirmationFee = booking.confirmation_fee_paid;
+  const permitFee = booking.permit_fee || 0;
+  const youngDriverFee = booking.young_driver_fee || 0;
+  const damageDeposit = booking.deposit_amount;
+  
+  // Calculate base cost (working backwards from total)
+  const baseCost = booking.total_price - confirmationFee - permitFee - youngDriverFee - damageDeposit;
+  const pricePerDay = baseCost / rentalDays;
+  
+  // Calculate taxable amount and government tax
+  const taxableAmount = baseCost - confirmationFee;
+  const governmentTax = taxableAmount * 0.125; // 12.5% tax rate
+
   const downloadReceipt = () => {
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
@@ -63,6 +79,8 @@ const BookingReceipt = ({ booking, showDownloadButton = false }: BookingReceiptP
             .value { color: #1f2937; }
             .price { font-size: 18px; font-weight: bold; color: #059669; }
             .total-price { font-size: 24px; font-weight: bold; color: #059669; text-align: center; padding: 15px; background: #ecfdf5; border-radius: 8px; margin: 20px 0; }
+            .breakdown-item { display: flex; justify-content: space-between; margin-bottom: 8px; }
+            .breakdown-item.total { border-top: 1px solid #d1d5db; padding-top: 8px; font-weight: bold; }
             @media print { body { margin: 0; } }
           </style>
         </head>
@@ -134,35 +152,44 @@ const BookingReceipt = ({ booking, showDownloadButton = false }: BookingReceiptP
           </div>
 
           <div class="section">
-            <h3>💰 Payment Breakdown</h3>
-            <div class="info-grid">
-              <div class="info-item">
-                <span class="label">Rental Fee:</span>
-                <span class="value price">$${(booking.total_price - (booking.permit_fee || 0) - (booking.young_driver_fee || 0) - booking.confirmation_fee_paid).toFixed(2)}</span>
-              </div>
-              <div class="info-item">
-                <span class="label">Security Deposit:</span>
-                <span class="value price">$${booking.deposit_amount.toFixed(2)}</span>
-              </div>
-              ${booking.permit_fee ? `
-                <div class="info-item">
-                  <span class="label">Permit Fee:</span>
-                  <span class="value price">$${booking.permit_fee.toFixed(2)}</span>
-                </div>
-              ` : ''}
-              ${booking.young_driver_fee ? `
-                <div class="info-item">
-                  <span class="label">Young Driver Fee:</span>
-                  <span class="value price">$${booking.young_driver_fee.toFixed(2)}</span>
-                </div>
-              ` : ''}
-              <div class="info-item">
-                <span class="label">Non-refundable Booking Fee Paid:</span>
-                <span class="value price">$${booking.confirmation_fee_paid.toFixed(2)}</span>
-              </div>
+            <h3>💰 Price Breakdown</h3>
+            <div class="breakdown-item">
+              <span>Rental Cost (${rentalDays} ${rentalDays === 1 ? 'day' : 'days'} × ${formatCurrency(pricePerDay)})</span>
+              <span>${formatCurrency(baseCost)}</span>
             </div>
-            <div class="total-price">
-              Total Amount: $${booking.total_price.toFixed(2)}
+            <div class="breakdown-item" style="color: #b45309;">
+              <span>Non-Refundable Confirmation Fee (12%)</span>
+              <span>${formatCurrency(confirmationFee)}</span>
+            </div>
+            <div class="breakdown-item" style="color: #6b7280; font-size: 12px;">
+              <span>Taxable Amount (Base - Confirmation Fee)</span>
+              <span>${formatCurrency(taxableAmount)}</span>
+            </div>
+            <div class="breakdown-item">
+              <span>Government Tax (12.5%)</span>
+              <span>${formatCurrency(governmentTax)}</span>
+            </div>
+            ${permitFee > 0 ? `
+              <div class="breakdown-item" style="color: #d97706;">
+                <span>Permit Fee (No International License)</span>
+                <span>${formatCurrency(permitFee)}</span>
+              </div>
+            ` : ''}
+            ${youngDriverFee > 0 ? `
+              <div class="breakdown-item" style="color: #ea580c;">
+                <span>Underage Deposit (Refundable)</span>
+                <span>${formatCurrency(youngDriverFee)}</span>
+              </div>
+            ` : ''}
+            ${damageDeposit > 0 ? `
+              <div class="breakdown-item" style="color: #2563eb;">
+                <span>Damage Deposit (Cash) - Paid at Delivery</span>
+                <span>${formatCurrency(damageDeposit)}</span>
+              </div>
+            ` : ''}
+            <div class="breakdown-item total">
+              <span>Total Cost</span>
+              <span>${formatCurrency(booking.total_price)}</span>
             </div>
           </div>
 
@@ -260,35 +287,66 @@ const BookingReceipt = ({ booking, showDownloadButton = false }: BookingReceiptP
         </div>
 
         <div className="bg-gray-50 p-6 rounded-lg border">
-          <h3 className="text-xl font-semibold text-gray-800 mb-4 border-b border-gray-300 pb-2">💰 Payment Breakdown</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <div>
-              <span className="font-semibold text-gray-700 block mb-1">Rental Fee:</span>
-              <span className="text-lg font-bold text-green-600">${(booking.total_price - (booking.permit_fee || 0) - (booking.young_driver_fee || 0) - booking.confirmation_fee_paid).toFixed(2)}</span>
+          <h3 className="text-xl font-semibold text-gray-800 mb-4 border-b border-gray-300 pb-2">💰 Price Breakdown</h3>
+          
+          <div className="space-y-2 text-sm mb-6">
+            <div className="flex justify-between">
+              <span>Rental Cost ({rentalDays} {rentalDays === 1 ? 'day' : 'days'} × {formatCurrency(pricePerDay)})</span>
+              <span className="font-medium">{formatCurrency(baseCost)}</span>
             </div>
-            <div>
-              <span className="font-semibold text-gray-700 block mb-1">Security Deposit:</span>
-              <span className="text-lg font-bold text-green-600">${booking.deposit_amount.toFixed(2)}</span>
+            
+            <div className="flex justify-between text-yellow-700">
+              <span>Non-Refundable Confirmation Fee (12%)</span>
+              <span className="font-medium">{formatCurrency(confirmationFee)}</span>
             </div>
-            {booking.permit_fee && (
-              <div>
-                <span className="font-semibold text-gray-700 block mb-1">Permit Fee:</span>
-                <span className="text-lg font-bold text-green-600">${booking.permit_fee.toFixed(2)}</span>
+            
+            <div className="flex justify-between text-gray-600 text-xs">
+              <span>Taxable Amount (Base - Confirmation Fee)</span>
+              <span>{formatCurrency(taxableAmount)}</span>
+            </div>
+            
+            <div className="flex justify-between">
+              <span>Government Tax (12.5%)</span>
+              <span className="font-medium">{formatCurrency(governmentTax)}</span>
+            </div>
+            
+            {permitFee > 0 && (
+              <div className="flex justify-between text-amber-700">
+                <span>Permit Fee (No International License)</span>
+                <span className="font-medium">{formatCurrency(permitFee)}</span>
               </div>
             )}
-            {booking.young_driver_fee && (
-              <div>
-                <span className="font-semibold text-gray-700 block mb-1">Young Driver Fee:</span>
-                <span className="text-lg font-bold text-green-600">${booking.young_driver_fee.toFixed(2)}</span>
+            
+            {youngDriverFee > 0 && (
+              <div className="flex justify-between text-orange-700">
+                <span>Underage Deposit (Refundable)</span>
+                <span className="font-medium">{formatCurrency(youngDriverFee)}</span>
               </div>
             )}
-            <div>
-              <span className="font-semibold text-gray-700 block mb-1">Non-refundable Booking Fee Paid:</span>
-              <span className="text-lg font-bold text-green-600">${booking.confirmation_fee_paid.toFixed(2)}</span>
+            
+            {damageDeposit > 0 && (
+              <div className="flex justify-between text-blue-700">
+                <span>Damage Deposit (Cash) - Paid at Delivery</span>
+                <span className="font-medium">{formatCurrency(damageDeposit)}</span>
+              </div>
+            )}
+            
+            <div className="border-t pt-2 mt-2">
+              <div className="flex justify-between font-bold text-lg">
+                <span>Total Cost</span>
+                <span>{formatCurrency(booking.total_price)}</span>
+              </div>
             </div>
-          </div>
-          <div className="text-center bg-green-50 p-4 rounded-lg border border-green-200">
-            <span className="text-2xl font-bold text-green-600">Total Amount: ${booking.total_price.toFixed(2)}</span>
+            
+            <div className="text-xs text-gray-600 mt-2 space-y-1">
+              <div>Non-refundable confirmation fee ({formatCurrency(confirmationFee)}) paid now</div>
+              {(youngDriverFee > 0 || damageDeposit > 0) && (
+                <div>* Deposits are refundable upon vehicle return in good condition</div>
+              )}
+              {damageDeposit > 0 && (
+                <div>* Damage deposit paid at delivery</div>
+              )}
+            </div>
           </div>
         </div>
 
