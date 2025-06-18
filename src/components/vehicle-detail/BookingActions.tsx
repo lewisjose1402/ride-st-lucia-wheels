@@ -55,7 +55,7 @@ const BookingActions = ({
       </Button>
       
       <div className="text-center text-sm text-gray-500 mt-2">
-        {isAvailable ? 'Only 12% deposit required to confirm' : 'Selected dates are not available'}
+        {isAvailable ? 'Only a 12% non-refundable fee is required to confirm your booking' : 'Selected dates are not available'}
       </div>
     </>
   );
