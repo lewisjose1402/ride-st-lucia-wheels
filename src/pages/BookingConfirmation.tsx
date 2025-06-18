@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useCheckoutFlow } from '@/hooks/useCheckoutFlow';
@@ -20,6 +19,19 @@ interface BookingDetails {
   payment_status: string;
   confirmation_fee_paid: number;
   stripe_session_id?: string;
+  driver_name: string;
+  first_name?: string;
+  last_name?: string;
+  email?: string;
+  phone_number?: string;
+  driver_age: number;
+  driving_experience?: number;
+  has_international_license: boolean;
+  delivery_location?: string;
+  pickup_location: string;
+  deposit_amount: number;
+  permit_fee?: number;
+  young_driver_fee?: number;
   vehicle: {
     name: string;
     rental_companies: {
@@ -73,6 +85,19 @@ const BookingConfirmation = () => {
             payment_status,
             confirmation_fee_paid,
             stripe_session_id,
+            driver_name,
+            first_name,
+            last_name,
+            email,
+            phone_number,
+            driver_age,
+            driving_experience,
+            has_international_license,
+            delivery_location,
+            pickup_location,
+            deposit_amount,
+            permit_fee,
+            young_driver_fee,
             vehicle:vehicles (
               name,
               rental_companies!vehicles_company_id_fkey (
@@ -106,6 +131,19 @@ const BookingConfirmation = () => {
             payment_status,
             confirmation_fee_paid,
             stripe_session_id,
+            driver_name,
+            first_name,
+            last_name,
+            email,
+            phone_number,
+            driver_age,
+            driving_experience,
+            has_international_license,
+            delivery_location,
+            pickup_location,
+            deposit_amount,
+            permit_fee,
+            young_driver_fee,
             vehicle:vehicles (
               name,
               rental_companies!vehicles_company_id_fkey (
@@ -237,6 +275,7 @@ const BookingConfirmation = () => {
         
         <BookingActions 
           paymentStatus={booking.payment_status}
+          booking={booking}
           onManualVerification={handleManualVerification}
           isVerifying={isVerifying}
           showManualVerification={booking.payment_status === 'pending' && Boolean(sessionId || booking.stripe_session_id)}

@@ -2,6 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { getAddressFromLocationData } from '@/utils/locationHelpers';
 
 interface BookingDetailsCardProps {
   booking: {
@@ -11,6 +12,8 @@ interface BookingDetailsCardProps {
     total_price: number;
     payment_status: string;
     confirmation_fee_paid: number;
+    delivery_location?: string;
+    pickup_location?: string;
     vehicle: {
       name: string;
     };
@@ -27,6 +30,26 @@ const BookingDetailsCard = ({ booking }: BookingDetailsCardProps) => {
       default:
         return <Badge variant="outline">Payment Pending</Badge>;
     }
+  };
+
+  // Get the primary location for display
+  const primaryLocation = booking.delivery_location || booking.pickup_location;
+  const { street_address } = getAddressFromLocationData(primaryLocation);
+  
+  // Format the location for display
+  const formatLocationForDisplay = (location: string) => {
+    // Check if it's an airport code format (e.g., "UVF – Hewanorra International Airport")
+    if (location.includes('–') && (location.includes('UVF') || location.includes('GFL'))) {
+      return location; // Already formatted
+    }
+    
+    // Check if it's a Google Maps URL
+    if (location.startsWith('https://maps.google.com') || location.startsWith('https://goo.gl')) {
+      return 'Google Maps Location (Click to view)';
+    }
+    
+    // Return as is for other formats
+    return location;
   };
 
   return (
@@ -59,6 +82,23 @@ const BookingDetailsCard = ({ booking }: BookingDetailsCardProps) => {
               {new Date(booking.dropoff_date).toLocaleDateString()}
             </p>
           </div>
+          {primaryLocation && (
+            <div className="col-span-2">
+              <p className="text-sm text-gray-600">Pickup/Delivery Location</p>
+              {primaryLocation.startsWith('https://') ? (
+                <a 
+                  href={primaryLocation} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="font-medium text-blue-600 hover:text-blue-800 underline"
+                >
+                  {formatLocationForDisplay(primaryLocation)}
+                </a>
+              ) : (
+                <p className="font-medium">{formatLocationForDisplay(primaryLocation)}</p>
+              )}
+            </div>
+          )}
           <div>
             <p className="text-sm text-gray-600">Total Price</p>
             <p className="font-medium">${booking.total_price}</p>
