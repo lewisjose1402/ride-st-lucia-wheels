@@ -1,4 +1,3 @@
-
 import { formatCurrency } from '@/utils/formatters';
 
 interface PriceBreakdownProps {
@@ -38,7 +37,7 @@ const PriceBreakdown = ({
       </div>
       
       <div className="flex justify-between text-yellow-700">
-        <span>Booking Confirmation Fee (12%)</span>
+        <span>Non-Refundable Confirmation Fee (12%)</span>
         <span className="font-medium">{formatCurrency(confirmationFee)}</span>
       </div>
       
@@ -81,7 +80,7 @@ const PriceBreakdown = ({
       </div>
       
       <div className="text-xs text-gray-600 mt-2 space-y-1">
-        <div>Confirmation fee ({formatCurrency(confirmationFee)}) paid now</div>
+        <div>Non-refundable confirmation fee ({formatCurrency(confirmationFee)}) paid now</div>
         {(underageDeposit > 0 || damageDeposit > 0) && (
           <div>* Deposits are refundable upon vehicle return in good condition</div>
         )}
