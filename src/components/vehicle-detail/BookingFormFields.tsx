@@ -21,6 +21,10 @@ interface BookingFormFieldsProps {
     setIsInternationalLicense: (isInternational: boolean) => void;
     deliveryLocation: string;
     setDeliveryLocation: (location: string) => void;
+    deliveryLocationType: 'google_maps' | 'airport';
+    setDeliveryLocationType: (type: 'google_maps' | 'airport') => void;
+    selectedAirport: string;
+    setSelectedAirport: (airport: string) => void;
     firstName: string;
     setFirstName: (name: string) => void;
     lastName: string;
@@ -71,6 +75,10 @@ const BookingFormFields = ({ vehicleId, formState, minimumRentalDays = 1 }: Book
         setDrivingExperience={formState.setDrivingExperience}
         deliveryLocation={formState.deliveryLocation}
         setDeliveryLocation={formState.setDeliveryLocation}
+        deliveryLocationType={formState.deliveryLocationType}
+        setDeliveryLocationType={formState.setDeliveryLocationType}
+        selectedAirport={formState.selectedAirport}
+        setSelectedAirport={formState.setSelectedAirport}
         isInternationalLicense={formState.isInternationalLicense}
         setIsInternationalLicense={formState.setIsInternationalLicense}
       />

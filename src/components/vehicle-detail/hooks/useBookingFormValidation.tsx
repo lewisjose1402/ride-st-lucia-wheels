@@ -8,6 +8,8 @@ interface UseBookingFormValidationProps {
     driverAge: string;
     drivingExperience: string;
     deliveryLocation: string;
+    deliveryLocationType: 'google_maps' | 'airport';
+    selectedAirport: string;
     firstName: string;
     lastName: string;
     email: string;
@@ -38,6 +40,8 @@ export const useBookingFormValidation = ({ formData, requirements }: UseBookingF
       driverAge: formData.driverAge,
       drivingExperience: formData.drivingExperience,
       deliveryLocation: formData.deliveryLocation,
+      deliveryLocationType: formData.deliveryLocationType,
+      selectedAirport: formData.selectedAirport,
       firstName: formData.firstName,
       lastName: formData.lastName,
       email: formData.email,

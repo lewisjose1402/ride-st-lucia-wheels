@@ -12,6 +12,8 @@ export const useBookingFormState = () => {
   const [driverAge, setDriverAge] = useState('');
   const [drivingExperience, setDrivingExperience] = useState('');
   const [deliveryLocation, setDeliveryLocation] = useState('');
+  const [deliveryLocationType, setDeliveryLocationType] = useState<'google_maps' | 'airport'>('google_maps');
+  const [selectedAirport, setSelectedAirport] = useState('');
   const [isInternationalLicense, setIsInternationalLicense] = useState(false);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -33,6 +35,8 @@ export const useBookingFormState = () => {
     driverAge,
     drivingExperience,
     deliveryLocation,
+    deliveryLocationType,
+    selectedAirport,
     isInternationalLicense,
     
     // State setters
@@ -46,6 +50,8 @@ export const useBookingFormState = () => {
     setDriverAge,
     setDrivingExperience,
     setDeliveryLocation,
+    setDeliveryLocationType,
+    setSelectedAirport,
     setIsInternationalLicense,
     
     // Handlers

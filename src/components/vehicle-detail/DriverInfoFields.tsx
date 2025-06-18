@@ -1,8 +1,9 @@
 
-import { Upload, MapPin } from 'lucide-react';
+import { Upload } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import DeliveryLocationSelector from './DeliveryLocationSelector';
 
 interface DriverInfoFieldsProps {
   driverLicense: File | null;
@@ -13,6 +14,10 @@ interface DriverInfoFieldsProps {
   setDrivingExperience: (value: string) => void;
   deliveryLocation: string;
   setDeliveryLocation: (value: string) => void;
+  deliveryLocationType: 'google_maps' | 'airport';
+  setDeliveryLocationType: (type: 'google_maps' | 'airport') => void;
+  selectedAirport: string;
+  setSelectedAirport: (airport: string) => void;
   isInternationalLicense: boolean;
   setIsInternationalLicense: (value: boolean) => void;
 }
@@ -26,6 +31,10 @@ const DriverInfoFields = ({
   setDrivingExperience,
   deliveryLocation,
   setDeliveryLocation,
+  deliveryLocationType,
+  setDeliveryLocationType,
+  selectedAirport,
+  setSelectedAirport,
   isInternationalLicense,
   setIsInternationalLicense
 }: DriverInfoFieldsProps) => {
@@ -107,23 +116,14 @@ const DriverInfoFields = ({
       </div>
 
       {/* Delivery Location */}
-      <div>
-        <Label htmlFor="deliveryLocation">Vehicle Delivery Location</Label>
-        <div className="relative mt-1">
-          <Input
-            id="deliveryLocation"
-            type="url"
-            value={deliveryLocation}
-            onChange={(e) => setDeliveryLocation(e.target.value)}
-            placeholder="https://maps.google.com/..."
-            className="w-full"
-          />
-          <MapPin className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-        </div>
-        <p className="text-xs text-gray-500 mt-1">
-          Share a Google Maps link for vehicle delivery
-        </p>
-      </div>
+      <DeliveryLocationSelector
+        deliveryLocationType={deliveryLocationType}
+        setDeliveryLocationType={setDeliveryLocationType}
+        deliveryLocation={deliveryLocation}
+        setDeliveryLocation={setDeliveryLocation}
+        selectedAirport={selectedAirport}
+        setSelectedAirport={setSelectedAirport}
+      />
     </>
   );
 };

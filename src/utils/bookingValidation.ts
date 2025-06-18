@@ -6,6 +6,8 @@ interface ValidationInputs {
   driverAge: string;
   drivingExperience: string;
   deliveryLocation: string;
+  deliveryLocationType: 'google_maps' | 'airport';
+  selectedAirport: string;
   firstName: string;
   lastName: string;
   email: string;
@@ -30,6 +32,8 @@ export const validateBookingForm = (inputs: ValidationInputs): ValidationResult 
     driverAge,
     drivingExperience,
     deliveryLocation,
+    deliveryLocationType,
+    selectedAirport,
     firstName,
     lastName,
     email,
@@ -52,6 +56,8 @@ export const validateBookingForm = (inputs: ValidationInputs): ValidationResult 
     driverAge: driverAge ? `"${driverAge}"` : 'EMPTY',
     drivingExperience: drivingExperience ? `"${drivingExperience}"` : 'EMPTY',
     deliveryLocation: deliveryLocation ? `"${deliveryLocation}"` : 'EMPTY',
+    deliveryLocationType: deliveryLocationType,
+    selectedAirport: selectedAirport ? `"${selectedAirport}"` : 'EMPTY',
     driverLicense: driverLicense ? 'FILE UPLOADED' : 'NO FILE',
     requireDriverLicense,
     minimumDriverAge,
@@ -153,13 +159,20 @@ export const validateBookingForm = (inputs: ValidationInputs): ValidationResult 
     }
   }
 
-  // Google Maps URL validation
-  if (!deliveryLocation.trim()) {
-    blockingErrors.push('Please insert your google maps location to proceed.');
-    console.log('VALIDATION ERROR: Delivery location is empty');
-  } else if (!isValidGoogleMapsUrl(deliveryLocation.trim())) {
-    blockingErrors.push('Please provide a valid Google Maps URL for delivery location.');
-    console.log('VALIDATION ERROR: Invalid Google Maps URL');
+  // Delivery location validation based on type
+  if (deliveryLocationType === 'google_maps') {
+    if (!deliveryLocation.trim()) {
+      blockingErrors.push('Please insert your google maps location to proceed.');
+      console.log('VALIDATION ERROR: Google Maps delivery location is empty');
+    } else if (!isValidGoogleMapsUrl(deliveryLocation.trim())) {
+      blockingErrors.push('Please provide a valid Google Maps URL for delivery location.');
+      console.log('VALIDATION ERROR: Invalid Google Maps URL');
+    }
+  } else if (deliveryLocationType === 'airport') {
+    if (!selectedAirport) {
+      blockingErrors.push('Please select an airport for vehicle delivery.');
+      console.log('VALIDATION ERROR: Airport not selected');
+    }
   }
 
   const isValid = errors.length === 0 && blockingErrors.length === 0;
