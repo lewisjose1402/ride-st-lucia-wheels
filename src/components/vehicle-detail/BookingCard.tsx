@@ -55,6 +55,8 @@ const BookingCard = ({ vehicle }: BookingCardProps) => {
       driverAge: formState.driverAge,
       drivingExperience: formState.drivingExperience,
       deliveryLocation: formState.deliveryLocation,
+      deliveryLocationType: formState.deliveryLocationType,
+      selectedAirport: formState.selectedAirport,
       firstName: formState.firstName,
       lastName: formState.lastName,
       email: formState.email,
