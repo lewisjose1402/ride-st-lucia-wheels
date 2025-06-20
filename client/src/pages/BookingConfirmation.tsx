@@ -43,8 +43,8 @@ interface BookingDetails {
 }
 
 const BookingConfirmation = () => {
-  const search = useSearch();
-  const searchParams = new URLSearchParams(search);
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
   const { verifyPayment, isVerifying } = useCheckoutFlow();
   const { user } = useAuth();
   const [booking, setBooking] = useState<BookingDetails | null>(null);
