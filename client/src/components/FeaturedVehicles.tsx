@@ -2,6 +2,13 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import VehicleCard from './VehicleCard';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 
 const FeaturedVehicles = () => {
   const [vehicles, setVehicles] = useState<any[]>([]);
@@ -79,18 +86,30 @@ const FeaturedVehicles = () => {
               Explore our most popular rental options in St. Lucia
             </p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[...Array(4)].map((_, index) => (
-              <div key={index} className="bg-white rounded-lg shadow-md animate-pulse">
-                <div className="h-48 bg-gray-200 rounded-t-lg"></div>
-                <div className="p-4 space-y-3">
-                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                  <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-                  <div className="h-8 bg-gray-200 rounded"></div>
-                </div>
-              </div>
-            ))}
-          </div>
+          <Carousel
+            opts={{
+              align: "start",
+              loop: true,
+            }}
+            className="w-full max-w-6xl mx-auto"
+          >
+            <CarouselContent className="-ml-2 md:-ml-4">
+              {[...Array(4)].map((_, index) => (
+                <CarouselItem key={index} className="pl-2 md:pl-4 md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
+                  <div className="bg-white rounded-lg shadow-md animate-pulse">
+                    <div className="h-48 bg-gray-200 rounded-t-lg"></div>
+                    <div className="p-4 space-y-3">
+                      <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                      <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                      <div className="h-8 bg-gray-200 rounded"></div>
+                    </div>
+                  </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="hidden md:flex" />
+            <CarouselNext className="hidden md:flex" />
+          </Carousel>
         </div>
       </section>
     );
@@ -114,37 +133,48 @@ const FeaturedVehicles = () => {
             <p className="text-gray-500 text-sm mt-2">Please check back later or contact us for more information.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {vehicles.map(vehicle => {
-              console.log('Rendering vehicle:', vehicle);
-              
-              // Get the primary image or first available image
-              const primaryImage = vehicle.vehicle_images?.find(img => img.is_primary);
-              const imageUrl = primaryImage?.image_url || vehicle.vehicle_images?.[0]?.image_url || '/placeholder.svg';
-              
-              // Check if vehicle has required fields
-              if (!vehicle.name || !vehicle.price_per_day) {
-                console.warn('Vehicle missing required fields:', vehicle);
-                return null;
-              }
-              
-              return (
-                <VehicleCard 
-                  key={vehicle.id} 
-                  id={vehicle.id}
-                  name={vehicle.name}
-                  image={imageUrl}
-                  type={vehicle.vehicle_type || 'Vehicle'}
-                  seats={vehicle.seats || 4}
-                  transmission={vehicle.transmission || 'Manual'}
-                  price={vehicle.price_per_day}
-                  rating={vehicle.rating || 4.5}
-                  location={vehicle.location || 'St. Lucia'}
-                  featured={vehicle.is_featured || false}
-                />
-              );
-            })}
-          </div>
+          <Carousel
+            opts={{
+              align: "start",
+              loop: true,
+            }}
+            className="w-full max-w-6xl mx-auto"
+          >
+            <CarouselContent className="-ml-2 md:-ml-4">
+              {vehicles.map(vehicle => {
+                console.log('Rendering vehicle:', vehicle);
+                
+                // Get the primary image or first available image
+                const primaryImage = vehicle.vehicle_images?.find(img => img.is_primary);
+                const imageUrl = primaryImage?.image_url || vehicle.vehicle_images?.[0]?.image_url || '/placeholder.svg';
+                
+                // Check if vehicle has required fields
+                if (!vehicle.name || !vehicle.price_per_day) {
+                  console.warn('Vehicle missing required fields:', vehicle);
+                  return null;
+                }
+                
+                return (
+                  <CarouselItem key={vehicle.id} className="pl-2 md:pl-4 md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
+                    <VehicleCard 
+                      id={vehicle.id}
+                      name={vehicle.name}
+                      image={imageUrl}
+                      type={vehicle.vehicle_type || 'Vehicle'}
+                      seats={vehicle.seats || 4}
+                      transmission={vehicle.transmission || 'Manual'}
+                      price={vehicle.price_per_day}
+                      rating={vehicle.rating || 4.5}
+                      location={vehicle.location || 'St. Lucia'}
+                      featured={vehicle.is_featured || false}
+                    />
+                  </CarouselItem>
+                );
+              })}
+            </CarouselContent>
+            <CarouselPrevious className="hidden md:flex" />
+            <CarouselNext className="hidden md:flex" />
+          </Carousel>
         )}
       </div>
     </section>
