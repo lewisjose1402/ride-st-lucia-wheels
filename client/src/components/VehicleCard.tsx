@@ -59,12 +59,8 @@ const VehicleCard = ({
       
       {/* Content */}
       <div className="p-4">
-        <div className="flex justify-between items-start mb-2">
+        <div className="mb-2">
           <h3 className="text-lg font-bold text-brand-dark">{name}</h3>
-          <div className="flex items-center text-brand-orange">
-            <Star size={16} className="fill-brand-orange text-brand-orange mr-1" />
-            <span>{rating.toFixed(1)}</span>
-          </div>
         </div>
         
         <p className="text-sm text-gray-600 mb-3">{formatLocationDisplay(location)}</p>

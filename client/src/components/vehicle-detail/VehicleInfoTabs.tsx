@@ -50,10 +50,9 @@ const VehicleInfoTabs = ({ vehicle, vehicleType }: VehicleInfoTabsProps) => {
       </div>
 
       <Tabs defaultValue="description" className="mb-8">
-        <TabsList className="grid grid-cols-3">
+        <TabsList className="grid grid-cols-2">
           <TabsTrigger value="description">Description</TabsTrigger>
           <TabsTrigger value="features">Features</TabsTrigger>
-          <TabsTrigger value="reviews">Reviews</TabsTrigger>
         </TabsList>
         
         <TabsContent value="description" className="pt-4">
@@ -116,20 +115,7 @@ const VehicleInfoTabs = ({ vehicle, vehicleType }: VehicleInfoTabsProps) => {
             </CardContent>
           </Card>
         </TabsContent>
-        
-        <TabsContent value="reviews" className="pt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Customer Reviews</CardTitle>
-              <CardDescription>
-                No reviews yet for this vehicle
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-500">Be the first to review this vehicle!</p>
-            </CardContent>
-          </Card>
-        </TabsContent>
+
       </Tabs>
     </div>
   );
