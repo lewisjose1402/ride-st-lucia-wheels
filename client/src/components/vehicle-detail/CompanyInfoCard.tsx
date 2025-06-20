@@ -122,18 +122,7 @@ const CompanyInfoCard = ({ companyData, vehicle }: CompanyInfoCardProps) => {
               <span>{formattedAddress}</span>
             </div>
           )}
-          {companyData.phone && (
-            <div className="flex items-center text-sm text-gray-600">
-              <Phone className="h-4 w-4 mr-2" />
-              <span>{companyData.phone}</span>
-            </div>
-          )}
-          {companyData.email && (
-            <div className="flex items-center text-sm text-gray-600">
-              <Mail className="h-4 w-4 mr-2" />
-              <span>{companyData.email}</span>
-            </div>
-          )}
+
         </div>
         
         <Separator className="my-4" />
