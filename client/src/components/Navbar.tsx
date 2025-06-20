@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Link } from 'wouter';
+import { Link } from 'react-router-dom';
 import { Car, Menu, X } from 'lucide-react';
 import AuthButtons from './AuthButtons';
 

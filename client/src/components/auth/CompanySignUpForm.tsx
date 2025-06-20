@@ -1,31 +1,30 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useAuth } from "@/context/AuthContext";
 
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAuth } from '@/context/AuthContext';
-
-import { Building, ArrowRight, AlertCircle } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
+import { Building, ArrowRight, AlertCircle } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 
 const CompanySignUpForm = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [companyName, setCompanyName] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [companyName, setCompanyName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const { signUpAsCompany } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setIsSubmitting(true);
 
     try {
@@ -45,7 +44,7 @@ const CompanySignUpForm = () => {
       const result = await signUpAsCompany(email, password, companyName);
       if (result.success) {
         console.log("Company sign-up successful");
-        navigate('/signin');
+        navigate("/signin");
       } else if (result.error) {
         setError(result.error);
       }
@@ -91,7 +90,7 @@ const CompanySignUpForm = () => {
                   required
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="email">Business Email</Label>
                 <Input
@@ -134,27 +133,28 @@ const CompanySignUpForm = () => {
                 disabled={isSubmitting}
               >
                 {isSubmitting ? (
-                  'Creating account...'
+                  "Creating account..."
                 ) : (
                   <>
-                    Create Company Account <ArrowRight className="ml-2 h-4 w-4" />
+                    Create Company Account{" "}
+                    <ArrowRight className="ml-2 h-4 w-4" />
                   </>
                 )}
               </Button>
             </form>
 
             <div className="mt-6 text-center">
-              <Link 
-                to="/signin" 
+              <Link
+                to="/signin"
                 className="text-sm text-brand-purple hover:text-brand-purple-dark"
               >
                 Already have an account? Sign in
               </Link>
             </div>
-            
+
             <div className="mt-2 text-center">
-              <Link 
-                to="/signup" 
+              <Link
+                to="/signup"
                 className="text-sm text-gray-500 hover:text-brand-purple"
               >
                 Looking to rent a vehicle? Sign up here

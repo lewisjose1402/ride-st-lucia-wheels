@@ -1,5 +1,5 @@
 
-import { Link } from 'wouter';
+import { Link } from 'react-router-dom';
 
 interface VehicleBreadcrumbsProps {
   vehicleName: string;

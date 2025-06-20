@@ -1,6 +1,6 @@
 
 import { Button } from '@/components/ui/button';
-import { Link } from 'wouter';
+import { Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useCompanyAccess } from '@/hooks/useCompanyAccess';
 import {
