@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from 'wouter';
 import { useAuth } from '@/context/AuthContext';
 import VehicleHeader from './VehicleHeader';
 import VehicleImageGallery from './VehicleImageGallery';
