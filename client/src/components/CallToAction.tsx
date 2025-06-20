@@ -1,5 +1,5 @@
 import { Button } from "./ui/button";
-import { Link } from "wouter";
+import { Link } from "react-router-dom";
 
 const CallToAction = () => {
   return (

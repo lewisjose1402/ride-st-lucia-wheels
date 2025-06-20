@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useSearch } from 'wouter';
+import { useLocation } from 'react-router-dom';
 import { useCheckoutFlow } from '@/hooks/useCheckoutFlow';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';

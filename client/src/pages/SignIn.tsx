@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from 'react';
-import { useLocation } from 'wouter';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import AuthLayout from '@/components/auth/AuthLayout';
 import SignInHeader from '@/components/auth/SignInHeader';
@@ -9,7 +9,7 @@ import SignInForm from '@/components/auth/SignInForm';
 const SignIn = () => {
   const [signInSuccess, setSignInSuccess] = useState(false);
   const { user } = useAuth();
-  const [, setLocation] = useLocation();
+  const navigate = useNavigate();
 
   // Redirect to company dashboard if user is already signed in
   useEffect(() => {
