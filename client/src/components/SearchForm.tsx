@@ -8,7 +8,7 @@ import DateInputs from './search/DateInputs';
 import FilterControls from './search/FilterControls';
 
 const SearchForm = () => {
-  const [, setLocation] = useLocation();
+  const navigate = useNavigate();
   const [pickupLocation, setPickupLocation] = useState('');
   const [pickupDate, setPickupDate] = useState('');
   const [dropoffDate, setDropoffDate] = useState('');
@@ -29,7 +29,7 @@ const SearchForm = () => {
       vehicleType,
       seats
     }));
-    setLocation('/vehicles');
+    navigate('/vehicles');
   };
 
   return (

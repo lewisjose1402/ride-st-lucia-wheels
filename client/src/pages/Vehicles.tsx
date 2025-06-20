@@ -20,7 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar, SlidersHorizontal } from 'lucide-react';
 
 const VehiclesPage = () => {
-  const [location] = useLocation();
+  const location = useLocation();
   
   // Get search params from localStorage (set by SearchForm component)
   const [searchParams, setSearchParams] = useState(() => {

@@ -24,7 +24,7 @@ const SignUp = () => {
   const [generalError, setGeneralError] = useState('');
   
   const { signUpAsRenter, signUpAsCompany } = useAuth();
-  const [, setLocation] = useLocation();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,7 +58,7 @@ const SignUp = () => {
       
       if (result.success) {
         // Redirect to sign in page after successful registration
-        setLocation('/signin');
+        navigate('/signin');
       } else if (result.error) {
         setGeneralError(result.error);
       }

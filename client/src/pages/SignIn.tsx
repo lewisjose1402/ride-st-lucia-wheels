@@ -15,17 +15,17 @@ const SignIn = () => {
   useEffect(() => {
     if (user) {
       console.log("User is already signed in, redirecting to company dashboard");
-      setLocation('/company');
+      navigate('/company');
     }
-  }, [user, setLocation]);
+  }, [user, navigate]);
 
   // Handle redirection after successful sign-in
   useEffect(() => {
     if (signInSuccess && user) {
       console.log("Sign-in successful, redirecting to company dashboard");
-      setLocation('/company');
+      navigate('/company');
     }
-  }, [signInSuccess, user, setLocation]);
+  }, [signInSuccess, user, navigate]);
 
   return (
     <AuthLayout>
