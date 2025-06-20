@@ -5,6 +5,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { Button } from '@/components/ui/button';
+import { supabase } from '@/integrations/supabase/client';
 import VehicleDetailContent from '@/components/vehicle-detail/VehicleDetailContent';
 import { Vehicle } from '@/types/vehicle';
 
@@ -20,14 +21,29 @@ const VehicleDetail = () => {
       
       console.log('Fetching vehicle and company data for ID:', id);
       
-      const response = await fetch(`/api/vehicles/${id}`);
-      if (!response.ok) {
+      const { data: vehicle, error: vehicleError } = await supabase
+        .from('vehicles')
+        .select(`
+          *,
+          vehicle_images(*),
+          vehicle_types(name),
+          rental_companies(*)
+        `)
+        .eq('id', id)
+        .single();
+
+      if (vehicleError) {
+        console.error('Error fetching vehicle with company data:', vehicleError);
+        throw new Error(vehicleError.message);
+      }
+
+      if (!vehicle) {
         throw new Error('Vehicle not found');
       }
 
-      const vehicle = await response.json();
       console.log('Successfully fetched vehicle with company data:', vehicle);
       
+      // Type cast the vehicle data to match our Vehicle interface
       return vehicle as Vehicle;
     },
     enabled: !!id,
