@@ -16,6 +16,10 @@ import SignUp from "./pages/SignUp";
 import NotFound from "./pages/NotFound";
 import BookingConfirmation from "./pages/BookingConfirmation";
 import MyBookings from "./pages/MyBookings";
+import HowItWorks from "./pages/HowItWorks";
+import FAQ from "./pages/FAQ";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
 
 // Company pages
 import CompanyDashboard from "./pages/company/Dashboard";
@@ -48,6 +52,10 @@ const App = () => (
             <Route path="/signup" element={<SignUp />} />
             <Route path="/booking-confirmation" element={<BookingConfirmation />} />
             <Route path="/my-bookings" element={<MyBookings />} />
+            <Route path="/how-it-works" element={<HowItWorks />} />
+            <Route path="/faq" element={<FAQ />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<TermsOfService />} />
 
             {/* Company routes */}
             <Route path="/company" element={<Navigate to="/company/dashboard" replace />} />
