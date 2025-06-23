@@ -51,7 +51,7 @@ const SignUp = () => {
           setGeneralError("Company name is required");
           return;
         }
-        result = await signUpAsCompany(email, password, companyName);
+        result = await signUpAsCompany(email, password, companyName.trim());
       } else {
         result = await signUpAsRenter(email, password, firstName, lastName);
       }

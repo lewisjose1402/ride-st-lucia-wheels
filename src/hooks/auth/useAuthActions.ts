@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -30,6 +29,31 @@ export function useAuthActions() {
     } catch (error) {
       console.error("Unexpected error checking existing email:", error);
       return { exists: false, userType: null };
+    }
+  };
+
+  const checkExistingCompanyName = async (companyName: string) => {
+    try {
+      // Check if company name exists in rental_companies table (case-insensitive)
+      const { data: existingCompany, error: companyError } = await supabase
+        .from('rental_companies')
+        .select('company_name')
+        .ilike('company_name', companyName.trim())
+        .single();
+      
+      if (existingCompany) {
+        return { exists: true };
+      }
+      
+      // If no error but no data, the company name doesn't exist
+      if (companyError && companyError.code !== 'PGRST116') {
+        console.error("Error checking existing company name:", companyError);
+      }
+      
+      return { exists: false };
+    } catch (error) {
+      console.error("Unexpected error checking existing company name:", error);
+      return { exists: false };
     }
   };
 
@@ -109,6 +133,17 @@ export function useAuthActions() {
   const signUpAsCompany = async (email: string, password: string, companyName: string) => {
     try {
       console.log("Attempting company sign-up:", { email, companyName });
+      
+      // Check if company name already exists
+      const companyNameCheck = await checkExistingCompanyName(companyName);
+      if (companyNameCheck.exists) {
+        toast({
+          title: "Company name already exists",
+          description: "A company with this name is already registered. Please choose a different company name.",
+          variant: "destructive"
+        });
+        return { success: false, error: "Company name already exists" };
+      }
       
       // Check if email already exists in rental_companies table
       const { data: existingCompany, error: checkError } = await supabase
