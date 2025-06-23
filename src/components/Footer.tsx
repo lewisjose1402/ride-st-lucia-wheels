@@ -50,7 +50,7 @@ const Footer = () => {
             <h3 className="font-bold text-lg mb-4">For Rental Companies</h3>
             <ul className="space-y-2">
               <li>
-                <Link to="/login" className="text-gray-300 hover:text-white">Sign In</Link>
+                <Link to="/signin" className="text-gray-300 hover:text-white">Sign In</Link>
               </li>
               <li>
                 <Link to="/register" className="text-gray-300 hover:text-white">Register Your Business</Link>
