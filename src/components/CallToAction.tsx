@@ -1,4 +1,3 @@
-
 import { Button } from "./ui/button";
 import { Link } from "react-router-dom";
 
@@ -21,7 +20,7 @@ const CallToAction = () => {
                 </Button>
               </Link>
               <Link to="/how-it-works-partners">
-                <Button variant="outline" className="text-white border-white hover:bg-brand-purple-dark">
+                <Button variant="outline" className="bg-white text-brand-purple border-white hover:bg-gray-100 hover:text-brand-purple">
                   Learn More
                 </Button>
               </Link>
