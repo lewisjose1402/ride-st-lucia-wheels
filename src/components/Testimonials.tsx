@@ -5,21 +5,21 @@ const testimonials = [
     content: "RideMatch made our St. Lucia vacation so much easier. We found a perfect Jeep at a great price and the pickup process was smooth. Highly recommend!",
     author: "Sarah M.",
     location: "Toronto, Canada",
-    avatar: "/avatars/avatar-1.jpg"
+    avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b47c?w=96&h=96&fit=crop&crop=face"
   },
   {
     id: 2,
     content: "As a first-time visitor to St. Lucia, I was worried about finding reliable transportation. RideMatch connected us with a wonderful local company and we couldn't be happier.",
     author: "James L.",
     location: "London, UK",
-    avatar: "/avatars/avatar-2.jpg"
+    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=96&h=96&fit=crop&crop=face"
   },
   {
     id: 3,
     content: "The ability to compare different rental companies in one place saved us time and money. Our SUV was perfect for exploring the island's rugged terrain.",
     author: "Maria C.",
     location: "Miami, USA",
-    avatar: "/avatars/avatar-3.jpg"
+    avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=96&h=96&fit=crop&crop=face"
   }
 ];
 
@@ -44,10 +44,6 @@ const Testimonials = () => {
                   <img 
                     src={testimonial.avatar} 
                     alt={testimonial.author}
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.src = 'https://via.placeholder.com/48?text=' + testimonial.author.charAt(0);
-                    }} 
                     className="h-full w-full object-cover"
                   />
                 </div>
