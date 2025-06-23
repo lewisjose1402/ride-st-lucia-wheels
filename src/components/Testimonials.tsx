@@ -1,11 +1,10 @@
-
 const testimonials = [
   {
     id: 1,
     content: "RideMatch made our St. Lucia vacation so much easier. We found a perfect Jeep at a great price and the pickup process was smooth. Highly recommend!",
     author: "Sarah M.",
     location: "Toronto, Canada",
-    avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b47c?w=96&h=96&fit=crop&crop=face"
+    avatar: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=96&h=96&fit=crop&crop=face"
   },
   {
     id: 2,
