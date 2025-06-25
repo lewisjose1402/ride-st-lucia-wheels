@@ -120,6 +120,8 @@ RideMatch St. Lucia is a comprehensive vehicle rental platform that connects tou
 
 ## Changelog
 - June 25, 2025. Initial setup
+- June 25, 2025. Updated branding to purple theme throughout application
+- June 25, 2025. Improved footer UX - signed-in users redirected to home page instead of sign-in page
 
 ## User Preferences
 
