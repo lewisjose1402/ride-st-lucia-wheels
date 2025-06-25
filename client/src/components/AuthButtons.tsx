@@ -24,7 +24,7 @@ const AuthButtons = () => {
       {!user ? (
         <div className="flex gap-3">
           <Link to="/signin">
-            <Button variant="outline">Sign In</Button>
+            <Button variant="outline" className="border-brand-purple text-brand-purple hover:bg-brand-purple hover:text-white">Sign In</Button>
           </Link>
           <Link to="/signup">
             <Button className="bg-brand-purple hover:bg-brand-purple-dark text-white">Sign Up</Button>

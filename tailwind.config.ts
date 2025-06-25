@@ -51,6 +51,13 @@ export default {
           "4": "hsl(var(--chart-4))",
           "5": "hsl(var(--chart-5))",
         },
+        "brand-purple": {
+          DEFAULT: "hsl(var(--brand-purple))",
+          dark: "hsl(var(--brand-purple-dark))",
+          light: "hsl(var(--brand-purple-light))",
+        },
+        "brand-dark": "hsl(var(--brand-dark))",
+        "brand-orange": "hsl(var(--brand-orange))",
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",

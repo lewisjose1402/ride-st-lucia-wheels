@@ -43,9 +43,9 @@ const VehicleCard = ({
   };
 
   return (
-    <div className={`bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow ${featured ? 'border-2 border-brand-orange' : ''}`}>
+    <div className={`bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow ${featured ? 'border-2 border-brand-purple' : ''}`}>
       {featured && (
-        <Badge className="absolute z-10 top-2 right-2 bg-brand-orange">Featured</Badge>
+        <Badge className="absolute z-10 top-2 right-2 bg-brand-purple text-white">Featured</Badge>
       )}
       
       {/* Vehicle image */}
