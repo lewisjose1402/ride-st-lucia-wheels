@@ -30,7 +30,7 @@ const Testimonials = () => {
           <h2 className="text-3xl md:text-4xl font-bold mb-2 text-[#ffffff]">
             Happy Travelers
           </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          <p className="text-lg max-w-2xl mx-auto text-[#ffffff]">
             See what our customers have to say about their experience with RideMatch
           </p>
         </div>
