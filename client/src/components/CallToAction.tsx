@@ -11,7 +11,9 @@ const CallToAction = () => {
               Are You a Car Rental Company in St. Lucia?
             </h2>
             <p className="text-xl text-white/90 mb-6">
-              Join our platform to reach more customers and grow your business. RideMatch connects tourists from around the world with local rental services.
+              Join our platform to reach more customers and grow your business.
+              RideMatch connects tourists from around the world with local
+              rental services.
             </p>
             <div className="flex flex-wrap gap-4">
               <Link to="/register">
@@ -19,8 +21,11 @@ const CallToAction = () => {
                   Register Your Business
                 </Button>
               </Link>
-              <Link to="/how-it-works-partners">
-                <Button variant="outline" className="bg-white text-brand-purple border-white hover:bg-gray-100 hover:text-brand-purple">
+              <Link to="/faq">
+                <Button
+                  variant="outline"
+                  className="bg-white text-brand-purple border-white hover:bg-gray-100 hover:text-brand-purple"
+                >
                   Learn More
                 </Button>
               </Link>
@@ -28,22 +33,34 @@ const CallToAction = () => {
           </div>
           <div className="lg:ml-auto">
             <div className="bg-white p-6 rounded-lg shadow-lg max-w-md">
-              <h3 className="text-xl font-bold text-brand-dark mb-3">Benefits for Partners</h3>
+              <h3 className="text-xl font-bold text-brand-dark mb-3">
+                Benefits for Partners
+              </h3>
               <ul className="space-y-3">
                 <li className="flex items-start">
-                  <span className="bg-brand-purple text-white rounded-full p-1 mr-2 text-xs">✓</span>
+                  <span className="bg-brand-purple text-white rounded-full p-1 mr-2 text-xs">
+                    ✓
+                  </span>
                   <span>Increase your visibility to tourists</span>
                 </li>
                 <li className="flex items-start">
-                  <span className="bg-brand-purple text-white rounded-full p-1 mr-2 text-xs">✓</span>
+                  <span className="bg-brand-purple text-white rounded-full p-1 mr-2 text-xs">
+                    ✓
+                  </span>
                   <span>Manage bookings through one simple dashboard</span>
                 </li>
                 <li className="flex items-start">
-                  <span className="bg-brand-purple text-white rounded-full p-1 mr-2 text-xs">✓</span>
-                  <span>Receive instant notifications for new reservations</span>
+                  <span className="bg-brand-purple text-white rounded-full p-1 mr-2 text-xs">
+                    ✓
+                  </span>
+                  <span>
+                    Receive instant notifications for new reservations
+                  </span>
                 </li>
                 <li className="flex items-start">
-                  <span className="bg-brand-purple text-white rounded-full p-1 mr-2 text-xs">✓</span>
+                  <span className="bg-brand-purple text-white rounded-full p-1 mr-2 text-xs">
+                    ✓
+                  </span>
                   <span>Access insights and analytics for your business</span>
                 </li>
               </ul>
