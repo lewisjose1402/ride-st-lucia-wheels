@@ -64,6 +64,32 @@ export class LoopsEmailService {
     }
   }
 
+  // Send event to trigger event-based emails
+  async sendEvent(eventName: string, email: string, eventProperties?: Record<string, any>): Promise<boolean> {
+    try {
+      const eventData = {
+        eventName,
+        email,
+        eventProperties: eventProperties || {}
+      };
+
+      console.log('Sending event to Loops:', eventData);
+
+      const response = await axios.post(
+        `${this.baseUrl}/events/send`,
+        eventData,
+        { headers: this.getHeaders() }
+      );
+
+      console.log('Event sent successfully:', response.data);
+      return response.data.success === true;
+    } catch (error: any) {
+      console.error('Failed to send event:', error.response?.data || error.message);
+      console.error('Full error:', error);
+      return false;
+    }
+  }
+
   // Email template methods for different scenarios
   async sendWelcomeEmail(userEmail: string, firstName?: string, lastName?: string): Promise<boolean> {
     await this.createContact({
@@ -73,13 +99,10 @@ export class LoopsEmailService {
       userRole: 'renter'
     });
 
-    return this.sendTransactionalEmail({
-      transactionalId: 'renter-signup-welcome',
-      email: userEmail,
-      dataVariables: {
-        firstName: firstName || 'there',
-        lastName
-      }
+    // Use Events API for event-triggered emails
+    return this.sendEvent('renter-signup-welcome', userEmail, {
+      firstName: firstName || 'there',
+      lastName: lastName || ''
     });
   }
 
