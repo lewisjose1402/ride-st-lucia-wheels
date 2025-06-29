@@ -32,6 +32,9 @@ import AddEditVehicle from "./pages/company/AddEditVehicle";
 // Admin pages
 import AdminDashboard from "./pages/admin/Dashboard";
 
+// Test pages
+import TestEmail from "./pages/TestEmail";
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -144,6 +147,9 @@ const App = () => {
                   </ProtectedRoute>
                 }
               />
+
+              {/* Test routes - remove in production */}
+              <Route path="/test-email" element={<TestEmail />} />
 
               <Route path="*" element={<NotFound />} />
             </Routes>
