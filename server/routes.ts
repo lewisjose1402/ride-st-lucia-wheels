@@ -30,6 +30,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
           phone: '',
         });
       }
+
+      // Send welcome email based on role
+      const emailService = getEmailService();
+      if (emailService) {
+        try {
+          if (role === 'renter' || !role) {
+            // Send welcome email to new renter
+            await emailService.sendWelcomeEmail(email, firstName, lastName);
+            console.log(`Welcome email sent to new renter: ${email}`);
+          } else if (role === 'rental_company' && companyName) {
+            // Send company signup notification (when you create that template)
+            await emailService.sendCompanySignupEmail(email, companyName, firstName);
+            console.log(`Company signup email sent to: ${email}`);
+          }
+        } catch (emailError) {
+          console.error('Failed to send registration email:', emailError);
+          // Don't fail the registration if email fails
+        }
+      }
       
       res.json({ success: true, user: profile });
     } catch (error) {
@@ -518,6 +537,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       res.status(500).json({ error: 'Payment verification not configured' });
+    }
+  });
+
+  // Email endpoints
+  app.post("/api/emails/welcome", async (req, res) => {
+    try {
+      const emailService = getEmailService();
+      if (!emailService) {
+        return res.status(503).json({ error: 'Email service not initialized' });
+      }
+
+      const { email, firstName, lastName } = req.body;
+      if (!email) {
+        return res.status(400).json({ error: 'Email address required' });
+      }
+
+      const result = await emailService.sendWelcomeEmail(email, firstName, lastName);
+      
+      if (result) {
+        console.log(`Welcome email sent to: ${email}`);
+        res.json({ success: true, message: 'Welcome email sent successfully' });
+      } else {
+        console.error(`Failed to send welcome email to: ${email}`);
+        res.status(500).json({ success: false, error: 'Failed to send welcome email' });
+      }
+    } catch (error) {
+      console.error('Welcome email error:', error);
+      res.status(500).json({ error: 'Failed to send welcome email' });
     }
   });
 

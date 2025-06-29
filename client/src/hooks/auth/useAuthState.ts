@@ -37,6 +37,31 @@ export function useAuthState() {
         console.error("Error creating user profile:", error);
       } else {
         console.log("User profile created successfully");
+        
+        // Send welcome email for new renter
+        if (role === 'renter') {
+          try {
+            const response = await fetch('/api/emails/welcome', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                email: user.email,
+                firstName: userMetadata?.first_name || userMetadata?.full_name?.split(' ')[0] || '',
+                lastName: userMetadata?.last_name || userMetadata?.full_name?.split(' ').slice(1).join(' ') || ''
+              })
+            });
+            
+            if (response.ok) {
+              console.log('Welcome email sent successfully');
+            } else {
+              console.error('Failed to send welcome email:', response.statusText);
+            }
+          } catch (emailError) {
+            console.error('Error sending welcome email:', emailError);
+          }
+        }
       }
     } catch (error) {
       console.error("Failed to create user profile:", error);
