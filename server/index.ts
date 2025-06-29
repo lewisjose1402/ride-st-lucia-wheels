@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { initializeEmailService } from "./services/emailService";
 
 const app = express();
 app.use(express.json());
@@ -37,6 +38,14 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Initialize email service if API key is available
+  const loopsApiKey = process.env.LOOPS_API_KEY;
+  if (loopsApiKey) {
+    initializeEmailService(loopsApiKey);
+  } else {
+    log("LOOPS_API_KEY not found - email service disabled");
+  }
+
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
