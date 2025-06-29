@@ -521,6 +521,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Email service test endpoint
+  app.post("/api/test-email", async (req, res) => {
+    try {
+      const emailService = getEmailService();
+      if (!emailService) {
+        return res.status(503).json({ error: 'Email service not initialized' });
+      }
+
+      const { email, type } = req.body;
+      if (!email) {
+        return res.status(400).json({ error: 'Email address required' });
+      }
+
+      let result = false;
+      switch (type) {
+        case 'welcome':
+          result = await emailService.sendWelcomeEmail(email, 'Test', 'User');
+          break;
+        case 'company':
+          result = await emailService.sendCompanySignupEmail(email, 'Test Company', 'Test Person');
+          break;
+        default:
+          // Just test contact creation
+          result = await emailService.createContact({
+            email,
+            firstName: 'Test',
+            lastName: 'User',
+            userRole: 'renter'
+          });
+      }
+
+      res.json({ success: result, message: result ? 'Email sent successfully' : 'Email sending failed' });
+    } catch (error) {
+      console.error('Email test error:', error);
+      res.status(500).json({ error: 'Email test failed' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
