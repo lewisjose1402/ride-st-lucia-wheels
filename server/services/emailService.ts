@@ -114,13 +114,10 @@ export class LoopsEmailService {
       userRole: 'rental_company'
     });
 
-    return this.sendTransactionalEmail({
-      transactionalId: 'company-signup-pending',
-      email: userEmail,
-      dataVariables: {
-        companyName,
-        contactPerson: contactPerson || 'there'
-      }
+    // Use Events API for event-triggered emails
+    return this.sendEvent('company-signup-pending', userEmail, {
+      companyName,
+      contactPerson: contactPerson || 'there'
     });
   }
 
