@@ -595,6 +595,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/emails/booking-confirmation", async (req, res) => {
+    try {
+      const emailService = getEmailService();
+      if (!emailService) {
+        return res.status(503).json({ error: 'Email service not initialized' });
+      }
+
+      const { 
+        renterEmail, 
+        vehicleName, 
+        pickupDate, 
+        pickupLocation, 
+        dropoffDate, 
+        dropoffLocation,
+        bookingLink 
+      } = req.body;
+      
+      if (!renterEmail || !vehicleName || !pickupDate || !dropoffDate) {
+        return res.status(400).json({ error: 'Missing required booking details' });
+      }
+
+      // Use the sendEvent method directly for testing
+      const result = await emailService.sendEvent('booking-confirmation-renter', renterEmail, {
+        'vehicle-name': vehicleName,
+        'pickup-date': pickupDate,
+        'pickup-location': pickupLocation || 'Not specified',
+        'dropoff-date': dropoffDate,
+        'dropoff-location': dropoffLocation || 'Not specified',
+        'booking-link': bookingLink || 'https://ridematchstlucia.com/my-bookings'
+      });
+      
+      if (result) {
+        console.log(`Booking confirmation email sent to: ${renterEmail} for vehicle: ${vehicleName}`);
+        res.json({ success: true, message: 'Booking confirmation email sent successfully' });
+      } else {
+        console.error(`Failed to send booking confirmation email to: ${renterEmail}`);
+        res.status(500).json({ success: false, error: 'Failed to send booking confirmation email' });
+      }
+    } catch (error) {
+      console.error('Booking confirmation email error:', error);
+      res.status(500).json({ error: 'Failed to send booking confirmation email' });
+    }
+  });
+
   // Email service test endpoint
   app.post("/api/test-email", async (req, res) => {
     try {

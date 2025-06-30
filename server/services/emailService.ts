@@ -145,15 +145,14 @@ export class LoopsEmailService {
       dropoffLocation: bookingData.dropoffLocation
     };
 
-    // Send to renter
-    const renterSent = await this.sendTransactionalEmail({
-      transactionalId: 'booking-confirmation-renter',
-      email: bookingData.renterEmail,
-      dataVariables: {
-        ...sharedData,
-        renterName: bookingData.renterName,
-        companyName: bookingData.companyName
-      }
+    // Send to renter using Events API
+    const renterSent = await this.sendEvent('booking-confirmation-renter', bookingData.renterEmail, {
+      'vehicle-name': bookingData.vehicleName,
+      'pickup-date': bookingData.pickupDate,
+      'pickup-location': bookingData.pickupLocation,
+      'dropoff-date': bookingData.dropoffDate,
+      'dropoff-location': bookingData.dropoffLocation,
+      'booking-link': `https://ridematchstlucia.com/bookings/${bookingData.bookingId}`
     });
 
     // Send to company
