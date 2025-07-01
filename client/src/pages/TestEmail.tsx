@@ -31,6 +31,10 @@ const TestEmail = () => {
   const [adminRenterLastName, setAdminRenterLastName] = useState('');
   const [adminPickupDateTime, setAdminPickupDateTime] = useState('');
   const [adminReturnDateTime, setAdminReturnDateTime] = useState('');
+  const [cancellationRenterEmail, setCancellationRenterEmail] = useState('');
+  const [cancellationRenterFirstName, setCancellationRenterFirstName] = useState('');
+  const [cancellationVehicleName, setCancellationVehicleName] = useState('');
+  const [cancellationPickupDate, setCancellationPickupDate] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
@@ -277,6 +281,53 @@ const TestEmail = () => {
     }
   };
 
+  const handleSendCancellationEmail = async () => {
+    if (!cancellationRenterEmail || !cancellationRenterFirstName || !cancellationVehicleName || !cancellationPickupDate) {
+      toast({
+        title: "Required fields missing",
+        description: "Please enter all required fields: renter email, first name, vehicle name, and pickup date",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/emails/booking-cancellation-renter', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          renterEmail: cancellationRenterEmail,
+          renterFirstName: cancellationRenterFirstName,
+          vehicleName: cancellationVehicleName,
+          pickupDate: cancellationPickupDate
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        toast({
+          title: "Email sent!",
+          description: `Booking cancellation email sent successfully to ${cancellationRenterEmail}`,
+        });
+        console.log('Booking cancellation email sent successfully:', data);
+      } else {
+        throw new Error('Failed to send booking cancellation email');
+      }
+    } catch (error) {
+      console.error('Error sending booking cancellation email:', error);
+      toast({
+        title: "Email failed",
+        description: "Failed to send booking cancellation email. Check console for details.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-2xl mx-auto">
@@ -286,12 +337,13 @@ const TestEmail = () => {
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="welcome" className="w-full">
-              <TabsList className="grid w-full grid-cols-5">
+              <TabsList className="grid w-full grid-cols-6">
                 <TabsTrigger value="welcome">Welcome</TabsTrigger>
                 <TabsTrigger value="company">Company</TabsTrigger>
                 <TabsTrigger value="booking">Renter</TabsTrigger>
                 <TabsTrigger value="company-booking">Company</TabsTrigger>
                 <TabsTrigger value="admin-booking">Admin</TabsTrigger>
+                <TabsTrigger value="cancellation">Cancel</TabsTrigger>
               </TabsList>
               
               <TabsContent value="welcome" className="space-y-4 mt-6">
@@ -696,6 +748,68 @@ const TestEmail = () => {
                 <div className="text-sm text-gray-600 mt-4">
                   <p>This triggers the 'booking-confirmation-admin' event in Loops.</p>
                   <p className="mt-1">Required properties: vehicle-name, company-name, renter-first-name, renter-last-name, pickup-date-time, return-date-time</p>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="cancellation" className="space-y-4 mt-6">
+                <div className="space-y-2">
+                  <Label htmlFor="cancellationRenterEmail">Renter Email</Label>
+                  <Input
+                    id="cancellationRenterEmail"
+                    type="email"
+                    value={cancellationRenterEmail}
+                    onChange={(e) => setCancellationRenterEmail(e.target.value)}
+                    placeholder="renter@example.com"
+                    required
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="cancellationRenterFirstName">Renter First Name</Label>
+                  <Input
+                    id="cancellationRenterFirstName"
+                    type="text"
+                    value={cancellationRenterFirstName}
+                    onChange={(e) => setCancellationRenterFirstName(e.target.value)}
+                    placeholder="John"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="cancellationVehicleName">Vehicle Name</Label>
+                  <Input
+                    id="cancellationVehicleName"
+                    type="text"
+                    value={cancellationVehicleName}
+                    onChange={(e) => setCancellationVehicleName(e.target.value)}
+                    placeholder="Honda Civic 2023"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="cancellationPickupDate">Original Pickup Date</Label>
+                  <Input
+                    id="cancellationPickupDate"
+                    type="date"
+                    value={cancellationPickupDate}
+                    onChange={(e) => setCancellationPickupDate(e.target.value)}
+                    required
+                  />
+                </div>
+                
+                <Button 
+                  onClick={handleSendCancellationEmail}
+                  disabled={isLoading}
+                  className="w-full"
+                >
+                  {isLoading ? 'Sending...' : 'Send Booking Cancellation Email'}
+                </Button>
+
+                <div className="text-sm text-gray-600 mt-4">
+                  <p>This triggers the 'booking-cancelled-renter' event in Loops.</p>
+                  <p className="mt-1">Required properties: renter-first-name, vehicle-name, pickup-date</p>
                 </div>
               </TabsContent>
             </Tabs>

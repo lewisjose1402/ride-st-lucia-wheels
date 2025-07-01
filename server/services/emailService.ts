@@ -341,6 +341,19 @@ export class LoopsEmailService {
       'return-date-time': adminData.returnDateTime
     });
   }
+
+  async sendBookingCancellationRenter(cancellationData: {
+    renterEmail: string;
+    renterName: string;
+    vehicleName: string;
+    pickupDate: string;
+  }): Promise<boolean> {
+    return await this.sendEvent('booking-cancelled-renter', cancellationData.renterEmail, {
+      'renter-first-name': cancellationData.renterName.split(' ')[0] || cancellationData.renterName,
+      'vehicle-name': cancellationData.vehicleName,
+      'pickup-date': cancellationData.pickupDate
+    });
+  }
 }
 
 // Initialize email service (will be configured with API key)
