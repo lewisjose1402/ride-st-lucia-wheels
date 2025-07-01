@@ -53,6 +53,13 @@ const TestEmail = () => {
   const [preRentalPickupDateTime, setPreRentalPickupDateTime] = useState('');
   const [preRentalPickupLocation, setPreRentalPickupLocation] = useState('');
   const [preRentalBookingLink, setPreRentalBookingLink] = useState('');
+  const [companyReminderEmail, setCompanyReminderEmail] = useState('');
+  const [companyReminderContactName, setCompanyReminderContactName] = useState('');
+  const [companyReminderVehicleName, setCompanyReminderVehicleName] = useState('');
+  const [companyReminderRenterFirstName, setCompanyReminderRenterFirstName] = useState('');
+  const [companyReminderRenterLastName, setCompanyReminderRenterLastName] = useState('');
+  const [companyReminderPickupDateTime, setCompanyReminderPickupDateTime] = useState('');
+  const [companyReminderBookingLink, setCompanyReminderBookingLink] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
@@ -493,6 +500,56 @@ const TestEmail = () => {
     }
   };
 
+  const handleSendCompanyReminderEmail = async () => {
+    if (!companyReminderEmail || !companyReminderContactName || !companyReminderVehicleName || !companyReminderRenterFirstName || !companyReminderPickupDateTime) {
+      toast({
+        title: "Required fields missing",
+        description: "Please enter company email, contact name, vehicle name, renter first name, and pickup date/time",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/emails/pre-rental-reminder-company', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          companyEmail: companyReminderEmail,
+          companyContactName: companyReminderContactName,
+          vehicleName: companyReminderVehicleName,
+          renterFirstName: companyReminderRenterFirstName,
+          renterLastName: companyReminderRenterLastName || '',
+          pickupDateTime: companyReminderPickupDateTime,
+          bookingLink: companyReminderBookingLink || 'https://ridematchstlucia.com/company/bookings'
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        toast({
+          title: "Email sent!",
+          description: `Company pre-rental reminder email sent successfully to ${companyReminderEmail}`,
+        });
+        console.log('Company pre-rental reminder email sent successfully:', data);
+      } else {
+        throw new Error('Failed to send company pre-rental reminder email');
+      }
+    } catch (error) {
+      console.error('Error sending company pre-rental reminder email:', error);
+      toast({
+        title: "Email failed",
+        description: "Failed to send company pre-rental reminder email. Check console for details.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-2xl mx-auto">
@@ -502,7 +559,7 @@ const TestEmail = () => {
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="welcome" className="w-full">
-              <TabsList className="grid w-full grid-cols-9">
+              <TabsList className="grid w-full grid-cols-10">
                 <TabsTrigger value="welcome">Welcome</TabsTrigger>
                 <TabsTrigger value="company">Company</TabsTrigger>
                 <TabsTrigger value="booking">Renter</TabsTrigger>
@@ -512,6 +569,7 @@ const TestEmail = () => {
                 <TabsTrigger value="company-cancel">Co Cancel</TabsTrigger>
                 <TabsTrigger value="admin-cancel">Ad Cancel</TabsTrigger>
                 <TabsTrigger value="reminder">Reminder</TabsTrigger>
+                <TabsTrigger value="company-reminder">Co Remind</TabsTrigger>
               </TabsList>
               
               <TabsContent value="welcome" className="space-y-4 mt-6">
@@ -1238,6 +1296,104 @@ const TestEmail = () => {
                 <div className="text-sm text-gray-600 mt-4">
                   <p>This triggers the 'pre-rental-reminder-renter' event in Loops.</p>
                   <p className="mt-1">Required properties: renter-first-name, vehicle-name, pickup-date-time, pickup-location, booking-link</p>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="company-reminder" className="space-y-4 mt-6">
+                <div className="space-y-2">
+                  <Label htmlFor="companyReminderEmail">Company Email</Label>
+                  <Input
+                    id="companyReminderEmail"
+                    type="email"
+                    value={companyReminderEmail}
+                    onChange={(e) => setCompanyReminderEmail(e.target.value)}
+                    placeholder="company@example.com"
+                    required
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="companyReminderContactName">Company Contact Name</Label>
+                  <Input
+                    id="companyReminderContactName"
+                    type="text"
+                    value={companyReminderContactName}
+                    onChange={(e) => setCompanyReminderContactName(e.target.value)}
+                    placeholder="Manager"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="companyReminderVehicleName">Vehicle Name</Label>
+                  <Input
+                    id="companyReminderVehicleName"
+                    type="text"
+                    value={companyReminderVehicleName}
+                    onChange={(e) => setCompanyReminderVehicleName(e.target.value)}
+                    placeholder="Honda Civic 2023"
+                    required
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="companyReminderRenterFirstName">Renter First Name</Label>
+                    <Input
+                      id="companyReminderRenterFirstName"
+                      type="text"
+                      value={companyReminderRenterFirstName}
+                      onChange={(e) => setCompanyReminderRenterFirstName(e.target.value)}
+                      placeholder="John"
+                      required
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="companyReminderRenterLastName">Renter Last Name</Label>
+                    <Input
+                      id="companyReminderRenterLastName"
+                      type="text"
+                      value={companyReminderRenterLastName}
+                      onChange={(e) => setCompanyReminderRenterLastName(e.target.value)}
+                      placeholder="Doe"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="companyReminderPickupDateTime">Pickup Date & Time</Label>
+                  <Input
+                    id="companyReminderPickupDateTime"
+                    type="datetime-local"
+                    value={companyReminderPickupDateTime}
+                    onChange={(e) => setCompanyReminderPickupDateTime(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="companyReminderBookingLink">Booking Link (Optional)</Label>
+                  <Input
+                    id="companyReminderBookingLink"
+                    type="url"
+                    value={companyReminderBookingLink}
+                    onChange={(e) => setCompanyReminderBookingLink(e.target.value)}
+                    placeholder="https://ridematchstlucia.com/company/bookings"
+                  />
+                </div>
+                
+                <Button 
+                  onClick={handleSendCompanyReminderEmail}
+                  disabled={isLoading}
+                  className="w-full"
+                >
+                  {isLoading ? 'Sending...' : 'Send Company Reminder Email'}
+                </Button>
+
+                <div className="text-sm text-gray-600 mt-4">
+                  <p>This triggers the 'pre-rental-reminder-company' event in Loops.</p>
+                  <p className="mt-1">Required properties: company-contact-name, vehicle-name, renter-first-name, renter-last-name, pickup-date-time, booking-link</p>
                 </div>
               </TabsContent>
             </Tabs>

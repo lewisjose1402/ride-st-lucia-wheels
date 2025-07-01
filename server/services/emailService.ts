@@ -401,6 +401,24 @@ export class LoopsEmailService {
       'booking-link': reminderData.bookingLink || 'https://ridematchstlucia.com/bookings'
     });
   }
+
+  async sendPreRentalReminderCompany(reminderData: {
+    companyEmail: string;
+    companyContactName: string;
+    vehicleName: string;
+    renterName: string;
+    pickupDateTime: string;
+    bookingLink?: string;
+  }): Promise<boolean> {
+    return await this.sendEvent('pre-rental-reminder-company', reminderData.companyEmail, {
+      'company-contact-name': reminderData.companyContactName,
+      'vehicle-name': reminderData.vehicleName,
+      'renter-first-name': reminderData.renterName.split(' ')[0] || reminderData.renterName,
+      'renter-last-name': reminderData.renterName.split(' ')[1] || '',
+      'pickup-date-time': reminderData.pickupDateTime,
+      'booking-link': reminderData.bookingLink || 'https://ridematchstlucia.com/company/bookings'
+    });
+  }
 }
 
 // Initialize email service (will be configured with API key)

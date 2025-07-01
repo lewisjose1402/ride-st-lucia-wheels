@@ -902,6 +902,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/emails/pre-rental-reminder-company", async (req, res) => {
+    try {
+      const emailService = getEmailService();
+      if (!emailService) {
+        return res.status(503).json({ error: 'Email service not initialized' });
+      }
+
+      const { 
+        companyEmail,
+        companyContactName,
+        vehicleName,
+        renterFirstName,
+        renterLastName,
+        pickupDateTime,
+        bookingLink
+      } = req.body;
+      
+      if (!companyEmail || !companyContactName || !vehicleName || !renterFirstName || !pickupDateTime) {
+        return res.status(400).json({ error: 'Missing required company pre-rental reminder details' });
+      }
+
+      const renterName = `${renterFirstName} ${renterLastName || ''}`.trim();
+
+      // Use the sendPreRentalReminderCompany method
+      const result = await emailService.sendPreRentalReminderCompany({
+        companyEmail,
+        companyContactName,
+        vehicleName,
+        renterName,
+        pickupDateTime,
+        bookingLink
+      });
+      
+      if (result) {
+        console.log(`Company pre-rental reminder email sent to: ${companyEmail} for vehicle: ${vehicleName}`);
+        res.json({ success: true, message: 'Company pre-rental reminder email sent successfully' });
+      } else {
+        console.error(`Failed to send company pre-rental reminder email to: ${companyEmail}`);
+        res.status(500).json({ success: false, error: 'Failed to send company pre-rental reminder email' });
+      }
+    } catch (error) {
+      console.error('Company pre-rental reminder email error:', error);
+      res.status(500).json({ error: 'Failed to send company pre-rental reminder email' });
+    }
+  });
+
   // Email service test endpoint
   app.post("/api/test-email", async (req, res) => {
     try {
