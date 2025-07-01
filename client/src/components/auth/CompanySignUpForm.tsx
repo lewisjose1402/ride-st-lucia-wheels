@@ -17,6 +17,7 @@ const CompanySignUpForm = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [companyName, setCompanyName] = useState("");
+  const [phone, setPhone] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const { signUpAsCompany } = useAuth();
@@ -40,8 +41,12 @@ const CompanySignUpForm = () => {
         setError("Company name is required");
         return;
       }
+      if (!phone.trim()) {
+        setError("Phone number is required");
+        return;
+      }
 
-      const result = await signUpAsCompany(email, password, companyName);
+      const result = await signUpAsCompany(email, password, companyName, phone);
       if (result.success) {
         console.log("Company sign-up successful");
         navigate("/signin");
@@ -99,6 +104,18 @@ const CompanySignUpForm = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter your business email"
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="phone">Phone Number</Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="Enter your business phone number"
                   required
                 />
               </div>

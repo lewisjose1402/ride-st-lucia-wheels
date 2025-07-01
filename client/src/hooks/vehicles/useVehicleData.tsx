@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import { getVehicle } from '@/services/vehicleService';

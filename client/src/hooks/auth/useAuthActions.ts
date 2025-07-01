@@ -130,7 +130,7 @@ export function useAuthActions() {
     }
   };
 
-  const signUpAsCompany = async (email: string, password: string, companyName: string) => {
+  const signUpAsCompany = async (email: string, password: string, companyName: string, phone?: string) => {
     try {
       console.log("Attempting company sign-up:", { email, companyName });
       
@@ -182,6 +182,7 @@ export function useAuthActions() {
 
       const metadata = {
         company_name: companyName,
+        phone: phone || '',
         is_company: true,
         role: 'rental_company'
       };
