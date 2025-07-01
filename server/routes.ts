@@ -685,6 +685,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/emails/booking-confirmation-admin", async (req, res) => {
+    try {
+      const emailService = getEmailService();
+      if (!emailService) {
+        return res.status(503).json({ error: 'Email service not initialized' });
+      }
+
+      const { 
+        adminEmail,
+        vehicleName, 
+        companyName,
+        renterFirstName,
+        renterLastName,
+        pickupDateTime, 
+        returnDateTime
+      } = req.body;
+      
+      if (!adminEmail || !vehicleName || !companyName || !renterFirstName || !pickupDateTime || !returnDateTime) {
+        return res.status(400).json({ error: 'Missing required booking details' });
+      }
+
+      const renterName = `${renterFirstName} ${renterLastName || ''}`.trim();
+
+      // Use the sendAdminBookingNotification method
+      const result = await emailService.sendAdminBookingNotification({
+        adminEmail,
+        vehicleName,
+        companyName,
+        renterName,
+        pickupDateTime,
+        returnDateTime
+      });
+      
+      if (result) {
+        console.log(`Admin booking confirmation email sent to: ${adminEmail} for vehicle: ${vehicleName}`);
+        res.json({ success: true, message: 'Admin booking confirmation email sent successfully' });
+      } else {
+        console.error(`Failed to send admin booking confirmation email to: ${adminEmail}`);
+        res.status(500).json({ success: false, error: 'Failed to send admin booking confirmation email' });
+      }
+    } catch (error) {
+      console.error('Admin booking confirmation email error:', error);
+      res.status(500).json({ error: 'Failed to send admin booking confirmation email' });
+    }
+  });
+
   // Email service test endpoint
   app.post("/api/test-email", async (req, res) => {
     try {

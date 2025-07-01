@@ -323,6 +323,24 @@ export class LoopsEmailService {
       }
     });
   }
+
+  async sendAdminBookingNotification(adminData: {
+    adminEmail: string;
+    vehicleName: string;
+    companyName: string;
+    renterName: string;
+    pickupDateTime: string;
+    returnDateTime: string;
+  }): Promise<boolean> {
+    return await this.sendEvent('booking-confirmation-admin', adminData.adminEmail, {
+      'vehicle-name': adminData.vehicleName,
+      'company-name': adminData.companyName,
+      'renter-first-name': adminData.renterName.split(' ')[0] || adminData.renterName,
+      'renter-last-name': adminData.renterName.split(' ')[1] || '',
+      'pickup-date-time': adminData.pickupDateTime,
+      'return-date-time': adminData.returnDateTime
+    });
+  }
 }
 
 // Initialize email service (will be configured with API key)

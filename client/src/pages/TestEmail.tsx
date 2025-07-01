@@ -24,6 +24,13 @@ const TestEmail = () => {
   const [renterLastName, setRenterLastName] = useState('');
   const [pickupDateTime, setPickupDateTime] = useState('');
   const [returnDateTime, setReturnDateTime] = useState('');
+  const [adminEmail, setAdminEmail] = useState('');
+  const [adminVehicleName, setAdminVehicleName] = useState('');
+  const [adminCompanyName, setAdminCompanyName] = useState('');
+  const [adminRenterFirstName, setAdminRenterFirstName] = useState('');
+  const [adminRenterLastName, setAdminRenterLastName] = useState('');
+  const [adminPickupDateTime, setAdminPickupDateTime] = useState('');
+  const [adminReturnDateTime, setAdminReturnDateTime] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
@@ -213,6 +220,56 @@ const TestEmail = () => {
       toast({
         title: "Email failed",
         description: "Failed to send company booking confirmation email. Check console for details.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSendAdminBookingEmail = async () => {
+    if (!adminEmail || !adminVehicleName || !adminCompanyName || !adminRenterFirstName || !adminPickupDateTime || !adminReturnDateTime) {
+      toast({
+        title: "Required fields missing",
+        description: "Please enter all required fields: admin email, vehicle name, company name, renter first name, and both date/times",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/emails/booking-confirmation-admin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          adminEmail,
+          vehicleName: adminVehicleName,
+          companyName: adminCompanyName,
+          renterFirstName: adminRenterFirstName,
+          renterLastName: adminRenterLastName || '',
+          pickupDateTime: adminPickupDateTime,
+          returnDateTime: adminReturnDateTime
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        toast({
+          title: "Email sent!",
+          description: `Admin booking confirmation email sent successfully to ${adminEmail}`,
+        });
+        console.log('Admin booking confirmation email sent successfully:', data);
+      } else {
+        throw new Error('Failed to send admin booking confirmation email');
+      }
+    } catch (error) {
+      console.error('Error sending admin booking confirmation email:', error);
+      toast({
+        title: "Email failed",
+        description: "Failed to send admin booking confirmation email. Check console for details.",
         variant: "destructive"
       });
     } finally {
