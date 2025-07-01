@@ -139,6 +139,14 @@ RideMatch St. Lucia is a comprehensive vehicle rental platform that connects tou
   - Email test interface with 10 tabs for comprehensive testing of all email types
   - Environment variable support for admin email notifications (ADMIN_EMAIL)
   - Email API base URL configuration for Supabase Edge Function email triggers
+- July 1, 2025. Company verification system implemented:
+  - Added phone number field to company signup form with validation
+  - Created pending verification screen for unapproved companies 
+  - Updated authentication flow to redirect new companies to pending verification
+  - Enhanced ProtectedRoute to check company approval status and redirect unapproved companies
+  - Fixed useNavigate import error in vehicle management hooks
+  - Fixed company dashboard navigation link from /company to /company/dashboard
+  - Added redirect route from /company to /company/dashboard for convenience
 
 ## User Preferences
 

@@ -23,7 +23,7 @@ const CompanyLayout = ({ children, title }: CompanyLayoutProps) => {
   const { profile } = useAuth();
   
   const navItems = [
-    { path: '/company', icon: <LayoutDashboard size={18} />, label: 'Dashboard' },
+    { path: '/company/dashboard', icon: <LayoutDashboard size={18} />, label: 'Dashboard' },
     { path: '/company/vehicles', icon: <Car size={18} />, label: 'Vehicles' },
     { path: '/company/bookings', icon: <CalendarClock size={18} />, label: 'Bookings' },
     { path: '/company/profile', icon: <User size={18} />, label: 'Company Profile' },
