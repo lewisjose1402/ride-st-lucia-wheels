@@ -46,6 +46,13 @@ const TestEmail = () => {
   const [adminCancellationCompanyName, setAdminCancellationCompanyName] = useState('');
   const [adminCancellationRenterFirstName, setAdminCancellationRenterFirstName] = useState('');
   const [adminCancellationRenterLastName, setAdminCancellationRenterLastName] = useState('');
+  const [preRentalRenterEmail, setPreRentalRenterEmail] = useState('');
+  const [preRentalRenterFirstName, setPreRentalRenterFirstName] = useState('');
+  const [preRentalRenterLastName, setPreRentalRenterLastName] = useState('');
+  const [preRentalVehicleName, setPreRentalVehicleName] = useState('');
+  const [preRentalPickupDateTime, setPreRentalPickupDateTime] = useState('');
+  const [preRentalPickupLocation, setPreRentalPickupLocation] = useState('');
+  const [preRentalBookingLink, setPreRentalBookingLink] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
@@ -436,6 +443,56 @@ const TestEmail = () => {
     }
   };
 
+  const handleSendPreRentalReminderEmail = async () => {
+    if (!preRentalRenterEmail || !preRentalRenterFirstName || !preRentalVehicleName || !preRentalPickupDateTime || !preRentalPickupLocation) {
+      toast({
+        title: "Required fields missing",
+        description: "Please enter renter email, first name, vehicle name, pickup date/time, and pickup location",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/emails/pre-rental-reminder-renter', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          renterEmail: preRentalRenterEmail,
+          renterFirstName: preRentalRenterFirstName,
+          renterLastName: preRentalRenterLastName || '',
+          vehicleName: preRentalVehicleName,
+          pickupDateTime: preRentalPickupDateTime,
+          pickupLocation: preRentalPickupLocation,
+          bookingLink: preRentalBookingLink || 'https://ridematchstlucia.com/bookings'
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        toast({
+          title: "Email sent!",
+          description: `Pre-rental reminder email sent successfully to ${preRentalRenterEmail}`,
+        });
+        console.log('Pre-rental reminder email sent successfully:', data);
+      } else {
+        throw new Error('Failed to send pre-rental reminder email');
+      }
+    } catch (error) {
+      console.error('Error sending pre-rental reminder email:', error);
+      toast({
+        title: "Email failed",
+        description: "Failed to send pre-rental reminder email. Check console for details.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-2xl mx-auto">
@@ -445,7 +502,7 @@ const TestEmail = () => {
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="welcome" className="w-full">
-              <TabsList className="grid w-full grid-cols-8">
+              <TabsList className="grid w-full grid-cols-9">
                 <TabsTrigger value="welcome">Welcome</TabsTrigger>
                 <TabsTrigger value="company">Company</TabsTrigger>
                 <TabsTrigger value="booking">Renter</TabsTrigger>
@@ -454,6 +511,7 @@ const TestEmail = () => {
                 <TabsTrigger value="cancellation">Cancel</TabsTrigger>
                 <TabsTrigger value="company-cancel">Co Cancel</TabsTrigger>
                 <TabsTrigger value="admin-cancel">Ad Cancel</TabsTrigger>
+                <TabsTrigger value="reminder">Reminder</TabsTrigger>
               </TabsList>
               
               <TabsContent value="welcome" className="space-y-4 mt-6">
@@ -1082,6 +1140,104 @@ const TestEmail = () => {
                 <div className="text-sm text-gray-600 mt-4">
                   <p>This triggers the 'booking-cancelled-admin' event in Loops.</p>
                   <p className="mt-1">Required properties: vehicle-name, company-name, renter-first-name, renter-last-name</p>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="reminder" className="space-y-4 mt-6">
+                <div className="space-y-2">
+                  <Label htmlFor="preRentalRenterEmail">Renter Email</Label>
+                  <Input
+                    id="preRentalRenterEmail"
+                    type="email"
+                    value={preRentalRenterEmail}
+                    onChange={(e) => setPreRentalRenterEmail(e.target.value)}
+                    placeholder="renter@example.com"
+                    required
+                  />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="preRentalRenterFirstName">Renter First Name</Label>
+                    <Input
+                      id="preRentalRenterFirstName"
+                      type="text"
+                      value={preRentalRenterFirstName}
+                      onChange={(e) => setPreRentalRenterFirstName(e.target.value)}
+                      placeholder="John"
+                      required
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="preRentalRenterLastName">Renter Last Name</Label>
+                    <Input
+                      id="preRentalRenterLastName"
+                      type="text"
+                      value={preRentalRenterLastName}
+                      onChange={(e) => setPreRentalRenterLastName(e.target.value)}
+                      placeholder="Doe"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="preRentalVehicleName">Vehicle Name</Label>
+                  <Input
+                    id="preRentalVehicleName"
+                    type="text"
+                    value={preRentalVehicleName}
+                    onChange={(e) => setPreRentalVehicleName(e.target.value)}
+                    placeholder="Honda Civic 2023"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="preRentalPickupDateTime">Pickup Date & Time</Label>
+                  <Input
+                    id="preRentalPickupDateTime"
+                    type="datetime-local"
+                    value={preRentalPickupDateTime}
+                    onChange={(e) => setPreRentalPickupDateTime(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="preRentalPickupLocation">Pickup Location</Label>
+                  <Input
+                    id="preRentalPickupLocation"
+                    type="text"
+                    value={preRentalPickupLocation}
+                    onChange={(e) => setPreRentalPickupLocation(e.target.value)}
+                    placeholder="Hewanorra International Airport"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="preRentalBookingLink">Booking Link (Optional)</Label>
+                  <Input
+                    id="preRentalBookingLink"
+                    type="url"
+                    value={preRentalBookingLink}
+                    onChange={(e) => setPreRentalBookingLink(e.target.value)}
+                    placeholder="https://ridematchstlucia.com/bookings"
+                  />
+                </div>
+                
+                <Button 
+                  onClick={handleSendPreRentalReminderEmail}
+                  disabled={isLoading}
+                  className="w-full"
+                >
+                  {isLoading ? 'Sending...' : 'Send Pre-Rental Reminder Email'}
+                </Button>
+
+                <div className="text-sm text-gray-600 mt-4">
+                  <p>This triggers the 'pre-rental-reminder-renter' event in Loops.</p>
+                  <p className="mt-1">Required properties: renter-first-name, vehicle-name, pickup-date-time, pickup-location, booking-link</p>
                 </div>
               </TabsContent>
             </Tabs>
