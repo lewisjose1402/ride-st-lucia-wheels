@@ -147,6 +147,7 @@ RideMatch St. Lucia is a comprehensive vehicle rental platform that connects tou
   - Fixed useNavigate import error in vehicle management hooks
   - Fixed company dashboard navigation link from /company to /company/dashboard
   - Added redirect route from /company to /company/dashboard for convenience
+  - Updated Supabase Edge Function to use ridematchstlucia.com domain for email API calls
 
 ## User Preferences
 

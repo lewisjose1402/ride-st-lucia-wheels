@@ -153,7 +153,7 @@ serve(async (req) => {
             });
 
             // Send emails to backend API endpoints
-            const emailBaseUrl = Deno.env.get('EMAIL_API_BASE_URL') || 'https://your-app-domain.repl.co';
+            const emailBaseUrl = Deno.env.get('EMAIL_API_BASE_URL') || 'https://ridematchstlucia.com';
 
             // Send renter confirmation email
             if (bookingDetails.email) {
