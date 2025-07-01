@@ -814,6 +814,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/emails/booking-cancellation-admin", async (req, res) => {
+    try {
+      const emailService = getEmailService();
+      if (!emailService) {
+        return res.status(503).json({ error: 'Email service not initialized' });
+      }
+
+      const { 
+        adminEmail,
+        vehicleName,
+        companyName, 
+        renterFirstName,
+        renterLastName
+      } = req.body;
+      
+      if (!adminEmail || !vehicleName || !companyName || !renterFirstName) {
+        return res.status(400).json({ error: 'Missing required admin cancellation details' });
+      }
+
+      const renterName = `${renterFirstName} ${renterLastName || ''}`.trim();
+
+      // Use the sendBookingCancellationAdmin method
+      const result = await emailService.sendBookingCancellationAdmin({
+        adminEmail,
+        vehicleName,
+        companyName,
+        renterName
+      });
+      
+      if (result) {
+        console.log(`Admin booking cancellation email sent to: ${adminEmail} for vehicle: ${vehicleName}`);
+        res.json({ success: true, message: 'Admin booking cancellation email sent successfully' });
+      } else {
+        console.error(`Failed to send admin booking cancellation email to: ${adminEmail}`);
+        res.status(500).json({ success: false, error: 'Failed to send admin booking cancellation email' });
+      }
+    } catch (error) {
+      console.error('Admin booking cancellation email error:', error);
+      res.status(500).json({ error: 'Failed to send admin booking cancellation email' });
+    }
+  });
+
   // Email service test endpoint
   app.post("/api/test-email", async (req, res) => {
     try {

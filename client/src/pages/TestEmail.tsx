@@ -41,6 +41,11 @@ const TestEmail = () => {
   const [companyCancellationRenterFirstName, setCompanyCancellationRenterFirstName] = useState('');
   const [companyCancellationRenterLastName, setCompanyCancellationRenterLastName] = useState('');
   const [companyCancellationBookingLink, setCompanyCancellationBookingLink] = useState('');
+  const [adminCancellationEmail, setAdminCancellationEmail] = useState('');
+  const [adminCancellationVehicleName, setAdminCancellationVehicleName] = useState('');
+  const [adminCancellationCompanyName, setAdminCancellationCompanyName] = useState('');
+  const [adminCancellationRenterFirstName, setAdminCancellationRenterFirstName] = useState('');
+  const [adminCancellationRenterLastName, setAdminCancellationRenterLastName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
@@ -383,6 +388,54 @@ const TestEmail = () => {
     }
   };
 
+  const handleSendAdminCancellationEmail = async () => {
+    if (!adminCancellationEmail || !adminCancellationVehicleName || !adminCancellationCompanyName || !adminCancellationRenterFirstName) {
+      toast({
+        title: "Required fields missing",
+        description: "Please enter admin email, vehicle name, company name, and renter first name",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/emails/booking-cancellation-admin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          adminEmail: adminCancellationEmail,
+          vehicleName: adminCancellationVehicleName,
+          companyName: adminCancellationCompanyName,
+          renterFirstName: adminCancellationRenterFirstName,
+          renterLastName: adminCancellationRenterLastName || ''
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        toast({
+          title: "Email sent!",
+          description: `Admin booking cancellation email sent successfully to ${adminCancellationEmail}`,
+        });
+        console.log('Admin booking cancellation email sent successfully:', data);
+      } else {
+        throw new Error('Failed to send admin booking cancellation email');
+      }
+    } catch (error) {
+      console.error('Error sending admin booking cancellation email:', error);
+      toast({
+        title: "Email failed",
+        description: "Failed to send admin booking cancellation email. Check console for details.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-2xl mx-auto">
@@ -392,7 +445,7 @@ const TestEmail = () => {
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="welcome" className="w-full">
-              <TabsList className="grid w-full grid-cols-7">
+              <TabsList className="grid w-full grid-cols-8">
                 <TabsTrigger value="welcome">Welcome</TabsTrigger>
                 <TabsTrigger value="company">Company</TabsTrigger>
                 <TabsTrigger value="booking">Renter</TabsTrigger>
@@ -400,6 +453,7 @@ const TestEmail = () => {
                 <TabsTrigger value="admin-booking">Admin</TabsTrigger>
                 <TabsTrigger value="cancellation">Cancel</TabsTrigger>
                 <TabsTrigger value="company-cancel">Co Cancel</TabsTrigger>
+                <TabsTrigger value="admin-cancel">Ad Cancel</TabsTrigger>
               </TabsList>
               
               <TabsContent value="welcome" className="space-y-4 mt-6">
@@ -952,6 +1006,82 @@ const TestEmail = () => {
                 <div className="text-sm text-gray-600 mt-4">
                   <p>This triggers the 'booking-cancelled-company' event in Loops.</p>
                   <p className="mt-1">Required properties: company-contact-name, vehicle-name, renter-first-name, renter-last-name, booking-link</p>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="admin-cancel" className="space-y-4 mt-6">
+                <div className="space-y-2">
+                  <Label htmlFor="adminCancellationEmail">Admin Email</Label>
+                  <Input
+                    id="adminCancellationEmail"
+                    type="email"
+                    value={adminCancellationEmail}
+                    onChange={(e) => setAdminCancellationEmail(e.target.value)}
+                    placeholder="admin@ridematchstlucia.com"
+                    required
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="adminCancellationVehicleName">Vehicle Name</Label>
+                  <Input
+                    id="adminCancellationVehicleName"
+                    type="text"
+                    value={adminCancellationVehicleName}
+                    onChange={(e) => setAdminCancellationVehicleName(e.target.value)}
+                    placeholder="Honda Civic 2023"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="adminCancellationCompanyName">Company Name</Label>
+                  <Input
+                    id="adminCancellationCompanyName"
+                    type="text"
+                    value={adminCancellationCompanyName}
+                    onChange={(e) => setAdminCancellationCompanyName(e.target.value)}
+                    placeholder="St. Lucia Car Rentals"
+                    required
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="adminCancellationRenterFirstName">Renter First Name</Label>
+                    <Input
+                      id="adminCancellationRenterFirstName"
+                      type="text"
+                      value={adminCancellationRenterFirstName}
+                      onChange={(e) => setAdminCancellationRenterFirstName(e.target.value)}
+                      placeholder="John"
+                      required
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="adminCancellationRenterLastName">Renter Last Name</Label>
+                    <Input
+                      id="adminCancellationRenterLastName"
+                      type="text"
+                      value={adminCancellationRenterLastName}
+                      onChange={(e) => setAdminCancellationRenterLastName(e.target.value)}
+                      placeholder="Doe"
+                    />
+                  </div>
+                </div>
+                
+                <Button 
+                  onClick={handleSendAdminCancellationEmail}
+                  disabled={isLoading}
+                  className="w-full"
+                >
+                  {isLoading ? 'Sending...' : 'Send Admin Cancellation Email'}
+                </Button>
+
+                <div className="text-sm text-gray-600 mt-4">
+                  <p>This triggers the 'booking-cancelled-admin' event in Loops.</p>
+                  <p className="mt-1">Required properties: vehicle-name, company-name, renter-first-name, renter-last-name</p>
                 </div>
               </TabsContent>
             </Tabs>
