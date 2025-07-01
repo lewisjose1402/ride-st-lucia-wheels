@@ -286,11 +286,12 @@ const TestEmail = () => {
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="welcome" className="w-full">
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-5">
                 <TabsTrigger value="welcome">Welcome</TabsTrigger>
                 <TabsTrigger value="company">Company</TabsTrigger>
-                <TabsTrigger value="booking">Renter Book</TabsTrigger>
-                <TabsTrigger value="company-booking">Company Book</TabsTrigger>
+                <TabsTrigger value="booking">Renter</TabsTrigger>
+                <TabsTrigger value="company-booking">Company</TabsTrigger>
+                <TabsTrigger value="admin-booking">Admin</TabsTrigger>
               </TabsList>
               
               <TabsContent value="welcome" className="space-y-4 mt-6">
@@ -595,6 +596,106 @@ const TestEmail = () => {
                 <div className="text-sm text-gray-600 mt-4">
                   <p>This triggers the 'booking-confirmation-company' event in Loops.</p>
                   <p className="mt-1">Required properties: company-contact-name, vehicle-name, renter-first-name, renter-last-name, pickup-date-time, return-date-time, booking-link</p>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="admin-booking" className="space-y-4 mt-6">
+                <div className="space-y-2">
+                  <Label htmlFor="adminEmailBooking">Admin Email</Label>
+                  <Input
+                    id="adminEmailBooking"
+                    type="email"
+                    value={adminEmail}
+                    onChange={(e) => setAdminEmail(e.target.value)}
+                    placeholder="admin@ridematchstlucia.com"
+                    required
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="adminVehicleNameBooking">Vehicle Name</Label>
+                  <Input
+                    id="adminVehicleNameBooking"
+                    type="text"
+                    value={adminVehicleName}
+                    onChange={(e) => setAdminVehicleName(e.target.value)}
+                    placeholder="Honda Civic 2023"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="adminCompanyNameBooking">Company Name</Label>
+                  <Input
+                    id="adminCompanyNameBooking"
+                    type="text"
+                    value={adminCompanyName}
+                    onChange={(e) => setAdminCompanyName(e.target.value)}
+                    placeholder="Island Rentals Ltd"
+                    required
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="adminRenterFirstNameBooking">Renter First Name</Label>
+                    <Input
+                      id="adminRenterFirstNameBooking"
+                      type="text"
+                      value={adminRenterFirstName}
+                      onChange={(e) => setAdminRenterFirstName(e.target.value)}
+                      placeholder="John"
+                      required
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="adminRenterLastNameBooking">Renter Last Name</Label>
+                    <Input
+                      id="adminRenterLastNameBooking"
+                      type="text"
+                      value={adminRenterLastName}
+                      onChange={(e) => setAdminRenterLastName(e.target.value)}
+                      placeholder="Doe"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="adminPickupDateTime">Pickup Date & Time</Label>
+                    <Input
+                      id="adminPickupDateTime"
+                      type="datetime-local"
+                      value={adminPickupDateTime}
+                      onChange={(e) => setAdminPickupDateTime(e.target.value)}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="adminReturnDateTime">Return Date & Time</Label>
+                    <Input
+                      id="adminReturnDateTime"
+                      type="datetime-local"
+                      value={adminReturnDateTime}
+                      onChange={(e) => setAdminReturnDateTime(e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+                
+                <Button 
+                  onClick={handleSendAdminBookingEmail}
+                  disabled={isLoading}
+                  className="w-full"
+                >
+                  {isLoading ? 'Sending...' : 'Send Admin Booking Notification'}
+                </Button>
+
+                <div className="text-sm text-gray-600 mt-4">
+                  <p>This triggers the 'booking-confirmation-admin' event in Loops.</p>
+                  <p className="mt-1">Required properties: vehicle-name, company-name, renter-first-name, renter-last-name, pickup-date-time, return-date-time</p>
                 </div>
               </TabsContent>
             </Tabs>
