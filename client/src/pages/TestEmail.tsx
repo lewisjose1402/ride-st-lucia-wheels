@@ -18,6 +18,12 @@ const TestEmail = () => {
   const [dropoffDate, setDropoffDate] = useState('');
   const [dropoffLocation, setDropoffLocation] = useState('');
   const [bookingLink, setBookingLink] = useState('');
+  const [companyEmail, setCompanyEmail] = useState('');
+  const [companyContactName, setCompanyContactName] = useState('');
+  const [renterFirstName, setRenterFirstName] = useState('');
+  const [renterLastName, setRenterLastName] = useState('');
+  const [pickupDateTime, setPickupDateTime] = useState('');
+  const [returnDateTime, setReturnDateTime] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
@@ -163,6 +169,57 @@ const TestEmail = () => {
     }
   };
 
+  const handleSendCompanyBookingEmail = async () => {
+    if (!companyEmail || !vehicleName || !renterFirstName || !pickupDateTime || !returnDateTime) {
+      toast({
+        title: "Required fields missing",
+        description: "Please enter company email, vehicle name, renter first name, and both date/times",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/emails/booking-confirmation-company', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          companyEmail,
+          companyContactName: companyContactName || 'Manager',
+          vehicleName,
+          renterFirstName,
+          renterLastName: renterLastName || '',
+          pickupDateTime,
+          returnDateTime,
+          bookingLink: bookingLink || 'https://ridematchstlucia.com/company/bookings'
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        toast({
+          title: "Email sent!",
+          description: `Company booking confirmation email sent successfully to ${companyEmail}`,
+        });
+        console.log('Company booking confirmation email sent successfully:', data);
+      } else {
+        throw new Error('Failed to send company booking confirmation email');
+      }
+    } catch (error) {
+      console.error('Error sending company booking confirmation email:', error);
+      toast({
+        title: "Email failed",
+        description: "Failed to send company booking confirmation email. Check console for details.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-2xl mx-auto">
@@ -172,10 +229,11 @@ const TestEmail = () => {
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="welcome" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="welcome">Welcome Email</TabsTrigger>
-                <TabsTrigger value="company">Company Signup</TabsTrigger>
-                <TabsTrigger value="booking">Booking Confirm</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="welcome">Welcome</TabsTrigger>
+                <TabsTrigger value="company">Company</TabsTrigger>
+                <TabsTrigger value="booking">Renter Book</TabsTrigger>
+                <TabsTrigger value="company-booking">Company Book</TabsTrigger>
               </TabsList>
               
               <TabsContent value="welcome" className="space-y-4 mt-6">
@@ -370,6 +428,116 @@ const TestEmail = () => {
                 <div className="text-sm text-gray-600 mt-4">
                   <p>This triggers the 'booking-confirmation-renter' event in Loops.</p>
                   <p className="mt-1">Required properties: vehicle-name, pickup-date, pickup-location, dropoff-date, dropoff-location, booking-link</p>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="company-booking" className="space-y-4 mt-6">
+                <div className="space-y-2">
+                  <Label htmlFor="companyEmailBooking">Company Email</Label>
+                  <Input
+                    id="companyEmailBooking"
+                    type="email"
+                    value={companyEmail}
+                    onChange={(e) => setCompanyEmail(e.target.value)}
+                    placeholder="company@example.com"
+                    required
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="companyContactNameBooking">Company Contact Name</Label>
+                  <Input
+                    id="companyContactNameBooking"
+                    type="text"
+                    value={companyContactName}
+                    onChange={(e) => setCompanyContactName(e.target.value)}
+                    placeholder="Manager"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="vehicleNameCompany">Vehicle Name</Label>
+                  <Input
+                    id="vehicleNameCompany"
+                    type="text"
+                    value={vehicleName}
+                    onChange={(e) => setVehicleName(e.target.value)}
+                    placeholder="Honda Civic 2023"
+                    required
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="renterFirstNameBooking">Renter First Name</Label>
+                    <Input
+                      id="renterFirstNameBooking"
+                      type="text"
+                      value={renterFirstName}
+                      onChange={(e) => setRenterFirstName(e.target.value)}
+                      placeholder="John"
+                      required
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="renterLastNameBooking">Renter Last Name</Label>
+                    <Input
+                      id="renterLastNameBooking"
+                      type="text"
+                      value={renterLastName}
+                      onChange={(e) => setRenterLastName(e.target.value)}
+                      placeholder="Doe"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="pickupDateTime">Pickup Date & Time</Label>
+                    <Input
+                      id="pickupDateTime"
+                      type="datetime-local"
+                      value={pickupDateTime}
+                      onChange={(e) => setPickupDateTime(e.target.value)}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="returnDateTime">Return Date & Time</Label>
+                    <Input
+                      id="returnDateTime"
+                      type="datetime-local"
+                      value={returnDateTime}
+                      onChange={(e) => setReturnDateTime(e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="bookingLinkCompany">Booking Link (Optional)</Label>
+                  <Input
+                    id="bookingLinkCompany"
+                    type="url"
+                    value={bookingLink}
+                    onChange={(e) => setBookingLink(e.target.value)}
+                    placeholder="https://ridematchstlucia.com/company/bookings"
+                  />
+                </div>
+                
+                <Button 
+                  onClick={handleSendCompanyBookingEmail}
+                  disabled={isLoading}
+                  className="w-full"
+                >
+                  {isLoading ? 'Sending...' : 'Send Company Booking Confirmation'}
+                </Button>
+
+                <div className="text-sm text-gray-600 mt-4">
+                  <p>This triggers the 'booking-confirmation-company' event in Loops.</p>
+                  <p className="mt-1">Required properties: company-contact-name, vehicle-name, renter-first-name, renter-last-name, pickup-date-time, return-date-time, booking-link</p>
                 </div>
               </TabsContent>
             </Tabs>
