@@ -121,6 +121,118 @@ serve(async (req) => {
         throw new Error(`Failed to update booking: ${updateError.message}`);
       }
       logStep("Booking updated successfully");
+
+      // Send booking confirmation emails if payment was successful
+      if (paymentStatus === 'paid' && currentBooking.payment_status !== 'paid') {
+        logStep("Payment successful - triggering confirmation emails");
+        try {
+          // Fetch complete booking details for email notifications
+          const { data: bookingDetails, error: bookingFetchError } = await supabaseClient
+            .from('bookings')
+            .select(`
+              *,
+              vehicles (
+                name,
+                rental_companies (
+                  company_name,
+                  contact_email,
+                  contact_name
+                )
+              )
+            `)
+            .eq('id', bookingId)
+            .single();
+
+          if (bookingFetchError) {
+            logStep("WARNING: Failed to fetch booking details for emails", { error: bookingFetchError });
+          } else if (bookingDetails) {
+            logStep("Sending booking confirmation emails", { 
+              renterEmail: bookingDetails.email,
+              companyEmail: bookingDetails.vehicles?.rental_companies?.contact_email,
+              vehicleName: bookingDetails.vehicles?.name
+            });
+
+            // Send emails to backend API endpoints
+            const emailBaseUrl = Deno.env.get('EMAIL_API_BASE_URL') || 'https://your-app-domain.repl.co';
+
+            // Send renter confirmation email
+            if (bookingDetails.email) {
+              try {
+                await fetch(`${emailBaseUrl}/api/emails/booking-confirmation-renter`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    renterEmail: bookingDetails.email,
+                    renterFirstName: bookingDetails.first_name || bookingDetails.driver_name?.split(' ')[0] || 'Renter',
+                    renterLastName: bookingDetails.last_name || bookingDetails.driver_name?.split(' ')[1] || '',
+                    vehicleName: bookingDetails.vehicles?.name,
+                    pickupDateTime: bookingDetails.pickup_date,
+                    dropoffDateTime: bookingDetails.dropoff_date,
+                    pickupLocation: bookingDetails.pickup_location,
+                    dropoffLocation: bookingDetails.dropoff_location,
+                    totalPrice: bookingDetails.total_price,
+                    companyName: bookingDetails.vehicles?.rental_companies?.company_name
+                  })
+                });
+                logStep("Renter confirmation email sent");
+              } catch (emailError) {
+                logStep("WARNING: Failed to send renter confirmation email", { error: emailError });
+              }
+            }
+
+            // Send company confirmation email
+            if (bookingDetails.vehicles?.rental_companies?.contact_email) {
+              try {
+                await fetch(`${emailBaseUrl}/api/emails/booking-confirmation-company`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    companyEmail: bookingDetails.vehicles?.rental_companies?.contact_email,
+                    companyContactName: bookingDetails.vehicles?.rental_companies?.contact_name || 'Manager',
+                    vehicleName: bookingDetails.vehicles?.name,
+                    renterFirstName: bookingDetails.first_name || bookingDetails.driver_name?.split(' ')[0] || 'Renter',
+                    renterLastName: bookingDetails.last_name || bookingDetails.driver_name?.split(' ')[1] || '',
+                    pickupDateTime: bookingDetails.pickup_date,
+                    dropoffDateTime: bookingDetails.dropoff_date,
+                    pickupLocation: bookingDetails.pickup_location,
+                    dropoffLocation: bookingDetails.dropoff_location,
+                    totalPrice: bookingDetails.total_price
+                  })
+                });
+                logStep("Company confirmation email sent");
+              } catch (emailError) {
+                logStep("WARNING: Failed to send company confirmation email", { error: emailError });
+              }
+            }
+
+            // Send admin notification email
+            const adminEmail = Deno.env.get('ADMIN_EMAIL');
+            if (adminEmail) {
+              try {
+                await fetch(`${emailBaseUrl}/api/emails/booking-confirmation-admin`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    adminEmail,
+                    vehicleName: bookingDetails.vehicles?.name,
+                    companyName: bookingDetails.vehicles?.rental_companies?.company_name,
+                    renterFirstName: bookingDetails.first_name || bookingDetails.driver_name?.split(' ')[0] || 'Renter',
+                    renterLastName: bookingDetails.last_name || bookingDetails.driver_name?.split(' ')[1] || '',
+                    pickupDateTime: bookingDetails.pickup_date,
+                    returnDateTime: bookingDetails.dropoff_date
+                  })
+                });
+                logStep("Admin notification email sent");
+              } catch (emailError) {
+                logStep("WARNING: Failed to send admin notification email", { error: emailError });
+              }
+            }
+          }
+        } catch (emailError) {
+          logStep("WARNING: Error in email notification process", { error: emailError });
+          // Don't fail the payment verification if emails fail
+        }
+      }
     } else {
       logStep("No update needed - status unchanged");
     }

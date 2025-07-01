@@ -38,7 +38,7 @@ export function useAuthState() {
       } else {
         console.log("User profile created successfully");
         
-        // Send welcome email for new renter
+        // Send welcome emails based on role
         if (role === 'renter') {
           try {
             const response = await fetch('/api/emails/welcome', {
@@ -54,12 +54,34 @@ export function useAuthState() {
             });
             
             if (response.ok) {
-              console.log('Welcome email sent successfully');
+              console.log('Renter welcome email sent successfully');
             } else {
-              console.error('Failed to send welcome email:', response.statusText);
+              console.error('Failed to send renter welcome email:', response.statusText);
             }
           } catch (emailError) {
-            console.error('Error sending welcome email:', emailError);
+            console.error('Error sending renter welcome email:', emailError);
+          }
+        } else if (role === 'rental_company') {
+          try {
+            const response = await fetch('/api/emails/company-signup', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                email: user.email,
+                companyName: userMetadata?.company_name || 'Your Company',
+                contactPerson: userMetadata?.first_name || userMetadata?.full_name?.split(' ')[0] || ''
+              })
+            });
+            
+            if (response.ok) {
+              console.log('Company signup email sent successfully');
+            } else {
+              console.error('Failed to send company signup email:', response.statusText);
+            }
+          } catch (emailError) {
+            console.error('Error sending company signup email:', emailError);
           }
         }
       }

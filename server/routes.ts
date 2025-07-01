@@ -353,12 +353,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/bookings/:id/cancel", async (req, res) => {
     try {
+      // Get booking details before cancellation for email notifications
+      const booking = await storage.getBooking(req.params.id);
+      if (!booking) {
+        return res.status(404).json({ error: 'Booking not found' });
+      }
+
+      // Get vehicle and company details for emails
+      const vehicle = await storage.getVehicle(booking.vehicleId || '');
+      const company = vehicle ? await storage.getRentalCompany(vehicle.companyId) : null;
+
       const success = await storage.cancelBooking(req.params.id);
       if (!success) {
         return res.status(404).json({ error: 'Booking not found' });
       }
+
+      // Send cancellation emails
+      const emailService = getEmailService();
+      if (emailService && booking.email && vehicle) {
+        try {
+          // Send renter cancellation email
+          await emailService.sendBookingCancellationRenter({
+            renterEmail: booking.email,
+            renterName: booking.firstName || booking.driverName || 'Renter',
+            vehicleName: vehicle.name,
+            pickupDate: booking.pickupDate
+          });
+
+          // Send company cancellation email
+          if (company?.email) {
+            await emailService.sendBookingCancellationCompany({
+              companyEmail: company.email,
+              companyContactName: company.contactPerson || 'Manager',
+              vehicleName: vehicle.name,
+              renterName: `${booking.firstName || ''} ${booking.lastName || ''}`.trim() || booking.driverName || 'Renter',
+              bookingLink: 'https://ridematchstlucia.com/company/bookings'
+            });
+          }
+
+          // Send admin cancellation email
+          const adminEmail = process.env.ADMIN_EMAIL;
+          if (adminEmail && company) {
+            await emailService.sendBookingCancellationAdmin({
+              adminEmail,
+              vehicleName: vehicle.name,
+              companyName: company.companyName,
+              renterName: `${booking.firstName || ''} ${booking.lastName || ''}`.trim() || booking.driverName || 'Renter'
+            });
+          }
+
+          console.log('Booking cancellation emails sent successfully');
+        } catch (emailError) {
+          console.error('Failed to send booking cancellation emails:', emailError);
+        }
+      }
+
       res.json({ success: true });
     } catch (error) {
+      console.error('Failed to cancel booking:', error);
       res.status(500).json({ error: 'Failed to cancel booking' });
     }
   });

@@ -42,6 +42,10 @@ app.use((req, res, next) => {
   const loopsApiKey = process.env.LOOPS_API_KEY;
   if (loopsApiKey) {
     initializeEmailService(loopsApiKey);
+    
+    // Initialize reminder service after email service is ready
+    const { reminderService } = await import('./services/reminderService');
+    reminderService.start();
   } else {
     log("LOOPS_API_KEY not found - email service disabled");
   }
