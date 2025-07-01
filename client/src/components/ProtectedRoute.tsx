@@ -11,7 +11,7 @@ type ProtectedRouteProps = {
 
 const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
   const { user, isLoading, isAdmin, isRentalCompany } = useAuth();
-  const { hasCompanyProfile, isLoading: companyLoading } = useCompanyAccess();
+  const { hasCompanyProfile, isCompanyApproved, isLoading: companyLoading } = useCompanyAccess();
 
   console.log("ProtectedRoute - user:", !!user, "isLoading:", isLoading, "isAdmin:", isAdmin, "isRentalCompany:", isRentalCompany, "requiredRole:", requiredRole, "hasCompanyProfile:", hasCompanyProfile);
 
@@ -38,8 +38,14 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
   }
 
   if (requiredRole === 'rental_company') {
-    // Allow access if user is a rental company OR if they're an admin with a company profile
-    const canAccessCompanyRoutes = isRentalCompany || (isAdmin && hasCompanyProfile);
+    // Check if user is a rental company but not approved
+    if (isRentalCompany && hasCompanyProfile && !isCompanyApproved) {
+      console.log("Company exists but not approved, redirecting to pending verification");
+      return <Navigate to="/pending-verification" replace />;
+    }
+    
+    // Allow access if user is an approved rental company OR if they're an admin with a company profile
+    const canAccessCompanyRoutes = (isRentalCompany && isCompanyApproved) || (isAdmin && hasCompanyProfile);
     if (!canAccessCompanyRoutes) {
       console.log("Rental company access required but user doesn't qualify, redirecting to home");
       return <Navigate to="/" replace />;

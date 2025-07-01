@@ -20,6 +20,7 @@ import FAQ from "./pages/FAQ";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import CompanySignUp from "./pages/CompanySignUp";
+import PendingVerification from "./pages/PendingVerification";
 
 // Company pages
 import CompanyDashboard from "./pages/company/Dashboard";
@@ -70,6 +71,7 @@ const App = () => {
               <Route path="/signup" element={<SignUp />} />
 
               <Route path="/register" element={<CompanySignUp />} />
+              <Route path="/pending-verification" element={<PendingVerification />} />
               <Route
                 path="/booking-confirmation"
                 element={<BookingConfirmation />}

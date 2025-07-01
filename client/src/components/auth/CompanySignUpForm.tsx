@@ -49,7 +49,7 @@ const CompanySignUpForm = () => {
       const result = await signUpAsCompany(email, password, companyName, phone);
       if (result.success) {
         console.log("Company sign-up successful");
-        navigate("/signin");
+        navigate("/pending-verification");
       } else if (result.error) {
         setError(result.error);
       }
