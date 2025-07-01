@@ -1000,6 +1000,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Manual reminder trigger endpoint (for testing)
+  app.post("/api/emails/send-reminders", async (req, res) => {
+    try {
+      const { reminderService } = await import('./services/reminderService');
+      await reminderService.sendPreRentalReminders();
+      res.json({ success: true, message: 'Manual reminder check completed' });
+    } catch (error) {
+      console.error('Manual reminder trigger error:', error);
+      res.status(500).json({ error: 'Failed to trigger reminders' });
+    }
+  });
+
   // Email service test endpoint
   app.post("/api/test-email", async (req, res) => {
     try {
