@@ -770,6 +770,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/emails/booking-cancellation-company", async (req, res) => {
+    try {
+      const emailService = getEmailService();
+      if (!emailService) {
+        return res.status(503).json({ error: 'Email service not initialized' });
+      }
+
+      const { 
+        companyEmail,
+        companyContactName,
+        vehicleName, 
+        renterFirstName,
+        renterLastName,
+        bookingLink
+      } = req.body;
+      
+      if (!companyEmail || !vehicleName || !renterFirstName) {
+        return res.status(400).json({ error: 'Missing required cancellation details' });
+      }
+
+      const renterName = `${renterFirstName} ${renterLastName || ''}`.trim();
+
+      // Use the sendBookingCancellationCompany method
+      const result = await emailService.sendBookingCancellationCompany({
+        companyEmail,
+        companyContactName: companyContactName || 'Manager',
+        vehicleName,
+        renterName,
+        bookingLink
+      });
+      
+      if (result) {
+        console.log(`Company booking cancellation email sent to: ${companyEmail} for vehicle: ${vehicleName}`);
+        res.json({ success: true, message: 'Company booking cancellation email sent successfully' });
+      } else {
+        console.error(`Failed to send company booking cancellation email to: ${companyEmail}`);
+        res.status(500).json({ success: false, error: 'Failed to send company booking cancellation email' });
+      }
+    } catch (error) {
+      console.error('Company booking cancellation email error:', error);
+      res.status(500).json({ error: 'Failed to send company booking cancellation email' });
+    }
+  });
+
   // Email service test endpoint
   app.post("/api/test-email", async (req, res) => {
     try {
