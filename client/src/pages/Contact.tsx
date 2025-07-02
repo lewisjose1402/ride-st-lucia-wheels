@@ -5,13 +5,66 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
 import { Mail, Phone, MapPin } from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { useState } from 'react';
+
+const contactFormSchema = z.object({
+  name: z.string().min(2, 'Name must be at least 2 characters'),
+  email: z.string().email('Please enter a valid email address'),
+  subject: z.string().min(3, 'Subject must be at least 3 characters'),
+  message: z.string().min(10, 'Message must be at least 10 characters'),
+});
+
+type ContactFormData = z.infer<typeof contactFormSchema>;
 
 const ContactPage = () => {
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Handle form submission
-    alert('Thank you for your message! We will get back to you soon.');
+  const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const form = useForm<ContactFormData>({
+    resolver: zodResolver(contactFormSchema),
+    defaultValues: {
+      name: '',
+      email: '',
+      subject: '',
+      message: '',
+    },
+  });
+
+  const onSubmit = async (data: ContactFormData) => {
+    setIsSubmitting(true);
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (response.ok) {
+        toast({
+          title: "Message sent successfully!",
+          description: "Thank you for your message. We'll get back to you soon.",
+        });
+        form.reset();
+      } else {
+        throw new Error('Failed to send message');
+      }
+    } catch (error) {
+      console.error('Contact form error:', error);
+      toast({
+        title: "Failed to send message",
+        description: "Please try again or contact us directly.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -75,21 +128,46 @@ const ContactPage = () => {
               {/* Contact Form */}
               <div className="bg-white p-6 rounded-lg shadow-md">
                 <h2 className="text-2xl font-bold text-brand-dark mb-6">Send Us a Message</h2>
-                <form onSubmit={handleSubmit}>
+                <form onSubmit={form.handleSubmit(onSubmit)}>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                     <div>
                       <Label htmlFor="name">Full Name</Label>
-                      <Input id="name" placeholder="Your name" required className="mt-1" />
+                      <Input 
+                        id="name" 
+                        placeholder="Your name" 
+                        className="mt-1" 
+                        {...form.register('name')}
+                      />
+                      {form.formState.errors.name && (
+                        <p className="text-red-500 text-sm mt-1">{form.formState.errors.name.message}</p>
+                      )}
                     </div>
                     <div>
                       <Label htmlFor="email">Email</Label>
-                      <Input id="email" type="email" placeholder="Your email" required className="mt-1" />
+                      <Input 
+                        id="email" 
+                        type="email" 
+                        placeholder="Your email" 
+                        className="mt-1"
+                        {...form.register('email')}
+                      />
+                      {form.formState.errors.email && (
+                        <p className="text-red-500 text-sm mt-1">{form.formState.errors.email.message}</p>
+                      )}
                     </div>
                   </div>
                   
                   <div className="mb-4">
                     <Label htmlFor="subject">Subject</Label>
-                    <Input id="subject" placeholder="What is this regarding?" required className="mt-1" />
+                    <Input 
+                      id="subject" 
+                      placeholder="What is this regarding?" 
+                      className="mt-1"
+                      {...form.register('subject')}
+                    />
+                    {form.formState.errors.subject && (
+                      <p className="text-red-500 text-sm mt-1">{form.formState.errors.subject.message}</p>
+                    )}
                   </div>
                   
                   <div className="mb-6">
@@ -97,13 +175,20 @@ const ContactPage = () => {
                     <Textarea 
                       id="message" 
                       placeholder="Tell us how we can help you..." 
-                      required 
-                      className="mt-1 min-h-[150px]" 
+                      className="mt-1 min-h-[150px]"
+                      {...form.register('message')}
                     />
+                    {form.formState.errors.message && (
+                      <p className="text-red-500 text-sm mt-1">{form.formState.errors.message.message}</p>
+                    )}
                   </div>
                   
-                  <Button type="submit" className="w-full bg-brand-purple hover:bg-brand-purple-dark">
-                    Send Message
+                  <Button 
+                    type="submit" 
+                    disabled={isSubmitting}
+                    className="w-full bg-brand-purple hover:bg-brand-purple-dark"
+                  >
+                    {isSubmitting ? 'Sending...' : 'Send Message'}
                   </Button>
                 </form>
               </div>

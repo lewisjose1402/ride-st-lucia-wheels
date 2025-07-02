@@ -1052,6 +1052,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Contact form submission endpoint
+  app.post("/api/contact", async (req, res) => {
+    try {
+      const emailService = getEmailService();
+      if (!emailService) {
+        return res.status(503).json({ error: 'Email service not initialized' });
+      }
+
+      const { name, email, subject, message } = req.body;
+      
+      if (!name || !email || !subject || !message) {
+        return res.status(400).json({ error: 'All fields are required' });
+      }
+
+      // Send contact form email to admin using Events API
+      const result = await emailService.sendEvent('contact-form-submission', 'admin@ridematchstlucia.com', {
+        'contact-name': name,
+        'contact-email': email,
+        'contact-subject': subject,
+        'contact-message': message,
+        'submission-date': new Date().toISOString()
+      });
+      
+      if (result) {
+        console.log(`Contact form submission sent to admin@ridematchstlucia.com from: ${email}`);
+        res.json({ success: true, message: 'Contact form submitted successfully' });
+      } else {
+        console.error(`Failed to send contact form submission from: ${email}`);
+        res.status(500).json({ success: false, error: 'Failed to send contact form submission' });
+      }
+    } catch (error) {
+      console.error('Contact form submission error:', error);
+      res.status(500).json({ error: 'Failed to send contact form submission' });
+    }
+  });
+
   // Manual reminder trigger endpoint (for testing)
   app.post("/api/emails/send-reminders", async (req, res) => {
     try {

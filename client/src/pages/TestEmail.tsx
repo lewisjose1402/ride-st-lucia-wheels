@@ -60,6 +60,11 @@ const TestEmail = () => {
   const [companyReminderRenterLastName, setCompanyReminderRenterLastName] = useState('');
   const [companyReminderPickupDateTime, setCompanyReminderPickupDateTime] = useState('');
   const [companyReminderBookingLink, setCompanyReminderBookingLink] = useState('');
+  // Contact form test state
+  const [contactName, setContactName] = useState('');
+  const [contactEmail, setContactEmail] = useState('');
+  const [contactSubject, setContactSubject] = useState('');
+  const [contactMessage, setContactMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
@@ -500,6 +505,53 @@ const TestEmail = () => {
     }
   };
 
+  const handleSendContactForm = async () => {
+    if (!contactName || !contactEmail || !contactSubject || !contactMessage) {
+      toast({
+        title: "Required fields missing",
+        description: "Please fill in all contact form fields",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: contactName,
+          email: contactEmail,
+          subject: contactSubject,
+          message: contactMessage
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        toast({
+          title: "Contact form sent!",
+          description: `Contact form submission sent to admin@ridematchstlucia.com`,
+        });
+        console.log('Contact form sent successfully:', data);
+      } else {
+        throw new Error('Failed to send contact form');
+      }
+    } catch (error) {
+      console.error('Error sending contact form:', error);
+      toast({
+        title: "Contact form failed",
+        description: "Failed to send contact form. Check console for details.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleSendCompanyReminderEmail = async () => {
     if (!companyReminderEmail || !companyReminderContactName || !companyReminderVehicleName || !companyReminderRenterFirstName || !companyReminderPickupDateTime) {
       toast({
@@ -559,7 +611,7 @@ const TestEmail = () => {
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="welcome" className="w-full">
-              <TabsList className="grid w-full grid-cols-10">
+              <TabsList className="grid w-full grid-cols-11">
                 <TabsTrigger value="welcome">Welcome</TabsTrigger>
                 <TabsTrigger value="company">Company</TabsTrigger>
                 <TabsTrigger value="booking">Renter</TabsTrigger>
@@ -570,6 +622,7 @@ const TestEmail = () => {
                 <TabsTrigger value="admin-cancel">Ad Cancel</TabsTrigger>
                 <TabsTrigger value="reminder">Reminder</TabsTrigger>
                 <TabsTrigger value="company-reminder">Co Remind</TabsTrigger>
+                <TabsTrigger value="contact">Contact</TabsTrigger>
               </TabsList>
               
               <TabsContent value="welcome" className="space-y-4 mt-6">
@@ -1394,6 +1447,70 @@ const TestEmail = () => {
                 <div className="text-sm text-gray-600 mt-4">
                   <p>This triggers the 'pre-rental-reminder-company' event in Loops.</p>
                   <p className="mt-1">Required properties: company-contact-name, vehicle-name, renter-first-name, renter-last-name, pickup-date-time, booking-link</p>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="contact" className="space-y-4 mt-6">
+                <div className="space-y-2">
+                  <Label htmlFor="contactName">Contact Name</Label>
+                  <Input
+                    id="contactName"
+                    type="text"
+                    value={contactName}
+                    onChange={(e) => setContactName(e.target.value)}
+                    placeholder="John Doe"
+                    required
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="contactEmailField">Contact Email</Label>
+                  <Input
+                    id="contactEmailField"
+                    type="email"
+                    value={contactEmail}
+                    onChange={(e) => setContactEmail(e.target.value)}
+                    placeholder="john@example.com"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="contactSubject">Subject</Label>
+                  <Input
+                    id="contactSubject"
+                    type="text"
+                    value={contactSubject}
+                    onChange={(e) => setContactSubject(e.target.value)}
+                    placeholder="Question about vehicle rental"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="contactMessage">Message</Label>
+                  <textarea
+                    id="contactMessage"
+                    value={contactMessage}
+                    onChange={(e) => setContactMessage(e.target.value)}
+                    placeholder="Hi, I have a question about..."
+                    className="w-full min-h-[100px] p-3 border border-gray-300 rounded-md resize-vertical"
+                    required
+                  />
+                </div>
+                
+                <Button 
+                  onClick={handleSendContactForm}
+                  disabled={isLoading}
+                  className="w-full"
+                >
+                  {isLoading ? 'Sending...' : 'Send Contact Form'}
+                </Button>
+
+                <div className="text-sm text-gray-600 mt-4">
+                  <p>This triggers the 'contact-form-submission' event in Loops.</p>
+                  <p className="mt-1">Sends to: admin@ridematchstlucia.com</p>
+                  <p className="mt-1">Required properties: contact-name, contact-email, contact-subject, contact-message, submission-date</p>
                 </div>
               </TabsContent>
             </Tabs>
