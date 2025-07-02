@@ -1101,6 +1101,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Catch-all for API routes - this ensures unknown API routes return JSON instead of HTML
+  app.use('/api/*', (req, res) => {
+    res.status(404).json({ 
+      error: 'API endpoint not found',
+      path: req.path,
+      method: req.method,
+      timestamp: new Date().toISOString()
+    });
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
