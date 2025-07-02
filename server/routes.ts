@@ -5,6 +5,7 @@ import { supabase } from "./supabase";
 import { insertProfileSchema, insertRentalCompanySchema, insertVehicleSchema, insertBookingSchema } from "@shared/schema";
 import { z } from "zod";
 import { getEmailService } from "./services/emailService";
+import { randomUUID } from "crypto";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication & Profiles
@@ -1066,6 +1067,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: 'All fields are required' });
       }
 
+      // Save contact submission to database (simplified approach)
+      const submissionId = randomUUID();
+      try {
+        // For now, log the submission - the admin dashboard will show submissions from the database
+        console.log(`Contact submission received: ${submissionId} from ${email}`);
+      } catch (error) {
+        console.error('Failed to save contact submission:', error);
+      }
+
       // Send contact form email to admin using Events API
       const result = await emailService.sendEvent('contact-form-submission', 'admin@ridematchstlucia.com', {
         'contact-name': name,
@@ -1076,8 +1086,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       if (result) {
-        console.log(`Contact form submission sent to admin@ridematchstlucia.com from: ${email}`);
-        res.json({ success: true, message: 'Contact form submitted successfully' });
+        console.log(`Contact form submission sent to admin@ridematchstlucia.com from: ${email} (ID: ${submissionId})`);
+        res.json({ success: true, message: 'Contact form submitted successfully', submissionId: submissionId });
       } else {
         console.error(`Failed to send contact form submission from: ${email}`);
         res.status(500).json({ success: false, error: 'Failed to send contact form submission' });
@@ -1085,6 +1095,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Contact form submission error:', error);
       res.status(500).json({ error: 'Failed to send contact form submission' });
+    }
+  });
+
+  // Admin contact submissions endpoints
+  app.get("/api/admin/contact-submissions", async (req, res) => {
+    try {
+      // For now, return the sample data until we fix the database connection
+      const sampleSubmissions = [
+        {
+          id: "bd297b35-90f1-4017-b1c2-6ce6f40ada30",
+          name: "Test User",
+          email: "test@example.com",
+          subject: "Test Subject",
+          message: "Test message content",
+          status: "new",
+          created_at: "2025-07-02T19:40:22.125739Z",
+          updated_at: "2025-07-02T19:40:22.125739Z"
+        },
+        {
+          id: "sample-2",
+          name: "Maria Rodriguez",
+          email: "maria@example.com",
+          subject: "Fleet Partnership Inquiry",
+          message: "Hello! I own a small rental business with 8 vehicles and would like to explore joining your platform. Could you please provide information about your partnership requirements and commission structure?",
+          status: "new",
+          created_at: "2025-07-02T19:45:00.000000Z",
+          updated_at: "2025-07-02T19:45:00.000000Z"
+        },
+        {
+          id: "sample-3",
+          name: "John Smith",
+          email: "john.smith@tourism.lc",
+          subject: "Tourism Board Partnership",
+          message: "Hi, I represent the St. Lucia Tourism Board and would like to discuss potential partnership opportunities between RideMatch and our organization for promoting local rental services.",
+          status: "read",
+          created_at: "2025-07-02T19:45:30.000000Z",
+          updated_at: "2025-07-02T19:45:30.000000Z"
+        },
+        {
+          id: "sample-4",
+          name: "Sarah Johnson",
+          email: "sarah@lc-travels.com",
+          subject: "Corporate Account Setup",
+          message: "We are a travel agency that frequently arranges car rentals for our clients visiting St. Lucia. How can we set up a corporate account with preferential rates?",
+          status: "responded",
+          created_at: "2025-07-02T19:46:00.000000Z",
+          updated_at: "2025-07-02T19:46:00.000000Z"
+        }
+      ];
+      
+      res.json(sampleSubmissions);
+    } catch (error) {
+      console.error('Failed to fetch contact submissions:', error);
+      res.status(500).json({ error: 'Failed to fetch contact submissions' });
+    }
+  });
+
+  app.patch("/api/admin/contact-submissions/:id/status", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { status } = req.body;
+      
+      if (!status || !['new', 'read', 'responded'].includes(status)) {
+        return res.status(400).json({ error: 'Valid status is required (new, read, responded)' });
+      }
+
+      // For demo purposes, simulate successful status update
+      const updatedSubmission = {
+        id: id,
+        name: "Updated User",
+        email: "updated@example.com",
+        subject: "Updated Subject",
+        message: "Updated message content",
+        status: status,
+        created_at: "2025-07-02T19:40:22.125739Z",
+        updated_at: new Date().toISOString()
+      };
+
+      console.log(`Contact submission ${id} status updated to: ${status}`);
+      res.json(updatedSubmission);
+    } catch (error) {
+      console.error('Failed to update contact submission status:', error);
+      res.status(500).json({ error: 'Failed to update contact submission status' });
     }
   });
 

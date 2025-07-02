@@ -176,6 +176,18 @@ export const reviews = pgTable("reviews", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Contact Form Submissions
+export const contactSubmissions = pgTable("contact_submissions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
+  email: text("email").notNull(),
+  subject: text("subject").notNull(),
+  message: text("message").notNull(),
+  status: text("status").default("new").notNull(), // new, read, responded
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Insert schemas
 export const insertProfileSchema = createInsertSchema(profiles).omit({
   id: true,
@@ -207,6 +219,12 @@ export const insertCompanySettingsSchema = createInsertSchema(companySettings).o
   updatedAt: true,
 });
 
+export const insertContactSubmissionSchema = createInsertSchema(contactSubmissions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Types
 export type Profile = typeof profiles.$inferSelect;
 export type InsertProfile = z.infer<typeof insertProfileSchema>;
@@ -230,6 +248,9 @@ export type VehicleCalendarFeed = typeof vehicleCalendarFeeds.$inferSelect;
 export type VehicleCalendarBlock = typeof vehicleCalendarBlocks.$inferSelect;
 export type IcalBooking = typeof icalBookings.$inferSelect;
 export type Review = typeof reviews.$inferSelect;
+
+export type ContactSubmission = typeof contactSubmissions.$inferSelect;
+export type InsertContactSubmission = z.infer<typeof insertContactSubmissionSchema>;
 
 // Legacy compatibility (keeping for now during migration)
 export const users = pgTable("users", {

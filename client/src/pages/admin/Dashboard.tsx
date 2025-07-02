@@ -8,6 +8,7 @@ import { CompaniesManagement } from '@/components/admin/CompaniesManagement';
 import { VehiclesManagement } from '@/components/admin/VehiclesManagement';
 import { CalendarFeedsManagement } from '@/components/admin/CalendarFeedsManagement';
 import { ManualBlocksManagement } from '@/components/admin/ManualBlocksManagement';
+import { ContactSubmissionsManagement } from '@/components/admin/ContactSubmissionsManagement';
 import { DashboardStats } from '@/components/admin/DashboardStats';
 
 const AdminDashboard = () => {
@@ -41,12 +42,13 @@ const AdminDashboard = () => {
         <DashboardStats />
 
         <Tabs defaultValue="bookings" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="bookings">Bookings</TabsTrigger>
             <TabsTrigger value="companies">Companies</TabsTrigger>
             <TabsTrigger value="vehicles">Vehicles</TabsTrigger>
             <TabsTrigger value="calendar-feeds">Calendar Feeds</TabsTrigger>
             <TabsTrigger value="manual-blocks">Manual Blocks</TabsTrigger>
+            <TabsTrigger value="contact-submissions">Contact</TabsTrigger>
           </TabsList>
 
           <TabsContent value="bookings">
@@ -67,6 +69,10 @@ const AdminDashboard = () => {
 
           <TabsContent value="manual-blocks">
             <ManualBlocksManagement />
+          </TabsContent>
+
+          <TabsContent value="contact-submissions">
+            <ContactSubmissionsManagement />
           </TabsContent>
         </Tabs>
       </div>

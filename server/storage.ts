@@ -12,6 +12,7 @@ import {
   vehicleCalendarBlocks,
   icalBookings,
   reviews,
+  contactSubmissions,
   type Profile,
   type InsertProfile,
   type RentalCompany,
@@ -27,6 +28,8 @@ import {
   type VehicleCalendarFeed,
   type VehicleCalendarBlock,
   type IcalBooking,
+  type ContactSubmission,
+  type InsertContactSubmission,
   users,
   type User,
   type InsertUser
@@ -87,6 +90,12 @@ export interface IStorage {
   getIcalBookings(vehicleId: string): Promise<IcalBooking[]>;
   addIcalBooking(booking: Partial<IcalBooking>): Promise<IcalBooking>;
   clearIcalBookings(feedId: string): Promise<boolean>;
+  
+  // Contact submission management
+  getContactSubmissions(): Promise<ContactSubmission[]>;
+  getContactSubmission(id: string): Promise<ContactSubmission | undefined>;
+  createContactSubmission(submission: InsertContactSubmission): Promise<ContactSubmission>;
+  updateContactSubmissionStatus(id: string, status: string): Promise<ContactSubmission | undefined>;
   
   // Legacy user methods (for compatibility during migration)
   getUser(id: number): Promise<User | undefined>;
@@ -439,6 +448,77 @@ export class DatabaseStorage implements IStorage {
   async createUser(user: InsertUser): Promise<User> {
     const result = await db.insert(users).values(user).returning();
     return result[0];
+  }
+
+  // Contact submission methods
+  async getContactSubmissions(): Promise<ContactSubmission[]> {
+    try {
+      const result = await db.select().from(contactSubmissions).orderBy(desc(contactSubmissions.createdAt));
+      return result;
+    } catch (error) {
+      console.error('Drizzle connection failed, trying direct SQL query...');
+      const { data, error: supabaseError } = await supabase.rpc('sql', {
+        query: 'SELECT * FROM contact_submissions ORDER BY created_at DESC'
+      });
+      
+      if (supabaseError) throw supabaseError;
+      return data || [];
+    }
+  }
+
+  async getContactSubmission(id: string): Promise<ContactSubmission | undefined> {
+    try {
+      const result = await db.select().from(contactSubmissions).where(eq(contactSubmissions.id, id)).limit(1);
+      return result[0];
+    } catch (error) {
+      console.error('Drizzle connection failed, trying Supabase client...');
+      const { data, error: supabaseError } = await supabase
+        .from('contact_submissions')
+        .select('*')
+        .eq('id', id)
+        .single();
+      
+      if (supabaseError) throw supabaseError;
+      return data;
+    }
+  }
+
+  async createContactSubmission(submission: InsertContactSubmission): Promise<ContactSubmission> {
+    try {
+      const result = await db.insert(contactSubmissions).values(submission).returning();
+      return result[0];
+    } catch (error) {
+      console.error('Drizzle connection failed, trying Supabase client...');
+      const { data, error: supabaseError } = await supabase
+        .from('contact_submissions')
+        .insert(submission)
+        .select()
+        .single();
+      
+      if (supabaseError) throw supabaseError;
+      return data;
+    }
+  }
+
+  async updateContactSubmissionStatus(id: string, status: string): Promise<ContactSubmission | undefined> {
+    try {
+      const result = await db.update(contactSubmissions)
+        .set({ status, updatedAt: new Date() })
+        .where(eq(contactSubmissions.id, id))
+        .returning();
+      return result[0];
+    } catch (error) {
+      console.error('Drizzle connection failed, trying Supabase client...');
+      const { data, error: supabaseError } = await supabase
+        .from('contact_submissions')
+        .update({ status, updated_at: new Date().toISOString() })
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (supabaseError) throw supabaseError;
+      return data;
+    }
   }
 }
 
