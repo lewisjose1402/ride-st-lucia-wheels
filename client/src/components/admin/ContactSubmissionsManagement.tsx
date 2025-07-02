@@ -6,8 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { Search, RefreshCw, Mail, Calendar, User, MessageSquare } from 'lucide-react';
+import { Search, RefreshCw, Mail, Calendar, User, MessageSquare, Eye, Clock } from 'lucide-react';
 
 interface ContactSubmission {
   id: string;
@@ -253,16 +255,101 @@ export const ContactSubmissionsManagement = () => {
                               Mark Responded
                             </Button>
                           )}
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => {
-                              const mailtoLink = `mailto:${submission.email}?subject=Re: ${submission.subject}&body=Hi ${submission.name},%0A%0AThank you for contacting RideMatch St. Lucia.%0A%0A`;
-                              window.open(mailtoLink, '_blank');
-                            }}
-                          >
-                            Reply
-                          </Button>
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                              >
+                                <Eye className="h-4 w-4 mr-1" />
+                                View
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-2xl">
+                              <DialogHeader>
+                                <DialogTitle className="flex items-center gap-2">
+                                  <MessageSquare className="h-5 w-5" />
+                                  Contact Submission Details
+                                </DialogTitle>
+                                <DialogDescription>
+                                  Full details of the contact form submission
+                                </DialogDescription>
+                              </DialogHeader>
+                              <div className="space-y-6">
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div>
+                                    <h4 className="font-semibold text-sm text-gray-700 mb-2 flex items-center gap-2">
+                                      <User className="h-4 w-4" />
+                                      Contact Information
+                                    </h4>
+                                    <div className="space-y-2">
+                                      <p><span className="font-medium">Name:</span> {submission.name}</p>
+                                      <p><span className="font-medium">Email:</span> {submission.email}</p>
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <h4 className="font-semibold text-sm text-gray-700 mb-2 flex items-center gap-2">
+                                      <Clock className="h-4 w-4" />
+                                      Timeline
+                                    </h4>
+                                    <div className="space-y-2">
+                                      <p><span className="font-medium">Submitted:</span> {formatDate(submission.createdAt)}</p>
+                                      <p><span className="font-medium">Updated:</span> {formatDate(submission.updatedAt)}</p>
+                                      <div className="flex items-center gap-2">
+                                        <span className="font-medium">Status:</span>
+                                        {getStatusBadge(submission.status)}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                                
+                                <Separator />
+                                
+                                <div>
+                                  <h4 className="font-semibold text-sm text-gray-700 mb-2">Subject</h4>
+                                  <p className="text-sm bg-gray-50 p-3 rounded border">{submission.subject}</p>
+                                </div>
+                                
+                                <div>
+                                  <h4 className="font-semibold text-sm text-gray-700 mb-2">Message</h4>
+                                  <div className="text-sm bg-gray-50 p-4 rounded border max-h-60 overflow-y-auto">
+                                    <p className="whitespace-pre-wrap">{submission.message}</p>
+                                  </div>
+                                </div>
+                                
+                                <div className="flex gap-2 pt-4 border-t">
+                                  {submission.status === 'new' && (
+                                    <Button
+                                      onClick={() => handleStatusChange(submission.id, 'read')}
+                                      disabled={updateStatusMutation.isPending}
+                                      className="flex items-center gap-2"
+                                    >
+                                      <Eye className="h-4 w-4" />
+                                      Mark as Read
+                                    </Button>
+                                  )}
+                                  {submission.status === 'read' && (
+                                    <Button
+                                      onClick={() => handleStatusChange(submission.id, 'responded')}
+                                      disabled={updateStatusMutation.isPending}
+                                      className="flex items-center gap-2"
+                                    >
+                                      <MessageSquare className="h-4 w-4" />
+                                      Mark as Responded
+                                    </Button>
+                                  )}
+                                  <Button
+                                    variant="outline"
+                                    onClick={() => window.open(`mailto:${submission.email}?subject=Re: ${submission.subject}`, '_blank')}
+                                    className="flex items-center gap-2"
+                                  >
+                                    <Mail className="h-4 w-4" />
+                                    Reply via Email
+                                  </Button>
+                                </div>
+                              </div>
+                            </DialogContent>
+                          </Dialog>
                         </div>
                       </TableCell>
                     </TableRow>
