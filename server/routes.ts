@@ -6,6 +6,7 @@ import { insertProfileSchema, insertRentalCompanySchema, insertVehicleSchema, in
 import { z } from "zod";
 import { getEmailService } from "./services/emailService";
 import { randomUUID } from "crypto";
+import ical from "ical-generator";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication & Profiles
@@ -563,6 +564,127 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ error: 'Failed to delete calendar block' });
+    }
+  });
+
+  // Public iCal feed endpoint for Google Calendar integration
+  app.get("/api/calendar/:vehicleId/:token", async (req, res) => {
+    try {
+      const { vehicleId, token } = req.params;
+      
+      // For testing, use a simple validation approach
+      // Expected format: vehicleId should be UUID and token should be UUID
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!uuidRegex.test(vehicleId) || !uuidRegex.test(token)) {
+        return res.status(404).send('Invalid calendar feed URL format');
+      }
+
+      // Get real vehicle data and bookings from Supabase
+      const { data: vehicle, error: vehicleError } = await supabase
+        .from('vehicles')
+        .select('id, name, feed_token')
+        .eq('id', vehicleId)
+        .eq('feed_token', token)
+        .single();
+
+      if (vehicleError || !vehicle) {
+        return res.status(404).send('Calendar feed not found or invalid token');
+      }
+
+      // Get confirmed bookings for this vehicle
+      const { data: bookings } = await supabase
+        .from('bookings')
+        .select('id, pickup_date, dropoff_date, status')
+        .eq('vehicle_id', vehicleId)
+        .eq('status', 'confirmed');
+
+      const confirmedBookings = (bookings || []).filter(booking => 
+        booking.pickup_date && booking.dropoff_date
+      );
+
+      // Get manual calendar blocks
+      const { data: calendarBlocks } = await supabase
+        .from('vehicle_calendar_blocks')
+        .select('id, start_date, end_date, reason')
+        .eq('vehicle_id', vehicleId);
+
+      // Get external iCal bookings
+      const { data: icalBookings } = await supabase
+        .from('ical_bookings')
+        .select('id, start_date, end_date, summary')
+        .eq('vehicle_id', vehicleId);
+
+      // Create iCal calendar
+      const calendar = ical({
+        name: `${vehicle.name} - Availability Calendar`,
+        description: `Booking calendar for ${vehicle.name}`,
+        timezone: 'America/St_Lucia',
+        prodId: {
+          company: 'RideMatch St. Lucia',
+          product: 'Vehicle Calendar'
+        }
+      });
+
+      // Add confirmed bookings as events
+      confirmedBookings.forEach((booking: any) => {
+        const startDate = new Date(booking.pickup_date);
+        const endDate = new Date(booking.dropoff_date);
+        
+        calendar.createEvent({
+          id: `booking-${booking.id}`,
+          start: startDate,
+          end: endDate,
+          summary: 'Reserved',
+          description: `Vehicle Reserved - ${vehicle.name}`,
+          allDay: true
+        });
+      });
+
+      // Add manual calendar blocks
+      (calendarBlocks || []).forEach((block: any) => {
+        const startDate = new Date(block.start_date);
+        const endDate = new Date(block.end_date);
+        
+        calendar.createEvent({
+          id: `block-${block.id}`,
+          start: startDate,
+          end: endDate,
+          summary: 'Blocked',
+          description: block.reason || `Manual block - ${vehicle.name}`,
+          allDay: true
+        });
+      });
+
+      // Add external iCal bookings
+      (icalBookings || []).forEach((icalBooking: any) => {
+        const startDate = new Date(icalBooking.start_date);
+        const endDate = new Date(icalBooking.end_date);
+        
+        calendar.createEvent({
+          id: `external-${icalBooking.id}`,
+          start: startDate,
+          end: endDate,
+          summary: icalBooking.summary || 'External Booking',
+          description: `External calendar event - ${vehicle.name}`,
+          allDay: true
+        });
+      });
+
+      // Set proper headers for iCal
+      res.set({
+        'Content-Type': 'text/calendar; charset=utf-8',
+        'Content-Disposition': `attachment; filename="${vehicle.name.replace(/[^a-zA-Z0-9]/g, '-')}-calendar.ics"`,
+        'Cache-Control': 'no-cache, must-revalidate',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept'
+      });
+
+      // Return the iCal content
+      res.send(calendar.toString());
+      
+    } catch (error) {
+      console.error('Calendar feed error:', error);
+      res.status(500).send('Internal server error generating calendar feed');
     }
   });
 
