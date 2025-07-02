@@ -691,6 +691,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/emails/booking-confirmation-renter", async (req, res) => {
+    try {
+      const emailService = getEmailService();
+      if (!emailService) {
+        return res.status(503).json({ error: 'Email service not initialized' });
+      }
+
+      const { 
+        renterEmail,
+        renterFirstName,
+        renterLastName,
+        vehicleName, 
+        pickupDateTime, 
+        dropoffDateTime,
+        pickupLocation,
+        dropoffLocation,
+        totalPrice,
+        companyName
+      } = req.body;
+      
+      if (!renterEmail || !vehicleName || !pickupDateTime || !dropoffDateTime) {
+        return res.status(400).json({ error: 'Missing required booking details' });
+      }
+
+      // Use the sendEvent method for renter booking confirmation
+      const result = await emailService.sendEvent('booking-confirmation-renter', renterEmail, {
+        'renter-first-name': renterFirstName || 'Renter',
+        'renter-last-name': renterLastName || '',
+        'vehicle-name': vehicleName,
+        'pickup-date-time': pickupDateTime,
+        'dropoff-date-time': dropoffDateTime,
+        'pickup-location': pickupLocation || 'Not specified',
+        'dropoff-location': dropoffLocation || 'Not specified',
+        'total-price': totalPrice || 0,
+        'company-name': companyName || 'Rental Company',
+        'booking-link': 'https://ridematchstlucia.com/my-bookings'
+      });
+      
+      if (result) {
+        console.log(`Renter booking confirmation email sent to: ${renterEmail} for vehicle: ${vehicleName}`);
+        res.json({ success: true, message: 'Renter booking confirmation email sent successfully' });
+      } else {
+        console.error(`Failed to send renter booking confirmation email to: ${renterEmail}`);
+        res.status(500).json({ success: false, error: 'Failed to send renter booking confirmation email' });
+      }
+    } catch (error) {
+      console.error('Renter booking confirmation email error:', error);
+      res.status(500).json({ error: 'Failed to send renter booking confirmation email' });
+    }
+  });
+
   app.post("/api/emails/booking-confirmation-company", async (req, res) => {
     try {
       const emailService = getEmailService();
