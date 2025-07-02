@@ -1,13 +1,19 @@
-import { Pool, neonConfig } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-serverless';
-import ws from "ws";
+import { Pool } from 'pg';
+import { drizzle } from 'drizzle-orm/node-postgres';
 import * as schema from "@shared/schema";
 
-neonConfig.webSocketConstructor = ws;
+// Use Supabase database connection string provided by user (URL encode the password)
+const supabaseDatabaseUrl = "postgresql://postgres:Jambojet24145%26@db.bmkoiaglbvkxszbipzul.supabase.co:5432/postgres";
+let databaseUrl = supabaseDatabaseUrl;
+console.log('Using Supabase database connection');
 
-// For now, continue using Neon database but we need to migrate data or reconfigure
-let databaseUrl = process.env.DATABASE_URL;
-console.log('Using configured database connection');
+// Configure SSL for Supabase connection
+const connectionConfig = {
+  connectionString: databaseUrl,
+  ssl: {
+    rejectUnauthorized: false
+  }
+};
 
 if (!databaseUrl) {
   throw new Error(
@@ -16,5 +22,5 @@ if (!databaseUrl) {
 }
 
 console.log('Connecting to database:', databaseUrl.substring(0, 50) + '...');
-export const pool = new Pool({ connectionString: databaseUrl });
+export const pool = new Pool(connectionConfig);
 export const db = drizzle({ client: pool, schema });

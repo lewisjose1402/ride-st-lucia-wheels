@@ -1,5 +1,6 @@
 import { eq, and, desc, sql } from "drizzle-orm";
 import { db } from "./db";
+import { supabase } from "./supabase";
 import {
   profiles,
   rentalCompanies,
@@ -143,7 +144,27 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllRentalCompanies(): Promise<RentalCompany[]> {
-    return await db.select().from(rentalCompanies).orderBy(desc(rentalCompanies.createdAt));
+    try {
+      // Try Drizzle first, fall back to Supabase client
+      try {
+        return await db.select().from(rentalCompanies).orderBy(desc(rentalCompanies.createdAt));
+      } catch (drizzleError) {
+        console.log('Drizzle connection failed, trying Supabase client...');
+        const { data, error } = await supabase
+          .from('rental_companies')
+          .select('*')
+          .order('created_at', { ascending: false });
+        
+        if (error) {
+          throw error;
+        }
+        
+        return data || [];
+      }
+    } catch (error) {
+      console.error('Error getting all rental companies:', error);
+      throw error;
+    }
   }
 
   // Vehicle methods
@@ -159,9 +180,30 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllVehicles(): Promise<Vehicle[]> {
-    return await db.select().from(vehicles)
-      .where(eq(vehicles.isAvailable, true))
-      .orderBy(desc(vehicles.createdAt));
+    try {
+      // Try Drizzle first, fall back to Supabase client
+      try {
+        return await db.select().from(vehicles)
+          .where(eq(vehicles.isAvailable, true))
+          .orderBy(desc(vehicles.createdAt));
+      } catch (drizzleError) {
+        console.log('Drizzle connection failed, trying Supabase client...');
+        const { data, error } = await supabase
+          .from('vehicles')
+          .select('*')
+          .eq('is_available', true)
+          .order('created_at', { ascending: false });
+        
+        if (error) {
+          throw error;
+        }
+        
+        return data || [];
+      }
+    } catch (error) {
+      console.error('Error getting all vehicles:', error);
+      throw error;
+    }
   }
 
   async getFeaturedVehicles(): Promise<Vehicle[]> {
@@ -222,8 +264,33 @@ export class DatabaseStorage implements IStorage {
 
   // Booking methods
   async getBooking(id: string): Promise<Booking | undefined> {
-    const result = await db.select().from(bookings).where(eq(bookings.id, id)).limit(1);
-    return result[0];
+    try {
+      // Try Drizzle first, fall back to Supabase client
+      try {
+        const result = await db.select().from(bookings).where(eq(bookings.id, id)).limit(1);
+        return result[0];
+      } catch (drizzleError) {
+        console.log('Drizzle connection failed, trying Supabase client...');
+        const { data, error } = await supabase
+          .from('bookings')
+          .select('*')
+          .eq('id', id)
+          .single();
+        
+        if (error) {
+          if (error.code === 'PGRST116') {
+            // No rows found
+            return undefined;
+          }
+          throw error;
+        }
+        
+        return data;
+      }
+    } catch (error) {
+      console.error('Error getting booking:', error);
+      throw error;
+    }
   }
 
   async getBookingsByUserId(userId: string): Promise<Booking[]> {
@@ -245,8 +312,28 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllBookings(): Promise<Booking[]> {
-    return await db.select().from(bookings)
-      .orderBy(desc(bookings.createdAt));
+    try {
+      // Try Drizzle first, fall back to Supabase client
+      try {
+        return await db.select().from(bookings)
+          .orderBy(desc(bookings.createdAt));
+      } catch (drizzleError) {
+        console.log('Drizzle connection failed, trying Supabase client...');
+        const { data, error } = await supabase
+          .from('bookings')
+          .select('*')
+          .order('created_at', { ascending: false });
+        
+        if (error) {
+          throw error;
+        }
+        
+        return data || [];
+      }
+    } catch (error) {
+      console.error('Error getting all bookings:', error);
+      throw error;
+    }
   }
 
   async createBooking(booking: InsertBooking): Promise<Booking> {

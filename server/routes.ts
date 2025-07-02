@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { supabase } from "./supabase";
 import { insertProfileSchema, insertRentalCompanySchema, insertVehicleSchema, insertBookingSchema } from "@shared/schema";
 import { z } from "zod";
 import { getEmailService } from "./services/emailService";
@@ -1060,6 +1061,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Manual reminder trigger error:', error);
       res.status(500).json({ error: 'Failed to trigger reminders' });
+    }
+  });
+
+  // Test Supabase connection
+  app.get("/api/test-supabase", async (_req, res) => {
+    try {
+      const { data, error } = await supabase
+        .from('bookings')
+        .select('id, created_at, status')
+        .limit(5);
+      
+      if (error) {
+        throw error;
+      }
+      
+      res.json({
+        connection: 'success',
+        bookings_found: data?.length || 0,
+        sample_bookings: data || []
+      });
+    } catch (error) {
+      res.status(500).json({
+        connection: 'failed',
+        error: error instanceof Error ? error.message : String(error)
+      });
     }
   });
 
