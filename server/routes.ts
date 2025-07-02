@@ -1101,6 +1101,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Database diagnostics route
+  app.get("/api/debug/database", async (req, res) => {
+    try {
+      console.log('Database diagnostic started');
+      
+      // Test basic database connectivity
+      const bookings = await storage.getAllBookings();
+      const vehicles = await storage.getAllVehicles();
+      const companies = await storage.getAllRentalCompanies();
+      
+      const diagnostic = {
+        database_connection: 'connected',
+        bookings_count: bookings.length,
+        vehicles_count: vehicles.length,
+        companies_count: companies.length,
+        sample_booking_ids: bookings.slice(0, 3).map(b => b.id),
+        environment: {
+          node_env: process.env.NODE_ENV,
+          has_database_url: !!process.env.DATABASE_URL,
+          database_url_prefix: process.env.DATABASE_URL?.substring(0, 30)
+        }
+      };
+      
+      console.log('Database diagnostic completed:', diagnostic);
+      res.json(diagnostic);
+    } catch (error) {
+      console.error('Database diagnostic error:', error);
+      res.status(500).json({ 
+        error: 'Database diagnostic failed',
+        details: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
+  // Bookings API routes
+  app.get("/api/bookings", async (req, res) => {
+    try {
+      const bookings = await storage.getAllBookings();
+      res.json(bookings);
+    } catch (error) {
+      console.error('Failed to fetch bookings:', error);
+      res.status(500).json({ error: 'Failed to fetch bookings' });
+    }
+  });
+
   // Catch-all for API routes - this ensures unknown API routes return JSON instead of HTML
   app.use('/api/*', (req, res) => {
     res.status(404).json({ 
