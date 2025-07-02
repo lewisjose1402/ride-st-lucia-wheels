@@ -148,6 +148,12 @@ RideMatch St. Lucia is a comprehensive vehicle rental platform that connects tou
   - Fixed company dashboard navigation link from /company to /company/dashboard
   - Added redirect route from /company to /company/dashboard for convenience
   - Updated Supabase Edge Function to use ridematchstlucia.com domain for email API calls
+- July 2, 2025. Critical email integration fixes completed:
+  - Fixed custom domain routing issue - redeployed with proper server hosting configuration
+  - Fixed booking cancellation email integration - frontend now uses backend API route that triggers emails
+  - Verified all email endpoints are working correctly after domain fix
+  - Booking confirmation emails triggered automatically via Supabase Edge Function when Stripe payments succeed
+  - Booking cancellation emails now sent automatically when users cancel bookings through frontend
 
 ## User Preferences
 

@@ -186,42 +186,38 @@ const MyBookings = () => {
       setCancellingBooking(bookingId);
       console.log('Cancelling booking:', bookingId);
 
-      const { error } = await supabase
-        .from('bookings')
-        .update({ 
-          status: 'cancelled',
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', bookingId);
+      // Use the backend API route that triggers email notifications
+      const response = await fetch(`/api/bookings/${bookingId}/cancel`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
 
-      if (error) {
-        console.error('Error cancelling booking:', error);
-        toast({
-          title: "Cancellation Failed",
-          description: "Failed to cancel your booking. Please try again.",
-          variant: "destructive",
-        });
-      } else {
-        console.log('Booking cancelled successfully');
-        toast({
-          title: "Booking Cancelled",
-          description: "Your booking has been cancelled successfully.",
-        });
-        
-        // Update the local state to reflect the cancellation
-        setBookings(prevBookings =>
-          prevBookings.map(booking =>
-            booking.id === bookingId
-              ? { ...booking, status: 'cancelled' }
-              : booking
-          )
-        );
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to cancel booking');
       }
-    } catch (error) {
-      console.error('Unexpected error cancelling booking:', error);
+
+      console.log('Booking cancelled successfully');
       toast({
-        title: "Error",
-        description: "An unexpected error occurred while cancelling your booking",
+        title: "Booking Cancelled",
+        description: "Your booking has been cancelled successfully. Email notifications have been sent.",
+      });
+      
+      // Update the local state to reflect the cancellation
+      setBookings(prevBookings =>
+        prevBookings.map(booking =>
+          booking.id === bookingId
+            ? { ...booking, status: 'cancelled' }
+            : booking
+        )
+      );
+    } catch (error) {
+      console.error('Error cancelling booking:', error);
+      toast({
+        title: "Cancellation Failed",
+        description: error instanceof Error ? error.message : "Failed to cancel your booking. Please try again.",
         variant: "destructive",
       });
     } finally {
