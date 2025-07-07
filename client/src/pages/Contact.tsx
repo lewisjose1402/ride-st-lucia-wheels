@@ -100,7 +100,6 @@ const ContactPage = () => {
                     <div>
                       <h3 className="font-medium text-brand-dark">Email Us</h3>
                       <p className="text-gray-600">info@ridematchstlucia.com</p>
-                      <p className="text-gray-600">support@ridematchstlucia.com</p>
                     </div>
                   </div>
                   
