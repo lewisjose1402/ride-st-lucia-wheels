@@ -70,7 +70,6 @@ const ContactPage = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      
       <main className="flex-grow pt-16">
         {/* Hero Section */}
         <section className="bg-brand-purple text-white py-16">
@@ -99,7 +98,7 @@ const ContactPage = () => {
                     <Mail className="text-brand-purple mr-4 mt-1" />
                     <div>
                       <h3 className="font-medium text-brand-dark">Email Us</h3>
-                      <p className="text-gray-600">info@ridematchstlucia.com</p>
+                      <p className="text-gray-600">support@ridematchstlucia.com</p>
                     </div>
                   </div>
                   
@@ -195,7 +194,6 @@ const ContactPage = () => {
           </div>
         </section>
       </main>
-      
       <Footer />
     </div>
   );
