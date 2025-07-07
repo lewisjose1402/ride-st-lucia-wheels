@@ -74,7 +74,7 @@ const Footer = () => {
             <h3 className="font-bold text-lg mb-4">Contact Us</h3>
             <p className="flex items-center text-gray-300 mb-2">
               <Mail size={16} className="mr-2" />
-              <a href="mailto:info@ridematchstlucia.com" className="hover:text-white">
+              <a href="mailto:admin@ridematchstlucia.com" className="hover:text-white">
                 info@ridematchstlucia.com
               </a>
             </p>

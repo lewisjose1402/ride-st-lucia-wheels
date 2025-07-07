@@ -21,6 +21,7 @@ const SignUp = () => {
   const [passwordError, setPasswordError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [companyName, setCompanyName] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [generalError, setGeneralError] = useState('');
   
   const { signUpAsRenter, signUpAsCompany } = useAuth();
@@ -51,7 +52,7 @@ const SignUp = () => {
           setGeneralError("Company name is required");
           return;
         }
-        result = await signUpAsCompany(email, password, companyName.trim());
+        result = await signUpAsCompany(email, password, companyName.trim(), phoneNumber.trim());
       } else {
         result = await signUpAsRenter(email, password, firstName, lastName);
       }
@@ -203,20 +204,38 @@ const SignUp = () => {
               )}
 
               {userType === 'company' && (
-                <div>
-                  <label htmlFor="companyName" className="block text-sm font-medium text-gray-700">
-                    Company / Registered Business Name
-                  </label>
-                  <Input 
-                    id="companyName" 
-                    name="companyName" 
-                    type="text" 
-                    required 
-                    value={companyName} 
-                    onChange={e => setCompanyName(e.target.value)} 
-                    className="mt-1" 
-                    placeholder="Enter your company name" 
-                  />
+                <div className="space-y-4">
+                  <div>
+                    <label htmlFor="companyName" className="block text-sm font-medium text-gray-700">
+                      Company / Registered Business Name
+                    </label>
+                    <Input 
+                      id="companyName" 
+                      name="companyName" 
+                      type="text" 
+                      required 
+                      value={companyName} 
+                      onChange={e => setCompanyName(e.target.value)} 
+                      className="mt-1" 
+                      placeholder="Enter your company name" 
+                    />
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700">
+                      Phone Number
+                    </label>
+                    <Input 
+                      id="phoneNumber" 
+                      name="phoneNumber" 
+                      type="tel" 
+                      required 
+                      value={phoneNumber} 
+                      onChange={e => setPhoneNumber(e.target.value)} 
+                      className="mt-1" 
+                      placeholder="Enter your phone number" 
+                    />
+                  </div>
                 </div>
               )}
 

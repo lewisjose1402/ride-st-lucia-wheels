@@ -98,7 +98,9 @@ const ContactPage = () => {
                     <Mail className="text-brand-purple mr-4 mt-1" />
                     <div>
                       <h3 className="font-medium text-brand-dark">Email Us</h3>
-                      <p className="text-gray-600">support@ridematchstlucia.com</p>
+                      <a href="mailto:admin@ridematchstlucia.com" className="text-gray-600">
+                        info@ridematchstlucia.com
+                      </a>
                     </div>
                   </div>
                   
@@ -106,7 +108,7 @@ const ContactPage = () => {
                     <Phone className="text-brand-purple mr-4 mt-1" />
                     <div>
                       <h3 className="font-medium text-brand-dark">Call Us</h3>
-                      <p className="text-gray-600">+1 (758) 519-2583</p>
+                      <a href="tel:17585192583" className="text-gray-600">+1 (758) 519-2583</a>
                       <p className="text-gray-600">Monday-Friday, 8:30am-5:00pm</p>
                     </div>
                   </div>
@@ -116,7 +118,7 @@ const ContactPage = () => {
                     <div>
                       <h3 className="font-medium text-brand-dark">Visit Us</h3>
                       <p className="text-gray-600">RideMatch St. Lucia</p>
-                      <p className="text-gray-600">St. Lucia</p>
+
                     </div>
                   </div>
                 </div>
