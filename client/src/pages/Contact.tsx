@@ -106,7 +106,7 @@ const ContactPage = () => {
                     <Phone className="text-brand-purple mr-4 mt-1" />
                     <div>
                       <h3 className="font-medium text-brand-dark">Call Us</h3>
-                      <p className="text-gray-600">+1 (758) 123-4567</p>
+                      <p className="text-gray-600">+1 (758) 519-2583</p>
                       <p className="text-gray-600">Monday-Friday, 8:30am-5:00pm</p>
                     </div>
                   </div>
