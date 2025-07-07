@@ -116,7 +116,7 @@ const ContactPage = () => {
                     <div>
                       <h3 className="font-medium text-brand-dark">Visit Us</h3>
                       <p className="text-gray-600">RideMatch St. Lucia</p>
-                      <p className="text-gray-600">Gros Islet, St. Lucia</p>
+                      <p className="text-gray-600">St. Lucia</p>
                     </div>
                   </div>
                 </div>
