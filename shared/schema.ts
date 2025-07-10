@@ -49,7 +49,7 @@ export const vehicles = pgTable("vehicles", {
   description: text("description"),
   typeId: integer("type_id").references(() => vehicleTypes.id),
   transmission: text("transmission").notNull(),
-  fuelType: text("fuel_type"),
+  fuel_type: text("fuel_type"),
   seats: integer("seats").notNull(),
   pricePerDay: numeric("price_per_day", { precision: 10, scale: 2 }).notNull(),
   features: json("features"),

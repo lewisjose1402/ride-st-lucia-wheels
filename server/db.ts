@@ -2,17 +2,13 @@ import { Pool } from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import * as schema from "@shared/schema";
 
-// Use Supabase database connection string provided by user (URL encode the password)
-const supabaseDatabaseUrl = "postgresql://postgres:Jambojet24145%26@db.bmkoiaglbvkxszbipzul.supabase.co:5432/postgres";
-let databaseUrl = supabaseDatabaseUrl;
-console.log('Using Supabase database connection');
+// Use environment DATABASE_URL 
+let databaseUrl = process.env.DATABASE_URL;
+console.log('Using environment DATABASE_URL');
 
-// Configure SSL for Supabase connection
+// Configure connection
 const connectionConfig = {
-  connectionString: databaseUrl,
-  ssl: {
-    rejectUnauthorized: false
-  }
+  connectionString: databaseUrl
 };
 
 if (!databaseUrl) {
