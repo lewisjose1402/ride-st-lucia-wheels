@@ -4,6 +4,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { getCompanyProfile } from "@/services/companyService";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -11,13 +12,23 @@ import Footer from "@/components/Footer";
 const PendingVerification = () => {
   const { user, signOut } = useAuth();
   const [companyPhone, setCompanyPhone] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const loadCompanyPhone = async () => {
+    const checkApprovalStatusAndLoadData = async () => {
       if (!user) return;
       
       try {
         const companyProfile = await getCompanyProfile(user.id);
+        
+        // If company is approved, redirect to dashboard
+        if (companyProfile?.is_approved) {
+          console.log("Company is approved, redirecting to dashboard");
+          navigate("/company/dashboard");
+          return;
+        }
+        
+        // If not approved, load phone number for display
         if (companyProfile?.phone) {
           setCompanyPhone(companyProfile.phone);
         }
@@ -26,8 +37,8 @@ const PendingVerification = () => {
       }
     };
 
-    loadCompanyPhone();
-  }, [user]);
+    checkApprovalStatusAndLoadData();
+  }, [user, navigate]);
 
   const handleSignOut = () => {
     signOut();
