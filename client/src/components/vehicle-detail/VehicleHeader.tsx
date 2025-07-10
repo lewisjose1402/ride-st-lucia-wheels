@@ -29,12 +29,6 @@ const VehicleHeader = ({ vehicle, vehicleType }: VehicleHeaderProps) => {
       <div className="flex items-center mt-2">
         <MapPin size={16} className="text-gray-500 mr-1" />
         <span className="text-gray-600">{formatLocationDisplay(vehicle.location)}</span>
-        
-        <div className="flex items-center ml-4">
-          <Star size={16} className="text-brand-orange fill-brand-orange mr-1" />
-          <span className="font-medium">{vehicle.rating || 4.5}</span>
-          <span className="text-gray-500 ml-1">(0 reviews)</span>
-        </div>
       </div>
     </div>
   );
