@@ -18,7 +18,7 @@ const PendingVerification = () => {
       <Navbar />
       <main className="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gray-50">
         <div className="max-w-md w-full space-y-8">
-          <Card>
+          <Card className="rounded-lg border bg-card text-card-foreground shadow-sm ml-[0px] mr-[0px] pt-[0px] pb-[0px] mt-[50px] mb-[50px]">
             <CardHeader>
               <CardTitle className="text-center text-2xl font-bold flex items-center justify-center gap-2">
                 <Clock className="h-8 w-8 text-yellow-500" />
