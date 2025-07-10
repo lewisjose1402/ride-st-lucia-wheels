@@ -73,7 +73,7 @@ const VehicleInfoTabs = ({ vehicle, vehicleType }: VehicleInfoTabsProps) => {
                 <div className="text-center p-3 bg-gray-50 rounded">
                   <span className="block text-xl text-brand-purple mb-1">A</span>
                   <p className="text-xs text-gray-500">Transmission</p>
-                  <p className="font-medium">{vehicle.transmission || 'Manual'}</p>
+                  <p className="font-medium capitalize">{vehicle.transmission || 'Manual'}</p>
                 </div>
                 <div className="text-center p-3 bg-gray-50 rounded">
                   <span className="block text-xl text-brand-purple mb-1">⛽</span>
