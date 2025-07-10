@@ -3,11 +3,31 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
+import { useState, useEffect } from "react";
+import { getCompanyProfile } from "@/services/companyService";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
 const PendingVerification = () => {
   const { user, signOut } = useAuth();
+  const [companyPhone, setCompanyPhone] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadCompanyPhone = async () => {
+      if (!user) return;
+      
+      try {
+        const companyProfile = await getCompanyProfile(user.id);
+        if (companyProfile?.phone) {
+          setCompanyPhone(companyProfile.phone);
+        }
+      } catch (error) {
+        console.error("Error loading company profile:", error);
+      }
+    };
+
+    loadCompanyPhone();
+  }, [user]);
 
   const handleSignOut = () => {
     signOut();
@@ -61,7 +81,7 @@ const PendingVerification = () => {
                     </div>
                     <div className="flex items-center gap-2 text-sm text-gray-600">
                       <Phone className="h-4 w-4" />
-                      <span>Phone number on file</span>
+                      <span>{companyPhone || "Phone number on file"}</span>
                     </div>
                   </div>
                 </div>
