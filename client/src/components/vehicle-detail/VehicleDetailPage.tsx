@@ -173,7 +173,7 @@ const VehicleDetailPage = ({ vehicle }: VehicleDetailPageProps) => {
                     <div className="text-center p-3 bg-gray-50 rounded">
                       <span className="block text-xl text-brand-purple mb-1">⛽</span>
                       <p className="text-xs text-gray-500">Fuel</p>
-                      <p className="font-medium">Gasoline</p>
+                      <p className="font-medium capitalize">{vehicle.fuel_type || 'Gasoline'}</p>
                     </div>
                     <div className="text-center p-3 bg-gray-50 rounded">
                       <span className="block text-xl text-brand-purple mb-1">👤</span>

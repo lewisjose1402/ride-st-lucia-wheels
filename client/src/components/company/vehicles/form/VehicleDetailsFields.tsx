@@ -48,7 +48,7 @@ const VehicleDetailsFields = () => {
       <VehicleTypeField />
       
       <div className="space-y-2">
-        <Label htmlFor="fuel_type">Fuel Type</Label>
+        <Label htmlFor="fuel_type">Fuel Type *</Label>
         <Select
           onValueChange={(value) => setValue('fuel_type', value)}
           value={watch('fuel_type')}
