@@ -12,9 +12,11 @@ interface UseVehicleFormSubmitProps {
   companyData: any;
   images: VehicleImage[];
   id?: string;
+  reset: () => void;
+  setImages: React.Dispatch<React.SetStateAction<VehicleImage[]>>;
 }
 
-export const useVehicleFormSubmit = ({ isEditMode, companyData, images, id }: UseVehicleFormSubmitProps) => {
+export const useVehicleFormSubmit = ({ isEditMode, companyData, images, id, reset, setImages }: UseVehicleFormSubmitProps) => {
   const [, setLocation] = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -110,6 +112,12 @@ export const useVehicleFormSubmit = ({ isEditMode, companyData, images, id }: Us
           title: isEditMode ? "Vehicle updated" : "Vehicle created",
           description: isEditMode ? "Vehicle has been updated successfully" : "Vehicle has been added successfully",
         });
+        
+        // Reset form fields and clear images only for new vehicle creation
+        if (!isEditMode) {
+          reset();
+          setImages([]);
+        }
         
         setLocation('/company/vehicles');
       } catch (vehicleError) {

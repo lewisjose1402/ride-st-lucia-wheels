@@ -48,7 +48,9 @@ export const useVehicleForm = (id?: string) => {
     isEditMode,
     companyData,
     images,
-    id
+    id,
+    reset: methods.reset,
+    setImages
   });
 
   return {
