@@ -8,6 +8,7 @@ export interface VehicleFormValues {
   seats: string;
   transmission: string;
   vehicle_type: string;
+  fuel_type: string;
   is_available: boolean;
   features: {
     air_conditioning: boolean;

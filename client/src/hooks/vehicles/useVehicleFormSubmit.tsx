@@ -62,7 +62,8 @@ export const useVehicleFormSubmit = ({ isEditMode, companyData, images, id, rese
         price_per_day: parseFloat(data.price_per_day),
         seats: parseInt(data.seats),
         features: data.features,
-        location: locationData
+        location: locationData,
+        fuel_type: data.fuel_type
       };
       
       // Remove the individual address fields since they're now in the location object

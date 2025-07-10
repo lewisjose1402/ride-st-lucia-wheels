@@ -198,6 +198,12 @@ RideMatch St. Lucia is a comprehensive vehicle rental platform that connects tou
   - Payment processing now operational with real credit card transactions
   - All booking confirmation fees and payment flows using live Stripe environment
   - System tested and confirmed working with live Stripe API endpoints
+- July 10, 2025. UX improvements completed:
+  - Added automatic redirection for approved rental companies from pending verification to dashboard
+  - Updated pending verification page to display actual company phone numbers from signup data
+  - Implemented form reset functionality for vehicle add form to prevent duplicate entries
+  - Added fuel type field to vehicle form with gasoline/diesel options
+  - Updated database schema and form validation to support fuel type selection
 
 ## User Preferences
 

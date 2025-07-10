@@ -48,6 +48,25 @@ const VehicleDetailsFields = () => {
       <VehicleTypeField />
       
       <div className="space-y-2">
+        <Label htmlFor="fuel_type">Fuel Type</Label>
+        <Select
+          onValueChange={(value) => setValue('fuel_type', value)}
+          value={watch('fuel_type')}
+        >
+          <SelectTrigger id="fuel_type">
+            <SelectValue placeholder="Select fuel type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="gasoline">Gasoline</SelectItem>
+            <SelectItem value="diesel">Diesel</SelectItem>
+          </SelectContent>
+        </Select>
+        {errors.fuel_type && (
+          <p className="text-sm text-red-500">{errors.fuel_type.message}</p>
+        )}
+      </div>
+      
+      <div className="space-y-2">
         <Label htmlFor="seats">Number of Seats</Label>
         <Select
           onValueChange={(value) => setValue('seats', value)}

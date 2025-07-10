@@ -25,6 +25,7 @@ export const useFormInitialization = ({ setValue, isEditMode, vehicle }: UseForm
       setValue('seats', vehicle.seats.toString());
       setValue('transmission', vehicle.transmission);
       setValue('vehicle_type', vehicle.vehicle_type || '');
+      setValue('fuel_type', vehicle.fuel_type || '');
       setValue('is_available', vehicle.is_available);
       
       // Set features
