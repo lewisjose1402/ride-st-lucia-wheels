@@ -526,15 +526,6 @@ const MyBookings = () => {
                         </DialogContent>
                       </Dialog>
 
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => downloadReceipt(booking)}
-                      >
-                        <Download className="h-4 w-4 mr-2" />
-                        Download Receipt
-                      </Button>
-
                       {canCancelBooking(booking) && (
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
