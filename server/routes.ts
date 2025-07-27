@@ -1433,8 +1433,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: 'is_approved must be a boolean value' });
       }
 
-      // Update company approval status
-      const company = await storage.updateRentalCompany(id, { isApproved: is_approved });
+      // Update company approval status using snake_case field name
+      const company = await storage.updateRentalCompany(id, { is_approved });
       
       if (!company) {
         return res.status(404).json({ error: 'Company not found' });

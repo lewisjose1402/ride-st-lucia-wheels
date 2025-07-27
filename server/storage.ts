@@ -192,7 +192,8 @@ export class SupabaseStorage implements IStorage {
     return data;
   }
 
-  async updateRentalCompany(id: string, company: Partial<InsertRentalCompany>): Promise<RentalCompany | undefined> {
+  async updateRentalCompany(id: string, company: any): Promise<RentalCompany | undefined> {
+    console.log('Updating company with data:', company);
     const { data, error } = await supabase
       .from('rental_companies')
       .update({ ...company, updated_at: new Date().toISOString() })
@@ -210,10 +211,7 @@ export class SupabaseStorage implements IStorage {
   async getAllRentalCompanies(): Promise<RentalCompany[]> {
     const { data, error } = await supabase
       .from('rental_companies')
-      .select(`
-        *,
-        vehicles!rental_companies_id_fkey(count)
-      `)
+      .select('*')
       .order('created_at', { ascending: false });
     
     if (error) {
@@ -221,12 +219,7 @@ export class SupabaseStorage implements IStorage {
       throw error;
     }
     
-    // Map the data to include vehicle count
-    return (data || []).map(company => ({
-      ...company,
-      vehicles: undefined, // Remove the nested vehicles data
-      vehicle_count: company.vehicles?.length || 0
-    }));
+    return data || [];
   }
 
   // Vehicle methods - CRITICAL: These now filter by company approval status
