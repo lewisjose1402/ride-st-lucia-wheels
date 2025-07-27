@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import VehicleCard from '@/components/VehicleCard';
@@ -43,29 +42,19 @@ const VehiclesPage = () => {
   const [pickupDate] = useState(searchParams.pickupDate || '');
   const [dropoffDate] = useState(searchParams.dropoffDate || '');
 
-  // Fetch vehicles from Supabase
+  // Fetch vehicles from backend API (which handles company filtering)
   const { data: vehicles = [], isLoading, error } = useQuery({
     queryKey: ['vehicles'],
     queryFn: async () => {
-      console.log('Fetching vehicles from database...');
+      console.log('Fetching vehicles from backend API...');
       
-      const { data, error } = await supabase
-        .from('vehicles')
-        .select(`
-          *,
-          vehicle_images(*),
-          rental_companies(company_name, is_approved)
-        `)
-        .eq('is_available', true)
-        .eq('rental_companies.is_approved', true)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching vehicles:', error);
-        throw new Error(error.message);
+      const response = await fetch('/api/vehicles');
+      if (!response.ok) {
+        throw new Error('Failed to fetch vehicles');
       }
-
-      console.log('Fetched vehicles:', data);
+      
+      const data = await response.json();
+      console.log('Fetched vehicles from API:', data);
       return data || [];
     },
   });

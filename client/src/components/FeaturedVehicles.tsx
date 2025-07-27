@@ -1,6 +1,5 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import VehicleCard from './VehicleCard';
 import {
   Carousel,
@@ -17,57 +16,36 @@ const FeaturedVehicles = () => {
   useEffect(() => {
     const fetchFeaturedVehicles = async () => {
       try {
-        console.log('Fetching vehicles...');
+        console.log('Fetching featured vehicles from backend API...');
         
-        // First try to get featured vehicles from approved companies only
-        let { data: featuredData, error: featuredError } = await supabase
-          .from('vehicles')
-          .select(`
-            *,
-            vehicle_images(*),
-            rental_companies(company_name, is_approved)
-          `)
-          .eq('is_available', true)
-          .eq('is_featured', true)
-          .eq('rental_companies.is_approved', true)
-          .limit(4)
-          .order('created_at', { ascending: false });
+        // First try to get featured vehicles from backend API (which handles company filtering)
+        const featuredResponse = await fetch('/api/vehicles/featured');
+        if (!featuredResponse.ok) {
+          throw new Error('Failed to fetch featured vehicles from API');
+        }
+        
+        const featuredData = await featuredResponse.json();
+        console.log('Featured vehicles from API:', featuredData);
 
-        console.log('Featured vehicles query result:', featuredData);
-
-        // If no featured vehicles, get any available vehicles
+        // If no featured vehicles, get any available vehicles from API
         if (!featuredData || featuredData.length === 0) {
-          console.log('No featured vehicles found, fetching any available vehicles...');
+          console.log('No featured vehicles found, fetching any available vehicles from API...');
           
-          const { data: anyData, error: anyError } = await supabase
-            .from('vehicles')
-            .select(`
-              *,
-              vehicle_images(*),
-              rental_companies(company_name, is_approved)
-            `)
-            .eq('is_available', true)
-            .eq('rental_companies.is_approved', true)
-            .limit(4)
-            .order('created_at', { ascending: false });
-
-          console.log('Any available vehicles query result:', anyData);
-
-          if (anyError) {
-            console.error('Error fetching any available vehicles:', anyError);
-            return;
+          const allResponse = await fetch('/api/vehicles');
+          if (!allResponse.ok) {
+            throw new Error('Failed to fetch vehicles from API');
           }
-
-          setVehicles(anyData || []);
+          
+          const allData = await allResponse.json();
+          console.log('All vehicles from API:', allData);
+          
+          // Take first 4 vehicles
+          setVehicles((allData || []).slice(0, 4));
         } else {
-          if (featuredError) {
-            console.error('Error fetching featured vehicles:', featuredError);
-            return;
-          }
           setVehicles(featuredData);
         }
       } catch (error) {
-        console.error('Error fetching vehicles:', error);
+        console.error('Error fetching vehicles from API:', error);
       } finally {
         setIsLoading(false);
       }

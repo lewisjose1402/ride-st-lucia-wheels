@@ -1,18 +1,5 @@
-import { eq, and, desc, sql } from "drizzle-orm";
-import { db } from "./db";
 import { supabase } from "./supabase";
 import {
-  profiles,
-  rentalCompanies,
-  vehicles,
-  vehicleImages,
-  bookings,
-  companySettings,
-  vehicleCalendarFeeds,
-  vehicleCalendarBlocks,
-  icalBookings,
-  reviews,
-  contactSubmissions,
   type Profile,
   type InsertProfile,
   type RentalCompany,
@@ -30,7 +17,6 @@ import {
   type IcalBooking,
   type ContactSubmission,
   type InsertContactSubmission,
-  users,
   type User,
   type InsertUser
 } from "@shared/schema";
@@ -104,457 +90,685 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
 }
 
-export class DatabaseStorage implements IStorage {
+export class SupabaseStorage implements IStorage {
   // Profile methods
   async getProfile(id: string): Promise<Profile | undefined> {
-    const result = await db.select().from(profiles).where(eq(profiles.id, id)).limit(1);
-    return result[0];
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (error) {
+      console.error('Error getting profile:', error);
+      return undefined;
+    }
+    return data || undefined;
   }
 
   async getProfileByEmail(email: string): Promise<Profile | undefined> {
-    const result = await db.select().from(profiles).where(eq(profiles.email, email)).limit(1);
-    return result[0];
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('email', email)
+      .single();
+    
+    if (error) {
+      console.error('Error getting profile by email:', error);
+      return undefined;
+    }
+    return data || undefined;
   }
 
   async createProfile(profile: InsertProfile): Promise<Profile> {
-    const result = await db.insert(profiles).values(profile).returning();
-    return result[0];
+    const { data, error } = await supabase
+      .from('profiles')
+      .insert(profile)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error creating profile:', error);
+      throw error;
+    }
+    return data;
   }
 
   async updateProfile(id: string, profile: Partial<InsertProfile>): Promise<Profile | undefined> {
-    const result = await db.update(profiles)
-      .set({ ...profile, updatedAt: new Date() })
-      .where(eq(profiles.id, id))
-      .returning();
-    return result[0];
+    const { data, error } = await supabase
+      .from('profiles')
+      .update({ ...profile, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error updating profile:', error);
+      return undefined;
+    }
+    return data || undefined;
   }
 
   // Rental company methods
   async getRentalCompany(id: string): Promise<RentalCompany | undefined> {
-    const result = await db.select().from(rentalCompanies).where(eq(rentalCompanies.id, id)).limit(1);
-    return result[0];
+    const { data, error } = await supabase
+      .from('rental_companies')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (error) {
+      console.error('Error getting rental company:', error);
+      return undefined;
+    }
+    return data || undefined;
   }
 
   async getRentalCompanyByUserId(userId: string): Promise<RentalCompany | undefined> {
-    const result = await db.select().from(rentalCompanies).where(eq(rentalCompanies.userId, userId)).limit(1);
-    return result[0];
+    const { data, error } = await supabase
+      .from('rental_companies')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+    
+    if (error) {
+      console.error('Error getting rental company by user ID:', error);
+      return undefined;
+    }
+    return data || undefined;
   }
 
   async createRentalCompany(company: InsertRentalCompany): Promise<RentalCompany> {
-    const result = await db.insert(rentalCompanies).values(company).returning();
-    return result[0];
+    const { data, error } = await supabase
+      .from('rental_companies')
+      .insert(company)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error creating rental company:', error);
+      throw error;
+    }
+    return data;
   }
 
   async updateRentalCompany(id: string, company: Partial<InsertRentalCompany>): Promise<RentalCompany | undefined> {
-    const result = await db.update(rentalCompanies)
-      .set({ ...company, updatedAt: new Date() })
-      .where(eq(rentalCompanies.id, id))
-      .returning();
-    return result[0];
+    const { data, error } = await supabase
+      .from('rental_companies')
+      .update({ ...company, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error updating rental company:', error);
+      return undefined;
+    }
+    return data || undefined;
   }
 
   async getAllRentalCompanies(): Promise<RentalCompany[]> {
-    try {
-      // Try Drizzle first, fall back to Supabase client
-      try {
-        return await db.select().from(rentalCompanies).orderBy(desc(rentalCompanies.createdAt));
-      } catch (drizzleError) {
-        console.log('Drizzle connection failed, trying Supabase client...');
-        const { data, error } = await supabase
-          .from('rental_companies')
-          .select('*')
-          .order('created_at', { ascending: false });
-        
-        if (error) {
-          throw error;
-        }
-        
-        return data || [];
-      }
-    } catch (error) {
+    const { data, error } = await supabase
+      .from('rental_companies')
+      .select(`
+        *,
+        vehicles!rental_companies_id_fkey(count)
+      `)
+      .order('created_at', { ascending: false });
+    
+    if (error) {
       console.error('Error getting all rental companies:', error);
       throw error;
     }
+    
+    // Map the data to include vehicle count
+    return (data || []).map(company => ({
+      ...company,
+      vehicles: undefined, // Remove the nested vehicles data
+      vehicle_count: company.vehicles?.length || 0
+    }));
   }
 
-  // Vehicle methods
+  // Vehicle methods - CRITICAL: These now filter by company approval status
   async getVehicle(id: string): Promise<Vehicle | undefined> {
-    const result = await db.select().from(vehicles).where(eq(vehicles.id, id)).limit(1);
-    return result[0];
+    const { data, error } = await supabase
+      .from('vehicles')
+      .select(`
+        *,
+        rental_companies!inner(is_approved)
+      `)
+      .eq('id', id)
+      .eq('rental_companies.is_approved', true)
+      .single();
+    
+    if (error) {
+      console.error('Error getting vehicle:', error);
+      return undefined;
+    }
+    return data || undefined;
   }
 
   async getVehiclesByCompanyId(companyId: string): Promise<Vehicle[]> {
-    return await db.select().from(vehicles)
-      .where(eq(vehicles.companyId, companyId))
-      .orderBy(desc(vehicles.createdAt));
+    const { data, error } = await supabase
+      .from('vehicles')
+      .select('*')
+      .eq('company_id', companyId)
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('Error getting vehicles by company ID:', error);
+      throw error;
+    }
+    return data || [];
   }
 
   async getAllVehicles(): Promise<Vehicle[]> {
-    try {
-      // Try Drizzle first, fall back to Supabase client
-      try {
-        // Join with rental companies to filter out vehicles from deactivated companies
-        const result = await db.select({
-          vehicle: vehicles,
-        }).from(vehicles)
-          .innerJoin(rentalCompanies, eq(vehicles.companyId, rentalCompanies.id))
-          .where(and(
-            eq(vehicles.isAvailable, true),
-            eq(rentalCompanies.isApproved, true)
-          ))
-          .orderBy(desc(vehicles.createdAt));
-        
-        return result.map(r => r.vehicle);
-      } catch (drizzleError) {
-        console.log('Drizzle connection failed, trying Supabase client...');
-        const { data, error } = await supabase
-          .from('vehicles')
-          .select(`
-            *,
-            rental_companies!inner(is_approved)
-          `)
-          .eq('is_available', true)
-          .eq('rental_companies.is_approved', true)
-          .order('created_at', { ascending: false });
-        
-        if (error) {
-          throw error;
-        }
-        
-        return data || [];
-      }
-    } catch (error) {
+    const { data, error } = await supabase
+      .from('vehicles')
+      .select(`
+        *,
+        rental_companies!inner(is_approved)
+      `)
+      .eq('is_available', true)
+      .eq('rental_companies.is_approved', true)
+      .order('created_at', { ascending: false });
+    
+    if (error) {
       console.error('Error getting all vehicles:', error);
       throw error;
     }
+    return data || [];
   }
 
   async getFeaturedVehicles(): Promise<Vehicle[]> {
-    try {
-      // Join with rental companies to filter out vehicles from deactivated companies
-      const result = await db.select({
-        vehicle: vehicles,
-      }).from(vehicles)
-        .innerJoin(rentalCompanies, eq(vehicles.companyId, rentalCompanies.id))
-        .where(and(
-          eq(vehicles.isAvailable, true),
-          eq(vehicles.isFeatured, true),
-          eq(rentalCompanies.isApproved, true)
-        ))
-        .orderBy(desc(vehicles.createdAt))
-        .limit(6);
-      
-      return result.map(r => r.vehicle);
-    } catch (error) {
+    const { data, error } = await supabase
+      .from('vehicles')
+      .select(`
+        *,
+        rental_companies!inner(is_approved)
+      `)
+      .eq('is_available', true)
+      .eq('is_featured', true)
+      .eq('rental_companies.is_approved', true)
+      .order('created_at', { ascending: false })
+      .limit(6);
+    
+    if (error) {
       console.error('Error getting featured vehicles:', error);
       throw error;
     }
+    return data || [];
   }
 
   async createVehicle(vehicle: InsertVehicle): Promise<Vehicle> {
-    const result = await db.insert(vehicles).values(vehicle).returning();
-    return result[0];
+    const { data, error } = await supabase
+      .from('vehicles')
+      .insert(vehicle)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error creating vehicle:', error);
+      throw error;
+    }
+    return data;
   }
 
   async updateVehicle(id: string, vehicle: Partial<InsertVehicle>): Promise<Vehicle | undefined> {
-    const result = await db.update(vehicles)
-      .set({ ...vehicle, updatedAt: new Date() })
-      .where(eq(vehicles.id, id))
-      .returning();
-    return result[0];
+    const { data, error } = await supabase
+      .from('vehicles')
+      .update({ ...vehicle, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error updating vehicle:', error);
+      return undefined;
+    }
+    return data || undefined;
   }
 
   async deleteVehicle(id: string): Promise<boolean> {
-    const result = await db.delete(vehicles).where(eq(vehicles.id, id));
-    return (result.rowCount ?? 0) > 0;
+    const { error } = await supabase
+      .from('vehicles')
+      .delete()
+      .eq('id', id);
+    
+    if (error) {
+      console.error('Error deleting vehicle:', error);
+      return false;
+    }
+    return true;
   }
 
   // Vehicle image methods
   async getVehicleImages(vehicleId: string): Promise<VehicleImage[]> {
-    return await db.select().from(vehicleImages)
-      .where(eq(vehicleImages.vehicleId, vehicleId))
-      .orderBy(desc(vehicleImages.isPrimary), desc(vehicleImages.createdAt));
+    const { data, error } = await supabase
+      .from('vehicle_images')
+      .select('*')
+      .eq('vehicle_id', vehicleId)
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('Error getting vehicle images:', error);
+      return [];
+    }
+    return data || [];
   }
 
   async addVehicleImage(image: InsertVehicleImage): Promise<VehicleImage> {
-    const result = await db.insert(vehicleImages).values(image).returning();
-    return result[0];
+    const { data, error } = await supabase
+      .from('vehicle_images')
+      .insert(image)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error adding vehicle image:', error);
+      throw error;
+    }
+    return data;
   }
 
   async deleteVehicleImage(id: string): Promise<boolean> {
-    const result = await db.delete(vehicleImages).where(eq(vehicleImages.id, id));
-    return (result.rowCount ?? 0) > 0;
+    const { error } = await supabase
+      .from('vehicle_images')
+      .delete()
+      .eq('id', id);
+    
+    if (error) {
+      console.error('Error deleting vehicle image:', error);
+      return false;
+    }
+    return true;
   }
 
   async setPrimaryVehicleImage(vehicleId: string, imageId: string): Promise<boolean> {
     // First, set all images for this vehicle to non-primary
-    await db.update(vehicleImages)
-      .set({ isPrimary: false })
-      .where(eq(vehicleImages.vehicleId, vehicleId));
+    const { error: resetError } = await supabase
+      .from('vehicle_images')
+      .update({ is_primary: false })
+      .eq('vehicle_id', vehicleId);
     
-    // Then set the specified image as primary
-    const result = await db.update(vehicleImages)
-      .set({ isPrimary: true })
-      .where(and(eq(vehicleImages.id, imageId), eq(vehicleImages.vehicleId, vehicleId)));
+    if (resetError) {
+      console.error('Error resetting primary images:', resetError);
+      return false;
+    }
     
-    return (result.rowCount ?? 0) > 0;
+    // Then set the specific image as primary
+    const { error } = await supabase
+      .from('vehicle_images')
+      .update({ is_primary: true })
+      .eq('id', imageId);
+    
+    if (error) {
+      console.error('Error setting primary image:', error);
+      return false;
+    }
+    return true;
   }
 
   // Booking methods
   async getBooking(id: string): Promise<Booking | undefined> {
-    try {
-      // Try Drizzle first, fall back to Supabase client
-      try {
-        const result = await db.select().from(bookings).where(eq(bookings.id, id)).limit(1);
-        return result[0];
-      } catch (drizzleError) {
-        console.log('Drizzle connection failed, trying Supabase client...');
-        const { data, error } = await supabase
-          .from('bookings')
-          .select('*')
-          .eq('id', id)
-          .single();
-        
-        if (error) {
-          if (error.code === 'PGRST116') {
-            // No rows found
-            return undefined;
-          }
-          throw error;
-        }
-        
-        return data;
-      }
-    } catch (error) {
+    const { data, error } = await supabase
+      .from('bookings')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (error) {
       console.error('Error getting booking:', error);
-      throw error;
+      return undefined;
     }
+    return data || undefined;
   }
 
   async getBookingsByUserId(userId: string): Promise<Booking[]> {
-    return await db.select().from(bookings)
-      .where(eq(bookings.userId, userId))
-      .orderBy(desc(bookings.createdAt));
+    const { data, error } = await supabase
+      .from('bookings')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('Error getting bookings by user ID:', error);
+      return [];
+    }
+    return data || [];
   }
 
   async getBookingsByCompanyId(companyId: string): Promise<Booking[]> {
-    // Join with vehicles to get bookings for a company
-    const result = await db.select({
-      booking: bookings,
-    }).from(bookings)
-      .innerJoin(vehicles, eq(bookings.vehicleId, vehicles.id))
-      .where(eq(vehicles.companyId, companyId))
-      .orderBy(desc(bookings.createdAt));
+    const { data, error } = await supabase
+      .from('bookings')
+      .select(`
+        *,
+        vehicles!inner(company_id)
+      `)
+      .eq('vehicles.company_id', companyId)
+      .order('created_at', { ascending: false });
     
-    return result.map(r => r.booking);
+    if (error) {
+      console.error('Error getting bookings by company ID:', error);
+      return [];
+    }
+    return data || [];
   }
 
   async getBookingsByVehicleId(vehicleId: string): Promise<Booking[]> {
-    return await db.select().from(bookings)
-      .where(eq(bookings.vehicleId, vehicleId))
-      .orderBy(desc(bookings.createdAt));
+    const { data, error } = await supabase
+      .from('bookings')
+      .select('*')
+      .eq('vehicle_id', vehicleId)
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('Error getting bookings by vehicle ID:', error);
+      return [];
+    }
+    return data || [];
   }
 
   async getAllBookings(): Promise<Booking[]> {
-    try {
-      // Try Drizzle first, fall back to Supabase client
-      try {
-        return await db.select().from(bookings)
-          .orderBy(desc(bookings.createdAt));
-      } catch (drizzleError) {
-        console.log('Drizzle connection failed, trying Supabase client...');
-        const { data, error } = await supabase
-          .from('bookings')
-          .select('*')
-          .order('created_at', { ascending: false });
-        
-        if (error) {
-          throw error;
-        }
-        
-        return data || [];
-      }
-    } catch (error) {
+    const { data, error } = await supabase
+      .from('bookings')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) {
       console.error('Error getting all bookings:', error);
-      throw error;
+      return [];
     }
+    return data || [];
   }
 
   async createBooking(booking: InsertBooking): Promise<Booking> {
-    const result = await db.insert(bookings).values(booking).returning();
-    return result[0];
+    const { data, error } = await supabase
+      .from('bookings')
+      .insert(booking)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error creating booking:', error);
+      throw error;
+    }
+    return data;
   }
 
   async updateBooking(id: string, booking: Partial<InsertBooking>): Promise<Booking | undefined> {
-    const result = await db.update(bookings)
-      .set({ ...booking, updatedAt: new Date() })
-      .where(eq(bookings.id, id))
-      .returning();
-    return result[0];
+    const { data, error } = await supabase
+      .from('bookings')
+      .update({ ...booking, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error updating booking:', error);
+      return undefined;
+    }
+    return data || undefined;
   }
 
   async cancelBooking(id: string): Promise<boolean> {
-    const result = await db.update(bookings)
-      .set({ status: 'cancelled', updatedAt: new Date() })
-      .where(eq(bookings.id, id));
-    return (result.rowCount ?? 0) > 0;
+    const { data, error } = await supabase
+      .from('bookings')
+      .update({ 
+        status: 'cancelled',
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error cancelling booking:', error);
+      return false;
+    }
+    return !!data;
   }
 
   // Company settings methods
   async getCompanySettings(companyId: string): Promise<CompanySettings | undefined> {
-    const result = await db.select().from(companySettings)
-      .where(eq(companySettings.companyId, companyId)).limit(1);
-    return result[0];
+    const { data, error } = await supabase
+      .from('company_settings')
+      .select('*')
+      .eq('company_id', companyId)
+      .single();
+    
+    if (error) {
+      console.error('Error getting company settings:', error);
+      return undefined;
+    }
+    return data || undefined;
   }
 
   async createCompanySettings(settings: InsertCompanySettings): Promise<CompanySettings> {
-    const result = await db.insert(companySettings).values(settings).returning();
-    return result[0];
+    const { data, error } = await supabase
+      .from('company_settings')
+      .insert(settings)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error creating company settings:', error);
+      throw error;
+    }
+    return data;
   }
 
   async updateCompanySettings(id: string, settings: Partial<InsertCompanySettings>): Promise<CompanySettings | undefined> {
-    const result = await db.update(companySettings)
-      .set({ ...settings, updatedAt: new Date() })
-      .where(eq(companySettings.id, id))
-      .returning();
-    return result[0];
+    const { data, error } = await supabase
+      .from('company_settings')
+      .update({ ...settings, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error updating company settings:', error);
+      return undefined;
+    }
+    return data || undefined;
   }
 
-  // Calendar methods
+  // Calendar management methods
   async getVehicleCalendarFeeds(vehicleId: string): Promise<VehicleCalendarFeed[]> {
-    return await db.select().from(vehicleCalendarFeeds)
-      .where(eq(vehicleCalendarFeeds.vehicleId, vehicleId))
-      .orderBy(desc(vehicleCalendarFeeds.createdAt));
+    const { data, error } = await supabase
+      .from('vehicle_calendar_feeds')
+      .select('*')
+      .eq('vehicle_id', vehicleId);
+    
+    if (error) {
+      console.error('Error getting calendar feeds:', error);
+      return [];
+    }
+    return data || [];
   }
 
   async addCalendarFeed(feed: Partial<VehicleCalendarFeed>): Promise<VehicleCalendarFeed> {
-    const result = await db.insert(vehicleCalendarFeeds).values(feed as any).returning();
-    return result[0];
+    const { data, error } = await supabase
+      .from('vehicle_calendar_feeds')
+      .insert(feed)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error adding calendar feed:', error);
+      throw error;
+    }
+    return data;
   }
 
   async deleteCalendarFeed(id: string): Promise<boolean> {
-    const result = await db.delete(vehicleCalendarFeeds).where(eq(vehicleCalendarFeeds.id, id));
-    return (result.rowCount ?? 0) > 0;
+    const { error } = await supabase
+      .from('vehicle_calendar_feeds')
+      .delete()
+      .eq('id', id);
+    
+    if (error) {
+      console.error('Error deleting calendar feed:', error);
+      return false;
+    }
+    return true;
   }
 
   async getVehicleCalendarBlocks(vehicleId: string): Promise<VehicleCalendarBlock[]> {
-    return await db.select().from(vehicleCalendarBlocks)
-      .where(eq(vehicleCalendarBlocks.vehicleId, vehicleId))
-      .orderBy(desc(vehicleCalendarBlocks.createdAt));
+    const { data, error } = await supabase
+      .from('vehicle_calendar_blocks')
+      .select('*')
+      .eq('vehicle_id', vehicleId);
+    
+    if (error) {
+      console.error('Error getting calendar blocks:', error);
+      return [];
+    }
+    return data || [];
   }
 
   async addCalendarBlock(block: Partial<VehicleCalendarBlock>): Promise<VehicleCalendarBlock> {
-    const result = await db.insert(vehicleCalendarBlocks).values(block as any).returning();
-    return result[0];
+    const { data, error } = await supabase
+      .from('vehicle_calendar_blocks')
+      .insert(block)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error adding calendar block:', error);
+      throw error;
+    }
+    return data;
   }
 
   async deleteCalendarBlock(id: string): Promise<boolean> {
-    const result = await db.delete(vehicleCalendarBlocks).where(eq(vehicleCalendarBlocks.id, id));
-    return (result.rowCount ?? 0) > 0;
+    const { error } = await supabase
+      .from('vehicle_calendar_blocks')
+      .delete()
+      .eq('id', id);
+    
+    if (error) {
+      console.error('Error deleting calendar block:', error);
+      return false;
+    }
+    return true;
   }
 
   async getIcalBookings(vehicleId: string): Promise<IcalBooking[]> {
-    return await db.select().from(icalBookings)
-      .where(eq(icalBookings.vehicleId, vehicleId))
-      .orderBy(desc(icalBookings.createdAt));
+    const { data, error } = await supabase
+      .from('ical_bookings')
+      .select('*')
+      .eq('vehicle_id', vehicleId);
+    
+    if (error) {
+      console.error('Error getting iCal bookings:', error);
+      return [];
+    }
+    return data || [];
   }
 
   async addIcalBooking(booking: Partial<IcalBooking>): Promise<IcalBooking> {
-    const result = await db.insert(icalBookings).values(booking as any).returning();
-    return result[0];
+    const { data, error } = await supabase
+      .from('ical_bookings')
+      .insert(booking)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error adding iCal booking:', error);
+      throw error;
+    }
+    return data;
   }
 
   async clearIcalBookings(feedId: string): Promise<boolean> {
-    const result = await db.delete(icalBookings).where(eq(icalBookings.sourceFeedId, feedId));
-    return (result.rowCount ?? 0) > 0;
-  }
-
-  // Legacy user methods (for compatibility)
-  async getUser(id: number): Promise<User | undefined> {
-    const result = await db.select().from(users).where(eq(users.id, id)).limit(1);
-    return result[0];
-  }
-
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    const result = await db.select().from(users).where(eq(users.username, username)).limit(1);
-    return result[0];
-  }
-
-  async createUser(user: InsertUser): Promise<User> {
-    const result = await db.insert(users).values(user).returning();
-    return result[0];
+    const { error } = await supabase
+      .from('ical_bookings')
+      .delete()
+      .eq('feed_id', feedId);
+    
+    if (error) {
+      console.error('Error clearing iCal bookings:', error);
+      return false;
+    }
+    return true;
   }
 
   // Contact submission methods
   async getContactSubmissions(): Promise<ContactSubmission[]> {
-    try {
-      const result = await db.select().from(contactSubmissions).orderBy(desc(contactSubmissions.createdAt));
-      return result;
-    } catch (error) {
-      console.error('Drizzle connection failed, trying direct SQL query...');
-      const { data, error: supabaseError } = await supabase.rpc('sql', {
-        query: 'SELECT * FROM contact_submissions ORDER BY created_at DESC'
-      });
-      
-      if (supabaseError) throw supabaseError;
-      return data || [];
+    const { data, error } = await supabase
+      .from('contact_submissions')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('Error getting contact submissions:', error);
+      return [];
     }
+    return data || [];
   }
 
   async getContactSubmission(id: string): Promise<ContactSubmission | undefined> {
-    try {
-      const result = await db.select().from(contactSubmissions).where(eq(contactSubmissions.id, id)).limit(1);
-      return result[0];
-    } catch (error) {
-      console.error('Drizzle connection failed, trying Supabase client...');
-      const { data, error: supabaseError } = await supabase
-        .from('contact_submissions')
-        .select('*')
-        .eq('id', id)
-        .single();
-      
-      if (supabaseError) throw supabaseError;
-      return data;
+    const { data, error } = await supabase
+      .from('contact_submissions')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (error) {
+      console.error('Error getting contact submission:', error);
+      return undefined;
     }
+    return data || undefined;
   }
 
   async createContactSubmission(submission: InsertContactSubmission): Promise<ContactSubmission> {
-    try {
-      const result = await db.insert(contactSubmissions).values(submission).returning();
-      return result[0];
-    } catch (error) {
-      console.error('Drizzle connection failed, trying Supabase client...');
-      const { data, error: supabaseError } = await supabase
-        .from('contact_submissions')
-        .insert(submission)
-        .select()
-        .single();
-      
-      if (supabaseError) throw supabaseError;
-      return data;
+    const { data, error } = await supabase
+      .from('contact_submissions')
+      .insert(submission)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error creating contact submission:', error);
+      throw error;
     }
+    return data;
   }
 
   async updateContactSubmissionStatus(id: string, status: string): Promise<ContactSubmission | undefined> {
-    try {
-      const result = await db.update(contactSubmissions)
-        .set({ status, updatedAt: new Date() })
-        .where(eq(contactSubmissions.id, id))
-        .returning();
-      return result[0];
-    } catch (error) {
-      console.error('Drizzle connection failed, trying Supabase client...');
-      const { data, error: supabaseError } = await supabase
-        .from('contact_submissions')
-        .update({ status, updated_at: new Date().toISOString() })
-        .eq('id', id)
-        .select()
-        .single();
-      
-      if (supabaseError) throw supabaseError;
-      return data;
+    const { data, error } = await supabase
+      .from('contact_submissions')
+      .update({ 
+        status,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error updating contact submission status:', error);
+      return undefined;
     }
+    return data || undefined;
+  }
+
+  // Legacy user methods (minimal implementation for compatibility)
+  async getUser(id: number): Promise<User | undefined> {
+    // Legacy method - not used in current application
+    return undefined;
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    // Legacy method - not used in current application
+    return undefined;
+  }
+
+  async createUser(user: InsertUser): Promise<User> {
+    // Legacy method - not used in current application
+    throw new Error('Legacy user creation not supported');
   }
 }
 
-export const storage = new DatabaseStorage();
+export const storage = new SupabaseStorage();
