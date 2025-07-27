@@ -65,6 +65,9 @@ const TestEmail = () => {
   const [contactEmail, setContactEmail] = useState('');
   const [contactSubject, setContactSubject] = useState('');
   const [contactMessage, setContactMessage] = useState('');
+  // Company approval test state
+  const [approvalEmail, setApprovalEmail] = useState('');  
+  const [approvalContactName, setApprovalContactName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
@@ -602,6 +605,51 @@ const TestEmail = () => {
     }
   };
 
+  const handleSendCompanyApprovalEmail = async () => {
+    if (!approvalEmail || !approvalContactName) {
+      toast({
+        title: "Required fields missing",
+        description: "Please enter company email and contact name",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/test-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: approvalEmail,
+          type: 'company-approved'
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        toast({
+          title: "Email sent!",
+          description: `Company approval email sent successfully to ${approvalEmail}`,
+        });
+        console.log('Company approval email sent successfully:', data);
+      } else {
+        throw new Error('Failed to send company approval email');
+      }
+    } catch (error) {
+      console.error('Error sending company approval email:', error);
+      toast({
+        title: "Email failed",
+        description: "Failed to send company approval email. Check console for details.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-2xl mx-auto">
@@ -611,9 +659,10 @@ const TestEmail = () => {
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="welcome" className="w-full">
-              <TabsList className="grid w-full grid-cols-11">
+              <TabsList className="grid w-full grid-cols-12">
                 <TabsTrigger value="welcome">Welcome</TabsTrigger>
                 <TabsTrigger value="company">Company</TabsTrigger>
+                <TabsTrigger value="approval">Approved</TabsTrigger>
                 <TabsTrigger value="booking">Renter</TabsTrigger>
                 <TabsTrigger value="company-booking">Company</TabsTrigger>
                 <TabsTrigger value="admin-booking">Admin</TabsTrigger>
@@ -719,6 +768,45 @@ const TestEmail = () => {
 
                 <div className="text-sm text-gray-600 mt-4">
                   <p>This triggers the 'company-signup-pending' event in Loops.</p>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="approval" className="space-y-4 mt-6">
+                <div className="space-y-2">
+                  <Label htmlFor="approvalEmail">Company Email</Label>
+                  <Input
+                    id="approvalEmail"
+                    type="email"
+                    value={approvalEmail}
+                    onChange={(e) => setApprovalEmail(e.target.value)}
+                    placeholder="company@example.com"
+                    required
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="approvalContactName">Contact Name</Label>
+                  <Input
+                    id="approvalContactName"
+                    type="text"
+                    value={approvalContactName}
+                    onChange={(e) => setApprovalContactName(e.target.value)}
+                    placeholder="John Company Owner"
+                    required
+                  />
+                </div>
+                
+                <Button 
+                  onClick={handleSendCompanyApprovalEmail}
+                  disabled={isLoading}
+                  className="w-full"
+                >
+                  {isLoading ? 'Sending...' : 'Send Company Approval Email'}
+                </Button>
+
+                <div className="text-sm text-gray-600 mt-4">
+                  <p>This triggers the 'company-approved' event in Loops.</p>
+                  <p className="mt-1">Required properties: company-contact-name</p>
                 </div>
               </TabsContent>
 

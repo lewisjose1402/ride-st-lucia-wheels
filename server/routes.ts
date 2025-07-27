@@ -1361,6 +1361,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         case 'company':
           result = await emailService.sendCompanySignupEmail(email, 'Test Company', 'Test Person');
           break;
+        case 'company-approved':
+          result = await emailService.sendEvent('company-approved', email, {
+            'company-contact-name': 'Test Company Owner'
+          });
+          break;
         default:
           // Just test contact creation
           result = await emailService.createContact({
@@ -1433,11 +1438,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: 'is_approved must be a boolean value' });
       }
 
+      // Get company details before updating for email notification
+      const existingCompany = await storage.getRentalCompany(id);
+      if (!existingCompany) {
+        return res.status(404).json({ error: 'Company not found' });
+      }
+
       // Update company approval status using snake_case field name
       const company = await storage.updateRentalCompany(id, { is_approved });
       
       if (!company) {
         return res.status(404).json({ error: 'Company not found' });
+      }
+
+      // Send company approval email when company is approved (not when deactivated)
+      if (is_approved && !existingCompany.isApproved) {
+        try {
+          const emailService = getEmailService();
+          if (emailService) {
+            await emailService.sendEvent('company-approved', existingCompany.email, {
+              'company-contact-name': existingCompany.contactPerson || existingCompany.companyName
+            });
+            console.log(`Company approval email sent to: ${existingCompany.email}`);
+          }
+        } catch (emailError) {
+          console.error('Failed to send company approval email:', emailError);
+          // Don't fail the approval process if email fails
+        }
       }
 
       // When deactivating a company, we don't need to explicitly hide vehicles
