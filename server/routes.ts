@@ -1423,6 +1423,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin endpoints
+  app.put("/api/admin/companies/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { is_approved } = req.body;
+
+      if (typeof is_approved !== 'boolean') {
+        return res.status(400).json({ error: 'is_approved must be a boolean value' });
+      }
+
+      // Update company approval status
+      const company = await storage.updateRentalCompany(id, { isApproved: is_approved });
+      
+      if (!company) {
+        return res.status(404).json({ error: 'Company not found' });
+      }
+
+      // When deactivating a company, we don't need to explicitly hide vehicles
+      // The marketplace filtering already excludes vehicles from non-approved companies
+      
+      res.json({ 
+        success: true, 
+        message: `Company ${is_approved ? 'approved' : 'deactivated'} successfully`,
+        company: company
+      });
+    } catch (error) {
+      console.error('Error updating company status:', error);
+      res.status(500).json({ error: 'Failed to update company status' });
+    }
+  });
+
   // Catch-all for API routes - this ensures unknown API routes return JSON instead of HTML
   app.use('/api/*', (req, res) => {
     res.status(404).json({ 

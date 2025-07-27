@@ -33,24 +33,32 @@ export const CompaniesManagement = () => {
 
   const updateCompanyMutation = useMutation({
     mutationFn: async ({ id, is_approved }: { id: string; is_approved: boolean }) => {
-      const { error } = await supabase
-        .from('rental_companies')
-        .update({ is_approved })
-        .eq('id', id);
+      const response = await fetch(`/api/admin/companies/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ is_approved }),
+      });
       
-      if (error) throw error;
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to update company status');
+      }
+      
+      return response.json();
     },
-    onSuccess: (_, variables) => {
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['admin-companies'] });
       toast({
         title: 'Success',
-        description: `Company ${variables.is_approved ? 'approved' : 'deactivated'} successfully`
+        description: `Company ${variables.is_approved ? 'approved' : 'deactivated'} successfully. ${!variables.is_approved ? 'All vehicles from this company are now hidden from the marketplace.' : 'Vehicles from this company are now visible in the marketplace.'}`
       });
     },
-    onError: () => {
+    onError: (error: Error) => {
       toast({
         title: 'Error',
-        description: 'Failed to update company status',
+        description: error.message || 'Failed to update company status',
         variant: 'destructive'
       });
     }
@@ -112,23 +120,23 @@ export const CompaniesManagement = () => {
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-2">
-                        {!company.is_approved && (
+                        {!company.is_approved && company.id && (
                           <Button
                             size="sm"
                             onClick={() => 
-                              updateCompanyMutation.mutate({ id: company.id, is_approved: true })
+                              updateCompanyMutation.mutate({ id: company.id!, is_approved: true })
                             }
                           >
                             <CheckCircle className="w-4 h-4 mr-1" />
                             Approve
                           </Button>
                         )}
-                        {company.is_approved && (
+                        {company.is_approved && company.id && (
                           <Button
                             size="sm"
                             variant="destructive"
                             onClick={() => 
-                              updateCompanyMutation.mutate({ id: company.id, is_approved: false })
+                              updateCompanyMutation.mutate({ id: company.id!, is_approved: false })
                             }
                           >
                             <XCircle className="w-4 h-4 mr-1" />

@@ -41,6 +41,11 @@ const VehicleDetail = () => {
         throw new Error('Vehicle not found');
       }
 
+      // Check if the company is approved - if not, throw error to hide vehicle
+      if (!vehicle.rental_companies?.is_approved) {
+        throw new Error('Vehicle is not available - company is not approved');
+      }
+
       console.log('Successfully fetched vehicle with company data:', vehicle);
       
       // Type cast the vehicle data to match our Vehicle interface

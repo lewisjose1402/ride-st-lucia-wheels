@@ -193,15 +193,28 @@ export class DatabaseStorage implements IStorage {
     try {
       // Try Drizzle first, fall back to Supabase client
       try {
-        return await db.select().from(vehicles)
-          .where(eq(vehicles.isAvailable, true))
+        // Join with rental companies to filter out vehicles from deactivated companies
+        const result = await db.select({
+          vehicle: vehicles,
+        }).from(vehicles)
+          .innerJoin(rentalCompanies, eq(vehicles.companyId, rentalCompanies.id))
+          .where(and(
+            eq(vehicles.isAvailable, true),
+            eq(rentalCompanies.isApproved, true)
+          ))
           .orderBy(desc(vehicles.createdAt));
+        
+        return result.map(r => r.vehicle);
       } catch (drizzleError) {
         console.log('Drizzle connection failed, trying Supabase client...');
         const { data, error } = await supabase
           .from('vehicles')
-          .select('*')
+          .select(`
+            *,
+            rental_companies!inner(is_approved)
+          `)
           .eq('is_available', true)
+          .eq('rental_companies.is_approved', true)
           .order('created_at', { ascending: false });
         
         if (error) {
@@ -217,10 +230,25 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getFeaturedVehicles(): Promise<Vehicle[]> {
-    return await db.select().from(vehicles)
-      .where(and(eq(vehicles.isAvailable, true), eq(vehicles.isFeatured, true)))
-      .orderBy(desc(vehicles.createdAt))
-      .limit(6);
+    try {
+      // Join with rental companies to filter out vehicles from deactivated companies
+      const result = await db.select({
+        vehicle: vehicles,
+      }).from(vehicles)
+        .innerJoin(rentalCompanies, eq(vehicles.companyId, rentalCompanies.id))
+        .where(and(
+          eq(vehicles.isAvailable, true),
+          eq(vehicles.isFeatured, true),
+          eq(rentalCompanies.isApproved, true)
+        ))
+        .orderBy(desc(vehicles.createdAt))
+        .limit(6);
+      
+      return result.map(r => r.vehicle);
+    } catch (error) {
+      console.error('Error getting featured vehicles:', error);
+      throw error;
+    }
   }
 
   async createVehicle(vehicle: InsertVehicle): Promise<Vehicle> {
