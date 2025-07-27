@@ -59,10 +59,9 @@ const DriverInfoFields = ({
           </p>
         )}
       </div>
-
       {/* International License Question */}
       <div>
-        <Label className="text-sm font-medium">Is this an international driver's license?</Label>
+        <Label className="text-sm font-medium">Is this an international or local driver's license?</Label>
         <div className="flex gap-2 mt-2">
           <Button
             type="button"
@@ -84,7 +83,6 @@ const DriverInfoFields = ({
           </Button>
         </div>
       </div>
-
       {/* Driver Information */}
       <div className="grid grid-cols-2 gap-2">
         <div>
@@ -114,7 +112,6 @@ const DriverInfoFields = ({
           />
         </div>
       </div>
-
       {/* Delivery Location */}
       <DeliveryLocationSelector
         deliveryLocationType={deliveryLocationType}
