@@ -54,9 +54,10 @@ const VehiclesPage = () => {
         .select(`
           *,
           vehicle_images(*),
-          rental_companies(company_name)
+          rental_companies(company_name, is_approved)
         `)
         .eq('is_available', true)
+        .eq('rental_companies.is_approved', true)
         .order('created_at', { ascending: false });
 
       if (error) {

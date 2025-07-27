@@ -19,16 +19,17 @@ const FeaturedVehicles = () => {
       try {
         console.log('Fetching vehicles...');
         
-        // First try to get featured vehicles
+        // First try to get featured vehicles from approved companies only
         let { data: featuredData, error: featuredError } = await supabase
           .from('vehicles')
           .select(`
             *,
             vehicle_images(*),
-            rental_companies(company_name)
+            rental_companies(company_name, is_approved)
           `)
           .eq('is_available', true)
           .eq('is_featured', true)
+          .eq('rental_companies.is_approved', true)
           .limit(4)
           .order('created_at', { ascending: false });
 
@@ -43,9 +44,10 @@ const FeaturedVehicles = () => {
             .select(`
               *,
               vehicle_images(*),
-              rental_companies(company_name)
+              rental_companies(company_name, is_approved)
             `)
             .eq('is_available', true)
+            .eq('rental_companies.is_approved', true)
             .limit(4)
             .order('created_at', { ascending: false });
 

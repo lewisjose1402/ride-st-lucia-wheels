@@ -208,6 +208,16 @@ RideMatch St. Lucia is a comprehensive vehicle rental platform that connects tou
   - Fixed database schema mapping (fuelType -> fuel_type) for proper ORM compatibility
   - Fixed backend database connection to use environment DATABASE_URL instead of hardcoded values
   - Backend API endpoints now properly accessible (resolved network connection issues)
+- July 27, 2025. Company deactivation system fully implemented:
+  - Added comprehensive company approval/deactivation controls in admin dashboard
+  - Backend vehicle filtering now only shows vehicles from approved companies in marketplace and featured sections
+  - Frontend marketplace (Vehicles.tsx) filters vehicles to only show approved company vehicles
+  - Featured vehicle carousel filters to only display vehicles from approved companies
+  - Direct URL protection prevents access to individual vehicle pages from deactivated companies
+  - Admin API endpoint (/api/admin/companies/:id) for company status management with proper validation
+  - Multi-layer protection: marketplace filtering + direct URL blocking + booking prevention
+  - Vehicle visibility automatically updates when company approval status changes
+  - TypeScript fixes resolved null ID checking issues in admin components
 
 ## User Preferences
 
