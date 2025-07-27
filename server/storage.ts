@@ -222,7 +222,24 @@ export class SupabaseStorage implements IStorage {
     return data || [];
   }
 
-  // Vehicle methods - CRITICAL: These now filter by company approval status
+  // Helper method to check if a company accepts bookings
+  async getCompanyAcceptBookingsStatus(companyId: string): Promise<boolean> {
+    const { data, error } = await supabase
+      .from('company_settings')
+      .select('accept_bookings')
+      .eq('company_id', companyId)
+      .single();
+    
+    if (error) {
+      // If no settings exist, default to accepting bookings (true)
+      return true;
+    }
+    
+    // Return the actual setting value, defaulting to true if null
+    return data?.accept_bookings ?? true;
+  }
+
+  // Vehicle methods - CRITICAL: These now filter by company approval status AND accept_bookings setting
   async getVehicle(id: string): Promise<Vehicle | undefined> {
     const { data, error } = await supabase
       .from('vehicles')
@@ -238,7 +255,23 @@ export class SupabaseStorage implements IStorage {
       console.error('Error getting vehicle:', error);
       return undefined;
     }
-    return data || undefined;
+    
+    if (!data) return undefined;
+    
+    // Check company settings for accept_bookings
+    const { data: settings } = await supabase
+      .from('company_settings')
+      .select('accept_bookings')
+      .eq('company_id', data.company_id)
+      .single();
+    
+    // Default to true if no settings exist, otherwise use the actual value
+    const acceptsBookings = settings?.accept_bookings ?? true;
+    if (!acceptsBookings) {
+      return undefined; // Hide vehicle if company doesn't accept bookings
+    }
+    
+    return data;
   }
 
   async getVehiclesByCompanyId(companyId: string): Promise<Vehicle[]> {
@@ -270,7 +303,26 @@ export class SupabaseStorage implements IStorage {
       console.error('Error getting all vehicles:', error);
       throw error;
     }
-    return data || [];
+    
+    if (!data) return [];
+    
+    // Filter vehicles by company accept_bookings status
+    const filteredVehicles = [];
+    for (const vehicle of data) {
+      const { data: settings } = await supabase
+        .from('company_settings')
+        .select('accept_bookings')
+        .eq('company_id', vehicle.company_id)
+        .single();
+      
+      // Default to true if no settings exist, otherwise use the actual value
+      const acceptsBookings = settings?.accept_bookings ?? true;
+      if (acceptsBookings) {
+        filteredVehicles.push(vehicle);
+      }
+    }
+    
+    return filteredVehicles;
   }
 
   async getFeaturedVehicles(): Promise<Vehicle[]> {
@@ -290,7 +342,26 @@ export class SupabaseStorage implements IStorage {
       console.error('Error getting featured vehicles:', error);
       throw error;
     }
-    return data || [];
+    
+    if (!data) return [];
+    
+    // Filter featured vehicles by company accept_bookings status
+    const filteredVehicles = [];
+    for (const vehicle of data) {
+      const { data: settings } = await supabase
+        .from('company_settings')
+        .select('accept_bookings')
+        .eq('company_id', vehicle.company_id)
+        .single();
+      
+      // Default to true if no settings exist, otherwise use the actual value
+      const acceptsBookings = settings?.accept_bookings ?? true;
+      if (acceptsBookings) {
+        filteredVehicles.push(vehicle);
+      }
+    }
+    
+    return filteredVehicles;
   }
 
   async createVehicle(vehicle: InsertVehicle): Promise<Vehicle> {
